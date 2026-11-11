@@ -143,11 +143,11 @@ Master controls rows (`enabled`, `visibility`, `scale`, `alpha` and `locked`, de
 `settings/SchemaMembers.lua`), each addressed through `Library.Member`. A callout's actions are its
 Line (`callout.channel` and `callout.text`), `callout.emote` (the game emote it performs, after its line
 if it has one), `callout.ping` (none, attack, warning, onmyway or assist) and `callout.marker` (none,
-or 1 star to 8 skull). Auto-thank's rows are `thank.*` (`settings/AutoThank.lua`, the Auto-thank page):
-`enabled`, `send` (emote, line or both), `text`, `mute`, `raidBuffsOnly`, one `thank.content.<kind>` per
-content kind, and `position`, the toast's dragged spot, which a page's Defaults keeps; every one's
-`onChange` re-runs `AutoThank.Rewire`; a write that would take away a callout's last action is refused (`noAction`,
-`Library.KeepsAction`); a callout holds up to four, one per kind (#16). Every module reads a setting
+or 1 star to 8 skull). A write that would take away a callout's last action is refused (`noAction`,
+`Library.KeepsAction`); a callout holds up to four, one per kind (#16). Auto-thank's rows are `thank.*`
+(`settings/AutoThank.lua`, the Auto-thank page): `enabled`, `send` (emote, line or both), `text`, `mute`,
+`raidBuffsOnly`, one `thank.content.<kind>` per content kind, and `position`, the toast's dragged spot,
+which a page's Defaults keeps; every one's `onChange` re-runs `AutoThank.Rewire`. Every module reads a setting
 through `NS.Setting(path)`, which answers the row's default before the database exists; the shared
 reactions are `Settings.REACTIONS`, and `enabled` is `writeThrough` so `/qc enable|disable` still
 lands on a load where the composers are hollow (options-ui-§1 route (a)).

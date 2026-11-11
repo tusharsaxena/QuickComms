@@ -72,8 +72,8 @@ core\PoolSetup.lua
 core\WidgetsSetup.lua
 # Conventional: NS.GlowLib (the LibKa0s-Glow-1.0 seam) is read inside functions only (modules\Glow.lua).
 core\GlowSetup.lua
-# Conventional: NS.NewToast (the LibKa0s-Toast-1.0 seam) is read inside functions only
-# (modules\AutoThank_Toast.lua).
+# LOAD-BEARING: publishes NS.NewToast (the LibKa0s-Toast-1.0 seam), which modules\AutoThank_Toast.lua
+# calls at load.
 core\ToastSetup.lua
 # LOAD-BEARING: publishes NS.MSG (the message catalog) and NS.Bus; every file that names a message
 # takes NS.MSG at load.
@@ -144,7 +144,8 @@ modules\Library_Migrate.lua
 modules\SendEngine_Guard.lua
 # LOAD-BEARING: the only secure writer; publishes NS.SendEngine, which modules\Dial_Secure.lua takes as a load-time upvalue; appends to NS.STAND_DOWN / NS.STAND_UP (and, Task 4, NS.FEATURE_EVENTS)
 modules\SendEngine.lua
-# Conventional: auto-thank (#19): pure decisions read at call time; reads NS.L and NS.State at load
+# LOAD-BEARING: auto-thank (#19); publishes NS.AutoThank, which modules\AutoThank_Toast.lua takes as a
+# load-time upvalue; reads NS.L and NS.State at load; appends to NS.STAND_DOWN / NS.STAND_UP
 modules\AutoThank.lua
 # LOAD-BEARING: takes NS.AutoThank (above) as a load-time upvalue and replaces its AT.Offer hook;
 # makes the thank toast through NS.NewToast (core\ToastSetup.lua) at load; appends to NS.STAND_DOWN
