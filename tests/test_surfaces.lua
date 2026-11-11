@@ -659,3 +659,39 @@ test("surfaces: [CA-M1-8] RefreshLocks relocks each action and lights the chip w
     assertEqual(table.concat(slot.locks, ","), "lockdown")
     assertTrue(plan.lockdownChip)
 end)
+
+test("surfaces: [CA-M1-R4] the chip lights when a later action is lockdown and the first lock is not", function()
+    local NS, m = live()
+    m.MAXEMOTEINDEX = 80
+    m.EMOTE73_TOKEN, m.EMOTE73_CMD1 = "POINT", "/point"
+    NS.Emotes.Reset()
+    local snap = {}
+    for k, v in pairs(NS.Situation.Current()) do snap[k] = v end
+    snap.lockdown = { encounter = true }
+    -- a raid Line in a party (padlock notInRaid) beside an emote under the encounter lockdown
+    local slot = NS.Surfaces.Slot("c1", { name = "Go", text = "go", channel = "raid", emote = "POINT" }, snap, {})
+    assertEqual(table.concat(slot.locks, ","), "notInRaid,lockdown")
+    assertEqual(slot.lock, "notInRaid")
+    -- red under: S.SlotLockdown reading slot.lock alone
+    assertTrue(NS.Surfaces.SlotLockdown(slot))
+    local cid, gid = userCallout(NS, { name = "Go", text = "go", channel = "raid" })
+    NS.Library.AddGroupToSurface("dial", "d2", gid, 1)
+    local function dialChip(s)
+        return NS.Surfaces.BuildDialPlan("d2", NS.db.profile.dials.d2, s, NS.Surfaces.Deps(s)).lockdownChip
+    end
+    assertFalse(planFor(NS, snap).lockdownChip, "the raid Line alone is no lockdown")
+    assertFalse(dialChip(snap), "nor on the dial")
+    NS.db.profile.callouts[cid].emote = "POINT"   -- two actions, as M2 allows; the slot bakes both
+    local plan = planFor(NS, snap)
+    assertEqual(slotOf(plan, cid).lock, "notInRaid")
+    -- red under: BuildPlan or BuildDialPlan lighting the chip on slot.lock == "lockdown"
+    assertTrue(plan.lockdownChip)
+    assertTrue(dialChip(snap))
+    NS.State.surfacePlans = { p1 = planFor(NS) }
+    assertFalse(NS.State.surfacePlans.p1.lockdownChip, "no lockdown outside the encounter")
+    NS.Situation.Current = function() return snap end
+    NS.Situation.Restamp = function() end
+    NS.Surfaces.RefreshLocks()
+    -- red under: RefreshLocks lighting the chip on slot.lock == "lockdown"
+    assertTrue(NS.State.surfacePlans.p1.lockdownChip)
+end)
