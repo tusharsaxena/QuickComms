@@ -104,7 +104,7 @@ listed task if the owner rules otherwise:
 | CA-M1-11 | Popup: the draft carries `emote`, `ping` and `marker` | done | 19f5d0d |
 | CA-M1-12 | Preview, tooltip and `/qc check` for a ping-only or marker-only callout | done | 6992297 |
 | CA-M1-13 | M1 docs and smoke checks | done | 4243ff8 |
-| CA-M1-14 | M1 checkpoint | done | (this commit) |
+| CA-M1-14 | M1 checkpoint | done | fe84251 |
 | CA-M2-1 | Lift the one-action rule | done | ab731e3 |
 | CA-M2-2 | Bake: the multi-line macro, `MAX_MACRO`, the Line budget, partial bakes | done | f2b1106 |
 | CA-M2-3 | Surfaces: the `{coordinates}` re-bake refreshes the press meta | done | 6bbc3f4 |
@@ -116,8 +116,8 @@ listed task if the owner rules otherwise:
 | CA-M2-9 | Settings readers: `C.PreviewLines`, Groups labels and tooltip | done | 1722ce4 |
 | CA-M2-10 | Module and slash readers: `Pad_Render.TooltipLines`, `V.CheckLines` | done | 617dc1a |
 | CA-M2-11 | Retire `slot.chatType` | done | 9e8f327 |
-| CA-M2-12 | M2 docs and smoke checks | done | (this commit) |
-| CA-M2-13 | M2 checkpoint | todo | |
+| CA-M2-12 | M2 docs and smoke checks | done | b7cd978 |
+| CA-M2-13 | M2 checkpoint | done | (this commit) |
 | CA-M3-1 | BuiltIns: 12 shipped callouts gain an emote | todo | |
 | CA-M3-2 | BuiltIns: the two `healme` rows | todo | |
 | CA-M3-3 | Step 20 part 1: emotes on unedited shipped callouts | todo | |
@@ -155,6 +155,7 @@ listed task if the owner rules otherwise:
 | baseline | 2026-11-10 | 1780/0/1 skip; 1780/0/1 skip; 0/0 (172 files) | 37a1e7b | n/a |
 | M0 | 2026-11-11 | 1791/0/1 skip; 1791/0/1 skip; 0/0 (174 files) | a84354d | yes (no R fix commits in M0; no owner ruling asks at M0) |
 | M1 | 2026-11-11 | 1860/0/1 skip; 1860/0/1 skip; 0/0 (174 files) | 9891167 | yes (review fix commits CA-M1-R1 a75b0c9, R2 364bc97, R3 00b2182, R4 2f24385, R5 9891167; owner asks D10 and D16; on the M1 build a ping-only or marker-only callout cannot be set up, only a legacy callout with no action takes one through `/qc set`, so #17/#18 and PING-1..5, MARK-1..7 are reachable from CA-M2-1 on) |
+| M2 | 2026-11-11 | 1909/0/1 skip; 1909/0/1 skip; 0/0 (174 files) | c7da096 | yes (review fix commits CA-M2-R1 e494d99, R2 7a15467, R3 c7da096; owner asks F4a and F4b, built in M3 to the spec's reading: step 20's "unedited" ignores name, icon and icon color (CA-M3-3), and the arena and battleground sets gain no emotes under the pvpMatch padlock (CA-M3-1); #16's AC passes headless on both kit profiles, ACTION-1..8 pending sign-off) |
 
 ---
 
