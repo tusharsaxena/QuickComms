@@ -144,3 +144,74 @@ test("coordinates: a previewed place that is not where you are prints <coordinat
     -- red under: mockBaked answering the literal (or the live position) for a synthetic preset
     assertEqual(m.prints[1], NS.PREFIX .. " /s <target> @ <coordinates>")
 end)
+
+-- ── The re-bake refreshes the press meta (CA-M2-3, combined actions §3) ─────────────────────────
+
+-- A Say Line that fits beside a ping at 5.2, 6.1 and runs over the macro's budget at 45.2, 61.8:
+-- the ping's "/ping [@target,exists] 1" and its newline leave the Line 230 bytes, and
+-- "/s " + 218 + " " + "5.2, 6.1" is 230.
+local function nearBudget(over)
+    local NS, m = T.enableAddon()
+    m.playerMap, m.playerPos = 2393, { 0.052, 0.061 }
+    NS.Situation.ReadInputs = function() return { inGroup = false } end
+    NS.Situation.RefreshNow("test")
+    local Lib = NS.Library
+    local f = { name = "Here", text = string.rep("a", 218) .. " {coordinates}", channel = "say", ping = "attack" }
+    for k, v in pairs(over or {}) do f[k] = v end
+    local cid = Lib.CreateCallout(f)
+    local gid = Lib.CreateGroup({ name = "Where", callouts = { cid } })
+    Lib.AddGroupToSurface("pad", "p1", gid, 1)
+    return NS, m, cid
+end
+
+local function sendResults(NS)
+    local out, t = {}, NS.Bus:NewTarget()
+    t:RegisterMessage(NS.MSG.SEND_RESULT, function(_, _, _, what) out[#out + 1] = what end)
+    return out
+end
+
+test("coordinates: [CA-M2-3] a re-bake that pushes the Line over budget refreshes the press meta", function()
+    local NS, m, cid = nearBudget()
+    local b = button(NS, cid)
+    local line = string.rep("a", 218) .. " 5.2, 6.1"
+    assertEqual(b:GetAttribute("macrotext"), "/s " .. line .. "\n/ping [@target,exists] 1")
+    assertEqual(#b.qcMeta.actions, 2) assertEqual(b.qcMeta.chatTypes[1], "SAY")
+    local out = sendResults(NS)
+    m.playerPos = { 0.452, 0.618 }
+    m.prints = {}
+    m.__click(b)
+    -- red under: rebake taking one string (the joined macro of the old meta, or nothing re-armed)
+    assertEqual(b:GetAttribute("macrotext"), "/ping [@target,exists] 1", "the ping alone is re-armed")
+    local meta = b.qcMeta
+    assertEqual(#meta.actions, 1) assertEqual(meta.actions[1].kind, "ping")
+    assertEqual(#meta.chatTypes, 0, "no chat action is left to echo")
+    assertEqual(#meta.locks, 0)
+    assertEqual(#meta.skipped, 1) assertEqual(meta.skipped[1].kind, "line")
+    assertEqual(meta.skipped[1].reason, "tooLong")
+    assertEqual(NS.SendEngine.EchoState().pending, 0, "the echo tracker waits for no Line")
+    assertEqual(out[#out], "sent", "an action-only press: no false dropped")
+    local said = false
+    for _, p in ipairs(m.prints) do
+        if p == NS.PREFIX .. " Here: the line is too long to send with its other actions." then said = true end
+    end
+    assertTrue(said, "the press says why the Line dropped")
+    -- moved back: the Line fits again, and the meta waits for it again
+    m.playerPos = { 0.052, 0.061 }
+    m.__click(b)
+    assertEqual(b:GetAttribute("macrotext"), "/s " .. line .. "\n/ping [@target,exists] 1")
+    assertEqual(#b.qcMeta.actions, 2) assertEqual(b.qcMeta.chatTypes[1], "SAY")
+    assertEqual(#b.qcMeta.skipped, 0)
+end)
+
+test("coordinates: [CA-M2-3] a re-bake where nothing bakes keeps the old macro and meta", function()
+    -- a Line alone, 255 bytes at 5.2, 6.1: two more bytes at 45.2, 61.8 and it bakes nothing
+    local NS, m, cid = nearBudget({ text = string.rep("a", 243) .. " {coordinates}", ping = false })
+    local b = button(NS, cid)
+    local before, meta = b:GetAttribute("macrotext"), b.qcMeta
+    assertEqual(#before, 255)
+    m.playerPos = { 0.452, 0.618 }
+    m.__click(b)
+    assertEqual(b:GetAttribute("macrotext"), before, "the old macro stays")
+    assertTrue(b.qcMeta == meta, "and the old meta")
+    assertEqual(#meta.actions, 1) assertEqual(meta.chatTypes[1], "SAY")
+end)

@@ -105,6 +105,25 @@ local function slotLocks(slot)
     slot.locks, slot.lock = locks, locks[1]
 end
 
+--- Write BakeActions' `info` into `t`, a slot or a button's press meta (combined actions §3):
+--- t.actions the baked actions, t.skipped the rest, t.chatTypes each baked chat action's chat type
+--- (t.chatType the first), t.locks each lock (t.lock the first) and t.concrete the first concrete.
+--- The slot's bake and SendEngine's press-time re-bake share it, so the echo never waits for an
+--- action the macro no longer holds.
+function S.ApplyActions(t, info)
+    t.actions, t.skipped, t.chatTypes, t.concrete = info.baked, {}, {}, nil
+    for _, a in ipairs(info.actions) do
+        if not a.line then t.skipped[#t.skipped + 1] = a end
+    end
+    for _, a in ipairs(info.baked) do
+        if a.chatType then t.chatTypes[#t.chatTypes + 1] = a.chatType end
+        t.concrete = t.concrete or a.concrete
+    end
+    t.chatType = t.chatTypes[1]
+    slotLocks(t)
+    return t
+end
+
 --- True when any of the slot's baked actions is under the encounter lockdown (the lockdown chip).
 function S.SlotLockdown(slot)
     for _, lock in ipairs(slot.locks or {}) do
@@ -125,20 +144,15 @@ function S.Slot(calloutId, callout, snap, opts)
     slot.name, slot.icon, slot.iconColor = callout.name, callout.icon, callout.iconColor
     local macro, reason, info = NS.Bake.BakeActions(callout, snap, opts)
     slot.line, slot.reason = macro, reason
-    slot.actions, slot.skipped, slot.chatTypes = info.baked, {}, {}
-    for _, a in ipairs(info.actions) do
-        if not a.line then slot.skipped[#slot.skipped + 1] = a end
-        if a.kind == "line" and a.reason == "solo" and a.selfPrint then slot.selfText = NS.Bake.Sanitize(callout.text) end
+    S.ApplyActions(slot, info)
+    local first = info.actions[1]
+    if first and first.kind == "line" and first.reason == "solo" and first.selfPrint then
+        slot.selfText = NS.Bake.Sanitize(callout.text)
     end
-    for _, a in ipairs(info.baked) do
-        if a.chatType then slot.chatTypes[#slot.chatTypes + 1] = a.chatType end
-        slot.concrete = slot.concrete or a.concrete
-    end
-    slot.chatType = slot.chatTypes[1]
-    slotLocks(slot)
     -- {coordinates} moves while the plan does not (QF-03): the slot's macro, re-baked with the position
-    -- as it is now, for SendEngine's press-time re-bake. Pad's arm hands it on only for an armed live
-    -- slot. Nil when nothing bakes: the button keeps what it holds.
+    -- as it is now, for SendEngine's press-time re-bake, which takes BakeActions' macro, reason, info
+    -- and refreshes the press meta from info (S.ApplyActions). Pad's arm hands it on only for an
+    -- armed live slot. Nil when nothing bakes: the button keeps what it holds.
     if macro and NS.Tokens.UsesCoordinates(callout.text) then
         opts = type(opts) == "table" and opts or {}
         local base = type(opts.ctx) == "table" and opts.ctx or {}

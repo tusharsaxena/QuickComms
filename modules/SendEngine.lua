@@ -139,15 +139,25 @@ function SE.Disarm(b, meta)
     return true
 end
 
--- Re-arm `b` with its line re-baked now (QF-03), when it carries a `rebake` and is armed. Out of
--- combat only; a line that did not bake, or did not change, writes nothing.
+-- Re-arm `b` with its macro re-baked now (QF-03), when it carries a `rebake` and is armed. Out of
+-- combat only. The re-bake answers BakeActions' macro, reason, info: a macro refreshes the meta's
+-- actions, chat types, locks and skipped ones (combined actions §3), so the echo never waits for a
+-- Line the new position pushed over the macro's budget, and the press says why that Line dropped
+-- (meta.lineNote). Nothing baked keeps the old macro and meta; an unchanged macro writes nothing.
 local function rebake(b)
     local meta = b.qcMeta
     if not (b.qcArmed and meta and meta.rebake) or inCombat() then return false end
     local t0 = Perf.on and debugprofilestop()
-    local line = meta.rebake()
-    local changed = type(line) == "string" and line ~= b:GetAttribute("macrotext")
-    if changed then SE.Arm(b, line, meta) end
+    local macro, _, info = meta.rebake()
+    local changed = false
+    if type(macro) == "string" and type(info) == "table" then
+        NS.Surfaces.ApplyActions(meta, info)
+        local line = info.actions[1]
+        meta.lineNote = line and line.kind == "line" and line.reason == "tooLong"
+            and L["%s: the line is too long to send with its other actions."]:format(tostring(meta.name)) or nil
+        changed = macro ~= b:GetAttribute("macrotext")
+        if changed then SE.Arm(b, macro, meta) end
+    end
     if t0 then Perf.Note("coordsRebake", debugprofilestop() - t0) end
     return changed
 end
@@ -473,8 +483,10 @@ local function press(b)
         if not hasActions(meta) then return end
     end
     if not (b.qcArmed and hasActions(meta)) then return end
-    -- Why a ping or a mark cannot land (D15): read in PreClick, before the macro ran, printed once.
+    -- Why a ping or a mark cannot land (D15): read in PreClick, before the macro ran, printed once;
+    -- and why the press-time re-bake dropped the Line (CA-M2-3).
     printNotes(notes)
+    if meta.lineNote then NS.Print(meta.lineNote) end
     -- A padlocked button stays armed (spec §8.4), but the game is expected to refuse it: no echo is
     -- awaited and no guard stamped, so a refusal is never blamed on the spam guard.
     local lockText = meta.lockText and meta.lockText()

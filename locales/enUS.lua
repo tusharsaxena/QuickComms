@@ -397,6 +397,9 @@ L["%s: that target cannot be marked."] = "%s: that target cannot be marked."
 L["%s: you need leader or assist to mark in a raid."] = "%s: you need leader or assist to mark in a raid."
 L["%s: pings are turned off."] = "%s: pings are turned off."
 L["%s: your ping is on cooldown."] = "%s: your ping is on cooldown."
+-- the press-time re-bake (combined actions §3): {coordinates} pushed the Line over the macro's budget
+L["%s: the line is too long to send with its other actions."] =
+    "%s: the line is too long to send with its other actions."
 
 -- Test mode (modules/Preview.lua)
 L["Test mode is not available in combat."] = "Test mode is not available in combat."
