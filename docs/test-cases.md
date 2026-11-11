@@ -128,7 +128,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (22)
+### test_database.lua (26)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -152,6 +152,10 @@ Total.
 - database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is
 - database: [QFE-E3] step 19 adds the Emotes set to a stored profile once, after Solo, touching nothing else
 - database: [CA-M1-4] step 6's raw copy keeps a shipped callout's ping and marker
+- database: [CA-M3-3] step 20 gives an unedited shipped callout its emote, once, and writes nothing else
+- database: [CA-M3-3] step 20 leaves an edited callout alone: text, channel, emote, ping or marker
+- database: [CA-M3-3] step 20: renamed or recolored still gains (F4a); no origin gains nothing
+- database: [CA-M3-3] step 20 is safe on nil, empty, unseeded and damaged profiles
 
 ### test_profile.lua (10)
 
@@ -2195,7 +2199,7 @@ Total.
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 26 |
-| test_database.lua | 22 |
+| test_database.lua | 26 |
 | test_profile.lua | 10 |
 | test_schema.lua | 24 |
 | test_slash.lua | 22 |
@@ -2277,4 +2281,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1915** |
+| **Total** | **1919** |

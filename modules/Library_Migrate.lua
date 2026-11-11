@@ -6,6 +6,7 @@ local _, NS = ...
 
 NS.Library = NS.Library or {}
 local Lib = NS.Library
+local L = NS.L
 
 -- The growth values a step rewrites: `up` (Upward) split into Right and up / Left and up (B2), and
 -- the old Upward always drew rightward.
@@ -489,4 +490,55 @@ function Lib.MigrateEmotesSet(profile)
             end
         end
     end
+end
+
+-- Step 20's input, frozen here so a later change to BuiltIns cannot change what it recognizes
+-- (combined actions §8): each listed shipped callout's pre-step origin, channel, text (the localized
+-- string it was seeded as) and the emote it gains, in shipped order.
+local COMBO_EMOTES = {
+    { "bi.world.rare",   "general",    L["Rare spotted: {target} @ {coordinates}"], "POINT" },
+    { "bi.world.elite",  "general",    L["Can anyone help with this elite? {target} @ {coordinates}"], "HELPME" },
+    { "bi.world.thanks", "general",    L["Thanks for the help!"], "THANK" },
+    { "bi.group.hello",  "smartGroup", L["Hello!"], "WAVE" },
+    { "bi.group.ready",  "smartGroup", L["Ready"], "READY" },
+    { "bi.group.glhf",   "smartGroup", L["GLHF!"], "CHEER" },
+    { "bi.group.tyff",   "smartGroup", L["tyff"], "THANK" },
+    { "bi.group.ggty",   "smartGroup", L["ggty"], "THANK" },
+    { "bi.group.ggnt",   "smartGroup", L["ggnt"], "BYE" },
+    { "bi.mplus.pull",   "smartGroup", L["Pulling next pack"], "CHARGE" },
+    { "bi.mplus.mana",   "smartGroup", L["Wait, need mana"], "OOM" },
+    { "bi.raid.wipe",    "smartLead",  L["Wipe it, run back"], "FLEE" },
+}
+
+-- A seeded profile step 20 may write: prepared, with its tables and counter well typed. An unprepared
+-- one is left to Prepare, which seeds the full sets from the shipped data.
+local function comboReady(profile)
+    return type(profile) == "table" and profile.seeded == true and type(profile.groups) == "table"
+        and type(profile.callouts) == "table" and type(profile.nextId) == "number"
+end
+
+-- Unedited: the shipped channel and (localized) text, and no emote, ping or marker set. Name, icon and
+-- icon color are not compared, since they do not change what the callout sends (F4a). Text seeded
+-- under another client language reads as edited, the safe side.
+local function unedited(c, r)
+    return c.channel == r[2] and c.text == r[3] and not c.emote and not c.ping and not c.marker
+end
+
+-- Part 1: every stored callout whose origin names a COMBO_EMOTES row, still unedited, gains that
+-- row's emote. Nothing else is written; a copy carries no origin, and a deleted callout is not here.
+local function addComboEmotes(callouts)
+    local byOrigin = {}
+    for _, r in ipairs(COMBO_EMOTES) do byOrigin[r[1]] = r end
+    for _, c in pairs(callouts) do
+        local r = type(c) == "table" and byOrigin[c.origin]
+        if r and unedited(c, r) then c.emote = r[4] end
+    end
+end
+
+--- Step 20 (combined actions §8, QuickComms#20): the shipped callouts that now perform an emote with
+--- their line gain it where the player left them unedited. Idempotent: one that has an emote is no
+--- longer unedited.
+function Lib.MigrateComboCallouts(profile)
+    if not comboReady(profile) then return end
+    addComboEmotes(profile.callouts)
 end

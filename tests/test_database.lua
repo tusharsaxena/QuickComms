@@ -659,3 +659,89 @@ test("database: [CA-M1-4] step 6's raw copy keeps a shipped callout's ping and m
     assertEqual(copy.ping, "attack")
     assertEqual(copy.marker, 2)
 end)
+
+-- ── step 20 part 1: emotes on unedited shipped callouts (CA-M3-3, combined actions §8) ────────
+
+-- A stored profile as builds before step 20 seeded it: Hello and Rare unedited, as shipped.
+local function preComboProfile()
+    return { seeded = true, nextId = 10,
+        groups = { g1 = { name = "In Group", origin = "bi.group", callouts = { "c1", "c2" }, when = {} } },
+        callouts = {
+            c1 = { name = "Hello", text = "Hello!", channel = "smartGroup", origin = "bi.group.hello" },
+            c2 = { name = "Rare spotted", text = "Rare spotted: {target} @ {coordinates}", channel = "general",
+                origin = "bi.world.rare" },
+        } }
+end
+
+test("database: [CA-M3-3] step 20 gives an unedited shipped callout its emote, once, and writes nothing else", function()
+    local NS = T.newAddon()
+    local p = preComboProfile()
+    -- red under: no Lib.MigrateComboCallouts in modules/Library_Migrate.lua
+    NS.Library.MigrateComboCallouts(p)
+    assertEqual(p.callouts.c1.emote, "WAVE")
+    assertEqual(p.callouts.c2.emote, "POINT")
+    assertEqual(p.callouts.c1.text, "Hello!")
+    assertEqual(p.callouts.c1.channel, "smartGroup")
+    assertNil(p.callouts.c1.ping) assertNil(p.callouts.c1.marker)
+    local keys = 0
+    for _ in pairs(p.callouts.c1) do keys = keys + 1 end
+    assertEqual(keys, 5, "name, text, channel, origin and the emote")
+    NS.Library.MigrateComboCallouts(p)
+    assertEqual(p.callouts.c1.emote, "WAVE", "a re-run is a no-op")
+end)
+
+test("database: [CA-M3-3] step 20 leaves an edited callout alone: text, channel, emote, ping or marker", function()
+    local NS = T.newAddon()
+    local edits = {
+        text = function(c) c.text = "Hi all!" end,
+        locale = function(c) c.text = "Hallo!" end,   -- seeded under another client language
+        channel = function(c) c.channel = "say" end,
+        emote = function(c) c.emote = "BOW" end,
+        ping = function(c) c.ping = "attack" end,
+        marker = function(c) c.marker = 8 end,
+    }
+    for what, edit in pairs(edits) do
+        local p = preComboProfile()
+        edit(p.callouts.c1)
+        local before = {}
+        for k, v in pairs(p.callouts.c1) do before[k] = v end
+        NS.Library.MigrateComboCallouts(p)
+        -- red under: an "unedited" test that skips this field
+        for k, v in pairs(before) do assertEqual(p.callouts.c1[k], v, what .. ": " .. k) end
+        if what ~= "emote" then assertNil(p.callouts.c1.emote, what) end
+        assertEqual(p.callouts.c2.emote, "POINT", what .. ": the unedited one still gains")
+    end
+end)
+
+test("database: [CA-M3-3] step 20: renamed or recolored still gains (F4a); no origin gains nothing", function()
+    local NS = T.newAddon()
+    local p = preComboProfile()
+    p.callouts.c1.name, p.callouts.c1.icon, p.callouts.c1.iconColor = "Hiya", 1234, "ff0000"
+    p.callouts.c3 = { name = "Hello", text = "Hello!", channel = "smartGroup" }   -- a copy: no origin
+    p.callouts.c4 = { name = "Hs", text = "Healthstone please!", channel = "smartGroup", origin = "bi.group.hs" }
+    p.callouts.c5 = "damaged"
+    NS.Library.MigrateComboCallouts(p)
+    -- red under: name, icon or icon color compared
+    assertEqual(p.callouts.c1.emote, "WAVE", "name, icon and icon color are not compared")
+    assertEqual(p.callouts.c1.name, "Hiya")
+    assertNil(p.callouts.c3.emote, "a copy carries no origin")
+    assertNil(p.callouts.c4.emote, "a shipped callout the list does not name")
+    assertEqual(p.callouts.c5, "damaged")
+end)
+
+test("database: [CA-M3-3] step 20 is safe on nil, empty, unseeded and damaged profiles", function()
+    local NS = T.newAddon()
+    local M = NS.Library.MigrateComboCallouts
+    M(nil) M({}) M("junk")
+    local unseeded = preComboProfile()
+    unseeded.seeded = nil
+    M(unseeded)
+    assertNil(unseeded.callouts.c1.emote, "an unprepared profile is left to Prepare")
+    for _, field in ipairs({ "groups", "callouts", "nextId" }) do
+        local p = preComboProfile()
+        p[field] = "damaged"
+        M(p)
+        assertEqual(p[field], "damaged", field)
+        if field ~= "callouts" then assertNil(p.callouts.c1.emote, field .. " damaged: nothing written") end
+    end
+end)
