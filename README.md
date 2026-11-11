@@ -91,15 +91,20 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
 - The text is prepared out of combat and loaded onto secure buttons, so a press sends it to the right
   channel (say, yell, party, instance, raid, raid warning, General or emote) even during a boss.
   General falls back to say when you haven't joined it. An emote callout sends its text as a custom
-  emote (`/e`), on Retail and WoW Forever alike. A game emote callout performs one of the game's own
-  emotes (`/point`, `/oom`, `/incoming`...) on your target, picked from a searchable list in the
-  callout editor; voice emotes play their sound. The built-in Emotes group, shown in the open world
-  whatever your group, carries twenty of them: the voice calls first (`/incoming`, `/oom`,
-  `/healme`...), then the social ones (`/wave`, `/thank`, `/dance`...).
-- A callout can also ping your target (Attack, Warning, On my way or Assist) or put a raid marker on it,
-  from star to skull. Both go through the game's own `/ping` and `/tm` commands on the same secure
-  button, and are meant to work in combat too (pending in-game checks). With no target nothing is pinged or marked and the press tells you
-  why; in a raid, marking needs leader or assist.
+  emote (`/e`), on Retail and WoW Forever alike.
+- One press can do up to four things at once: send the line, perform one of the game's own emotes
+  (`/point`, `/oom`, `/incoming`...) on your target, ping the target and mark it. "Kick on me" in party,
+  `/point`, an Attack ping and a skull all go from one button. A callout can also skip the line
+  (Channel None) and only emote, ping or mark. The whole press has to fit in 255 bytes; a line too
+  long to fit beside the rest is left out, and the other actions still go.
+- The emote is picked from a searchable list in the callout editor, and voice emotes play their sound.
+  The built-in Emotes group, shown in the open world whatever your group, carries twenty of them: the
+  voice calls first (`/incoming`, `/oom`, `/healme`...), then the social ones (`/wave`, `/thank`,
+  `/dance`...).
+- The ping is Attack, Warning, On my way or Assist, and the raid marker anything from star to skull.
+  Both go through the game's own `/ping` and `/tm` commands on the same secure button, and are meant to
+  work in combat too (pending in-game checks). With no target nothing is pinged or marked and the press
+  tells you why; in a raid, marking needs leader or assist.
 - After a press every button dims for about a second. On a boss the game quietly drops lines sent
   faster than that, so if one never arrives you get a note in chat.
 - Text that starts with a slash command is refused. A callout's text is only ever chat; its ping and

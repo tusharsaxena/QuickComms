@@ -60,6 +60,39 @@ Add the field to `Library.TEMPLATES[kind]` (its shape and default), and a row to
 
 A callout field has no page: the callout popup is its editor. Add it to `DRAFT` in `settings/CalloutPopup.lua` (the draft, the baseline and Save's changed-field writes follow from it, in that order), and to `FIELDS` and `renderFields` too when the popup draws it as a row of its own, in one of its two columns or across both (the icon and its color are drawn by the icon chooser instead), give the blank draft in `Pop.Open` its default, and check it in the popup's `check` with the row's own validator; `copyCallout` in `modules/Library.lua` (the copy `AddToGroup`, `CreateGroup` and `DuplicateGroup` make) must carry it too (Prepare's split copies the stored table whole, so it needs nothing). Pin it in `tests/test_callout_popup.lua`.
 
+The worked example is `ping` and `marker` (#17, #18): `Library.TEMPLATES.callout` gives each `false`
+(none), `Lib.ValidPing` and `Lib.ValidMarker` in `modules/Library.lua` are the validators, the
+`callout.ping` and `callout.marker` rows in `settings/SchemaMembers.lua` take a `normalize` (so `/qc set
+callout.ping <id> none` and `... 0` clear it) and a `validate` that also keeps the callout's last action
+(`keepsAction`); `copyCallout`, `CreateCallout`, the seed (`BI.Callout`'s `extra`, `defaults/BuiltIns.lua`)
+and migration step 6 (`modules/Library_Migrate.lua`) carry them; the popup has them in `DRAFT` and
+`FIELDS`, draws them as one line of two dropdowns (`h.RenderField`, `split()`, `alignField()`), gives the
+blank draft `ping = nil, marker = nil`, and checks them with `checkPing` and `checkMarker`.
+
+## Add a callout action
+
+A callout's actions are a fixed set, one of each kind, baked in a fixed order (D1): the Line, the emote,
+the ping, the marker. A fifth kind is a member field (above) plus each reader of an action:
+
+1. **Bake.** An entry builder in `modules/Bake.lua` that returns `{ kind, line, reason, length, value }`
+   (and `chatType` and `lock` when the line is chat), from a fixed table and never from typed text, so no
+   data byte follows a newline; add it to `B.BakeActions` in its place in the order. A command the client
+   may lack (`Compat.PingCommand`) bakes nothing, with a reason of its own (`noPing`), and drops only
+   that action. The Line's share of `B.MAX_MACRO` (`holdLine`) then leaves room for it.
+2. **The action rule.** Count it in `Lib.HasAction` (`modules/Library.lua`).
+3. **The reasons.** Its skipped reason's words in `PadRender.REASON_TEXT` and its kind's skipped row in
+   `PadRender.SKIPPED_TEXT` (`modules/Pad_Render.lua`), both read by the tooltip and the editor.
+4. **The press.** A chat action gets an echo entry for free (its `chatType`); a press-time note (no
+   target, no rights) goes in `SE.PressNotes` (`modules/SendEngine.lua`), read in `PreClick` from plain
+   Compat answers only.
+5. **The readers.** Its echo line in `Preview.SlotEcho` (`modules/Preview.lua`), its rows in
+   `Callouts.PreviewLines` (`settings/Callouts.lua`: the summary's short form and its own row), its
+   Groups suffix (`settings/Groups.lua`), and `/qc check`'s row (`settings/SlashVerbs.lua`, by its
+   `kind`).
+6. **Tests and docs.** The order and the newline in `tests/test_bake.lua`, the press in
+   `tests/test_sendengine.lua`, each reader's suite, and a smoke check (the ACTION, PING and MARK
+   checks in `smoke-tests.md` are the pattern).
+
 ## Add an editor page
 
 A file under `settings/` that calls `Settings.Editors.RegisterPage(pageKey, title, frameSuffix, render, defaults, hooks)` (`hooks`, optional, `{ onShow, onHide }`, run on the page's canvas each time it shows or hides; the Groups page's edit preview uses them), listed in the TOC above `settings\SlashVerbs.lua`. `render(ctx)` draws `PageBanner` (the picker and the create action; `PageHeader` instead when the band holds another page-wide control too, as the Groups page's Preview while editing), then `Settings.Editors.Tabs(ctx, pageKey, tabs)`. Keep the selection with `Ed.Heal`/`Ed.Select`, draw lists with `Ed.ReorderRows` (each entry `{ id, label, icon, iconColor, edit, editTooltip, remove, removeTooltip }`: an `edit` function adds the edit glyph, `remove` the remove glyph; a remove that deletes asks first, one that only takes a member off a surface does not), delete through `Ed.ConfirmDelete`, and write only through Library or the seam. A member's icon is chosen with `Ed.IconChooser(ctx, spec)` (its `choose` writes icon and color as one act, `Library.SetIcon`; see `G.IconSpec` in `settings/Groups.lua`), and any texture you draw for one is tinted with `Library.IconTint(icon, color)`, white included. Drive it in a suite through `tests/page_helpers.lua`.

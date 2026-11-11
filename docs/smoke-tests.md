@@ -44,6 +44,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | ROLE-1..3 | [Role and character](#role-and-character) | The Role row on General → Behavior and its Automatic phrase, the group's assigned role winning over the spec, the Character and Specialization rows of the When editor (Retail; FOREVER-18 to FOREVER-21 re-run them on Forever) |
 | FOREVER-1..25 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, Forever's place ids against the client's own names and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone; `/qc probe ids`, the no-travel sweep of the client's map, dungeon finder and battleground names |
 | EMOTE-1..8 | [Emotes](#emotes) | Retail, then Forever: a custom emote callout (`/e`) and its lock, a game emote callout, the emote picker's order and voice marks, preview, throttle and an unknown token, a game emote during an encounter, the Emotes set in the open world and an existing profile gaining it once |
+| ACTION-1..8 | [Combined actions](#combined-actions) | Retail, then Forever: one press that sends a line, an emote, a ping and a marker (#16), in combat, with no target, the 255-byte macro cap, Say and an emote outdoors, a boss encounter, a locked Line beside a marker, a legacy game-emote callout |
 | PING-1..5 | [Pings](#pings) | Retail, then Forever: a callout's ping on the target (#17), solo and grouped, in combat, Forever's server delivery, an encounter lockdown, pings off and on cooldown |
 | MARK-1..7 | [Raid markers](#raid-markers) | Retail, then Forever: a callout's raid target marker on the target (#18), solo, in a party and in a raid with and without assist, a second press, no target and an unmarkable one, Forever's `/tm`, marking in combat and during an encounter |
 | SKIN-1..31 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker; no line under any window title |
@@ -2474,22 +2475,25 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
 
 - **EMOTE-3. A game emote callout performs the game's emote (QFE-E2).** Out of combat in the open
   world, target a nearby player or NPC, and edit a callout in a group on your pad → the **Channel**
-  dropdown lists **Game emote** last. Pick it → the Text box gives way to a **Game emote** box. Type
+  dropdown lists **None (no chat line)** last (the game-emote kind, relabeled by combined actions D10).
+  Pick it → the Text box is hidden; the **Emote (optional)** box stays. Type
   `po` → a list hangs under the box with `/point` among its rows; pick it → the Name, if empty, becomes
-  `/point`, and What it sends reads `Emotes: /point`. Save → its Groups row reads `/point  Game emote
-  /point` with the channel in the emote color. Click its button → your character points at your
+  `/point`, and What it sends reads `Emotes: /point`. Save → its Groups row reads `/point  None (no
+  chat line)  /point` with the channel in the emote color. Click its button → your character points at your
   target and chat shows the game's own line (`You point at <target>.`), once, with no "interface action
   blocked" and no drop note (`/qc debug on` shows an `Echo` line ending `sent`: the
   `CHAT_MSG_TEXT_EMOTE` echo is matched). With no target it points ahead as `/point` typed does.
-  Repeat on WoW Forever. Result: passed (owner, 2026-11-10)
-- **EMOTE-4. The picker's order, its voice marks and the name rule (QFE-E2).** In the Game emote box
-  type `o` → the first rows are speech emotes (`/incoming (voice)`, `/oom (voice)`...), then the
+  Repeat on WoW Forever. Result: owed (passed by the owner 2026-11-10; CA-M2-7 changed the editor it
+  walks through)
+- **EMOTE-4. The picker's order, its voice marks and the name rule (QFE-E2).** In the Emote (optional)
+  box type `o` → the first rows are speech emotes (`/incoming (voice)`, `/oom (voice)`...), then the
   animated ones (`/bow`, `/point`...), then the rest; the arrow keys and Enter pick from the
   list. Rename the callout `Look`, then pick `/wave` → the name stays `Look`. Pick `/oom` on a new
   callout → What it sends adds *A voice emote: it also plays its sound.*; its button plays the voice
   line. Typing `/wave` and pressing Enter without picking a row also picks it. Switch the channel back
-  to Say → the Text box returns; Save → the callout sends its text and keeps no emote
-  (`/qc get callout.emote <id>` prints false). Result: passed (owner, 2026-11-10)
+  to Say and type a text → the Text box returns and the emote stays; Save → one press says the text
+  and waves (combined actions, #16). Empty the emote box and Save → `/qc get callout.emote <id>`
+  prints false. Result: owed (passed by the owner 2026-11-10; CA-M2-7 kept the emote beside the Line)
 - **EMOTE-5. Preview, throttle and an unknown token (QFE-E2).** Turn on **Preview as... → World** and
   click the `/point` button → one `[QC] would emote /point` line and no emote. Turn preview off and
   press it twice quickly → the second press is dimmed by the guard as for chat. Then run
@@ -2514,6 +2518,54 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
   build (Solo on the pad) → after the update the pad lists Emotes right after Solo and nothing else
   moved; an edited Solo callout keeps its text. Delete Emotes and `/reload` → it does not come back.
   Result: passed (owner, 2026-11-10)
+
+## Combined actions
+
+**Client: Retail, then WoW Forever**, every check here (QuickComms#16, the combined-actions design
+`docs/superpowers/specs/2026-11-10-combined-actions-design.md` §2 to §4 and §7). **Code:**
+`modules/Bake.lua` (`B.BakeActions`, `B.MAX_MACRO`), `modules/Surfaces.lua` (`S.ApplyActions`),
+`modules/SendEngine.lua` and `modules/SendEngine_Guard.lua` (one result per press), `settings/CalloutPopup.lua`
+(the four action slots), `settings/Callouts.lua` (What it sends), `modules/Pad_Render.lua` (the tooltip)
+and `settings/SlashVerbs.lua` (`/qc check`).
+
+**Set-up, for every check here.** Edit a callout in a group on your pad → the popup draws Name | Channel,
+Text, **Emote (optional)** across both columns, then **Ping** | **Raid marker**. Set the Name `Kick`,
+Channel Party, Text `Kick on me`, the emote `/point`, Ping Attack and Raid marker Skull, and Save → What
+it sends opens with `"Kick on me" in Party, /point, ping Attack, mark Skull`, lists each action with its
+bytes, `Macro: <n> of 255 bytes` and *Needs a target when pressed.*; its Groups row ends `+/point +ping
++{rt8}`. `/qc check <id>` → `<id> -> 4 actions`, then `line: /p Kick on me, 13 of 255 bytes`,
+`channel: party`, `emote: /point, 6 of 255 bytes`, `ping: /ping [@target,exists] 1, 24 of 255 bytes`,
+`marker: /tm [@target,exists] !8, 23 of 255 bytes` and `macro: 69 of 255 bytes`. Hover its button → one
+row per action, `Channel: Party` under the line only.
+
+- **ACTION-1. One press sends all four (#16 AC).** Out of combat, in a party, with a target → one press
+  sends `Kick on me` to party, you point at the target, the Attack ping lands on it and the skull marks
+  it, with no "interface action blocked" and no drop note. The button flashes once and the guard dims
+  every button once; `/qc debug on` shows one press and one `sent`. Result: owed
+- **ACTION-2. The same callout in combat.** As ACTION-1, in combat → all four go out, with no taint or
+  blocked-action error. Result: owed
+- **ACTION-3. No target.** As ACTION-1, with no target → the line and the emote go out (the emote with no
+  target, as typed), and chat shows `[QC] Kick: no target to ping.` and `[QC] Kick: no target to mark.`;
+  no ping lands on a unit you did not pick and nothing is marked (`exists`). Result: owed
+- **ACTION-4. The macro cap (D13, UNVERIFIED).** Set the Text to a 250-byte line, keep the emote and the
+  ping, clear the marker → What it sends reads `No line: Too long: a chat line holds 255 bytes.` and the
+  others still bake; a press performs the emote and the ping and sends no line. Then, on a dev build
+  with `B.MAX_MACRO` raised, check whether a 300-byte, four-line macro runs in full: if it does, the
+  total cap is larger than 255 and `MAX_MACRO` can be raised (the re-check trigger in
+  `known-limitations.md`). Result: owed
+- **ACTION-5. Say and an emote outdoors (UNVERIFIED).** In the open world, solo or grouped, a callout with
+  Channel Say and the emote `/wave` → one press says the line and waves: the one hardware event covers
+  the second line. Result: owed
+- **ACTION-6. During a boss encounter (UNVERIFIED).** A Line, an emote and a ping on one callout, pressed
+  on a boss → record which of the three go out (the encounter's throttle and chat lockdown), and whether
+  the press reports `sent` or one drop note naming what dropped. Result: owed
+- **ACTION-7. A locked Line beside a marker.** A callout with Channel Say and Raid marker Skull, pressed
+  under a chat lockdown (a raid boss), with a target → chat shows `[QC] <name> may not have been sent.`
+  with the lock's reason, the skull still lands, and no drop note follows for the Line. Result: owed
+- **ACTION-8. A legacy game-emote callout.** On a profile saved before this build, a Game emote callout
+  (EMOTE-3) still performs its emote on a press. Its editor shows Channel **None (no chat line)**, the
+  Text box hidden and the emote in **Emote (optional)**; its Groups row names the channel *None (no chat
+  line)*. Result: owed
 
 ## Pings
 
@@ -2663,3 +2715,5 @@ Owed from the Forever ids run (QuickComms#21, FID-1 to FID-3, `docs/superpowers/
 On 2026-11-10 the owner reported that every check owed from the WoW Forever port and emotes run (Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`) and the Forever ids run (QuickComms#21) passed. Passed, recorded on each `Result:` line as `passed (owner, 2026-11-10)`: ROLE-1 to ROLE-3, FOREVER-1 to FOREVER-25 and EMOTE-1 to EMOTE-8. FOREVER-16's line also records what the ids record showed.
 
 Owed from combined actions M1 (QuickComms#17 and #18, CA-M1-1 to CA-M1-12, `docs/superpowers/specs/2026-11-10-combined-actions-design.md` §5, §6 and §13): PING-1 to PING-5 and MARK-1 to MARK-7, new, each owed. Each runs on the build where callouts combine actions (CA-M2-1 and later), since the M1 build's one-action rule refuses the set-up's first command.
+
+Owed from combined actions M2 (QuickComms#16, CA-M2-1 to CA-M2-11, the same design §2 to §4 and §7): ACTION-1 to ACTION-8, new, each owed; EMOTE-3 and EMOTE-4 (the callout editor's four action slots and Channel None changed their expected result, so each lost its pass mark). PING-1 to PING-5 and MARK-1 to MARK-7 are runnable from this build on.

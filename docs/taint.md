@@ -16,8 +16,13 @@ run as a command.
 ## Send buttons and the pad
 
 Send buttons are `SecureActionButtonTemplate`, named `QuickCommsSend<n>`, registered for `AnyUp` and
-`AnyDown`, armed with `type=macro` and one baked `macrotext` line, and only out of combat
-(`InCombatLockdown()`, events-frames-taint-§2). A pad's root becomes protected in combat because its
+`AnyDown`, armed with `type=macro` and one baked `macrotext`, and only out of combat
+(`InCombatLockdown()`, events-frames-taint-§2). The macrotext holds one line per set action of the
+callout (the Line, an emote, a ping, a marker, in that fixed order; combined actions §3), joined with
+`"\n"` by `Bake.BakeActions` alone: the Line's text is flattened by `B.CleanText`, the other lines
+come from fixed tables, so no data byte follows a newline, and the whole macro is held to
+`B.MAX_MACRO` (255 bytes). The one secure click runs every line, so a combined press is still one
+hardware event and one write. A pad's root becomes protected in combat because its
 buttons are secure: its visibility is a `visibility` state driver, and its geometry is set only out of
 combat, through `RunOrQueue` (rebuilds, which also re-anchor it from the active profile, the end of a
 drag, Reset position). A rebuild asked for in combat is filed in SendEngine's keyed combat-end queue

@@ -411,11 +411,13 @@ window   the settings template's window, in the skin, titled Ka0s Quick Comms  (
 header   New callout / Edit callout, the gold rule under it
 body     [Name          ] [Channel       ]   the callout.* member rows' labels and help
          [Text  (i)                       ]   across both columns; (i) is the token glyph
-                                              (Game emote: the emote picker in its place)
+                                              (not drawn when Channel is None)
+         [Emote (optional)                ]   the emote picker, across both columns, always shown
+         [Ping          ] [Raid marker   ]   the callout.ping and callout.marker rows
          Icon                                 the chooser's label
          [icon] [Choose icon…] [x] Icon color the icon as drawn, the button, the color swatch
-         ------- What it sends -------         the baked line and its bytes, or why it sends
-                                              nothing, and any lock
+         ------- What it sends -------         each action's line and bytes, or why it is
+                                              skipped, the macro's bytes, and any lock
          (a gap)
          [Cancel        ] [Save          ]
          the line that names a field Save refused
@@ -437,24 +439,28 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   What it sends heading (*Preview* until item 020, QUI-L08: the Groups page's term for the same
   line) keeps a section's gap above it (`O.Section`'s 10 px): the popup sets
   `ctx.lastGroup` to the fields' group after drawing them, as `RenderRows` would.
-- **The emote channels** (QuickComms#15). The Channel dropdown lists **Emote** (`emote`, a custom
-  `/e` line from the Text box, locked as Say is) and **Game emote** (`gameEmote`,
-  one of the game's own emotes). One action per callout: a callout either sends a chat line or
-  performs one emote, never both.
-- **The emote picker.** With Game emote picked, the Text box gives way to a **Game emote** box under
+- **The four actions** (QuickComms#15, #16, #17, #18). A callout holds up to four actions, one of each
+  kind, and one press runs them all, in a fixed order: the Line, the emote, the ping, the marker
+  (`Bake.BakeActions`). The Channel dropdown sets the Line's channel; it lists **Emote** (`emote`, a
+  custom `/e` line from the Text box, locked as Say is) and, last, **None (no chat line)** (`gameEmote`,
+  the kind a game-emote callout has always stored, relabeled by D10), which hides the Text box: the
+  callout then sends no chat line, only its other actions. **Emote (optional)** is one of the game's
+  own emotes beside the Line. **Ping** (Attack, Warning, On my way, Assist) and **Raid marker** (star to
+  skull) act on your target. Save needs at least one action (*This callout has no action.*).
+- **The emote picker.** The **Emote (optional)** box, under
   the library's autocomplete (`W.Autocomplete`): typing searches the client's emotes by command or
   token, the speech emotes first, each marked *(voice)* since it also plays a sound, then the animated
   ones, then the rest (`modules/Emotes.lua`). A pick, or Enter on a typed command or token, sets the
   draft's `emote`; a Name that is empty, or still the previous pick's command, takes the new command.
   The line it sends is the client's own localized command for the token, never typed text, and a
   command the chat parser runs as something else first (`/shout`, which is Yell) is never offered.
-  Save keeps the field the channel uses and clears the other: a game emote carries no text, a chat
-  callout no token. A stored token this client lacks shows as the token and bakes nothing, saying why.
+  Emptying the box clears the draft's emote. A stored token this client lacks shows as the token and
+  drops only the emote, saying why; the other actions still bake.
 - **No Icon box.** The icon is chosen only with the chooser; the draft still carries it as a
   texture path or id, Save writes it to `callout.icon`, and that row still answers `/qc`.
 
-- **The draft.** The popup edits a plain copy of the callout's four fields and its icon's glyph
-  color (blank for Add). Choose icon… opens the icon browser over the popup; its Choose writes the
+- **The draft.** The popup edits a plain copy of the callout's fields (name, text, channel, emote,
+  ping, marker, icon) and its icon's glyph color (blank for Add: no emote, ping or marker). Choose icon… opens the icon browser over the popup; its Choose writes the
   draft's icon and color, the clear glyph empties both, and the swatch writes the draft's color.
   An icon that is no glyph drops the draft's color. Every control writes the draft, never the
   profile, and What it sends bakes the draft, so it follows each edit before anything is saved. A text
@@ -470,8 +476,11 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   The glyph is kept on the Text box's frame and reused, re-anchored on every render, and hidden
   when the box is released (an `OnRelease` callback, the library's landing-logo pattern), so a
   frame AceGUI hands to another EditBox never shows it.
-- **Save** checks the draft with the member rows' own validators (the name, the text and its
-  length, the channel, the icon, the icon's color). A field that fails keeps the popup open and names the field
+- **Save** checks the draft with the member rows' own validators, one check per field (the name;
+  the Line's text and its length in bytes, only when Channel is not None; the emote, *Pick an emote
+  from the list.*; the ping; the marker; at least one action; the channel; the icon, the icon's
+  color). Channel None writes `text = ""`, since the hidden box keeps nothing; every other action is
+  kept beside the Line. A field that fails keeps the popup open and names the field
   (an icon that is no texture names the chooser: "Icon: … Click Choose icon… and pick another.");
   otherwise Save writes one act (`Library.Batch`): for a listed callout, each field that differs
   from the copy taken when the popup opened, through the seam by id; for Add,

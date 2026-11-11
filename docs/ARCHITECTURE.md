@@ -216,7 +216,10 @@ while disabled. Events the client refuses are kept in `NS.rejectedEvents` and re
 
 Every secure rule lives in `modules/SendEngine.lua`, the only code that makes a `Secure*` frame,
 calls `SetAttribute` or registers a state driver, and `tests/test_sendengine.lua` greps every other
-shipped file to keep it so. Send buttons are armed with one baked macro line, only out of combat; a
+shipped file to keep it so. Send buttons are armed with one baked macro, only out of combat: one line
+per set action (the Line, an emote, a ping, a marker, in that order), joined with `"\n"` by Bake
+alone, so a newline never comes from callout text (`B.CleanText` flattens it), and held to 255 bytes in
+all (`B.MAX_MACRO`); a
 rebuild asked for in combat waits in a keyed combat-end queue; the click and `PreClick` hooks are
 insecure and cannot cancel a click, so the spam guard is soft. The Comms Dial is one secure header
 per dial whose restricted snippets alone act in combat, with one secure catcher per ring and a
@@ -340,7 +343,8 @@ flavor ([Per-client features](#per-client-features)). The spam guard is soft and
 line it last held; General is sent only when the client confirms channel 1 is General, else Say; a
 lockdown that clears late can keep its padlock until the next event; the dial is Relaxed only and its
 key belongs to its place in the dial order; a few battleground and instance names are ours or
-ambiguous; a ping or a marker needs a target, a raid mark needs leader or assist, macros mark at
+ambiguous; the 255-byte cap covers a callout's whole macro, so a Line beside other actions has less
+room and is refused alone when it does not fit; a ping or a marker needs a target, a raid mark needs leader or assist, macros mark at
 most three units in a short time, and a ping-only or marker-only press flashes with no confirmation;
 and another Ka0s addon carrying a newer LibKa0s runs its newer modules inside this one.
 Each, with why: [`known-limitations.md`](known-limitations.md).

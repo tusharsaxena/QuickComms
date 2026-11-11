@@ -105,18 +105,18 @@ listed task if the owner rules otherwise:
 | CA-M1-12 | Preview, tooltip and `/qc check` for a ping-only or marker-only callout | done | 6992297 |
 | CA-M1-13 | M1 docs and smoke checks | done | 4243ff8 |
 | CA-M1-14 | M1 checkpoint | done | (this commit) |
-| CA-M2-1 | Lift the one-action rule | todo | |
-| CA-M2-2 | Bake: the multi-line macro, `MAX_MACRO`, the Line budget, partial bakes | todo | |
-| CA-M2-3 | Surfaces: the `{coordinates}` re-bake refreshes the press meta | todo | |
-| CA-M2-4 | Echo grouping: one result per press, per-action lock notes | todo | |
-| CA-M2-5 | Diagnostics: `SE.Escaped` shows each newline | todo | |
-| CA-M2-6 | Preview: one echo row per action | todo | |
-| CA-M2-7 | Editor: the four-slot layout, None, Save | todo | |
-| CA-M2-8 | Editor: `check(d)` split, byte counts, `noAction` | todo | |
-| CA-M2-9 | Settings readers: `C.PreviewLines`, Groups labels and tooltip | todo | |
-| CA-M2-10 | Module and slash readers: `Pad_Render.TooltipLines`, `V.CheckLines` | todo | |
-| CA-M2-11 | Retire `slot.chatType` | todo | |
-| CA-M2-12 | M2 docs and smoke checks | todo | |
+| CA-M2-1 | Lift the one-action rule | done | ab731e3 |
+| CA-M2-2 | Bake: the multi-line macro, `MAX_MACRO`, the Line budget, partial bakes | done | f2b1106 |
+| CA-M2-3 | Surfaces: the `{coordinates}` re-bake refreshes the press meta | done | 6bbc3f4 |
+| CA-M2-4 | Echo grouping: one result per press, per-action lock notes | done | 9be1564 |
+| CA-M2-5 | Diagnostics: `SE.Escaped` shows each newline | done | 0d4db1a |
+| CA-M2-6 | Preview: one echo row per action | done | 007620d |
+| CA-M2-7 | Editor: the four-slot layout, None, Save | done | ad27930 |
+| CA-M2-8 | Editor: `check(d)` split, byte counts, `noAction` | done | c7b8c2d |
+| CA-M2-9 | Settings readers: `C.PreviewLines`, Groups labels and tooltip | done | 1722ce4 |
+| CA-M2-10 | Module and slash readers: `Pad_Render.TooltipLines`, `V.CheckLines` | done | 617dc1a |
+| CA-M2-11 | Retire `slot.chatType` | done | 9e8f327 |
+| CA-M2-12 | M2 docs and smoke checks | done | (this commit) |
 | CA-M2-13 | M2 checkpoint | todo | |
 | CA-M3-1 | BuiltIns: 12 shipped callouts gain an emote | todo | |
 | CA-M3-2 | BuiltIns: the two `healme` rows | todo | |

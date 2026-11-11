@@ -39,6 +39,15 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   rights move with the roster. Solo marking is believed to work (smoke check MARK-1).
 - Since 12.0 macros cannot mark more than three units within a very short time; a fourth mark in a
   burst does not land. Nothing in the addon counts them.
+- The 255-byte cap covers the whole macro, not each line (`B.MAX_MACRO`, combined actions §3, D13). The
+  emote, ping and marker lines are baked first; the Line gets what is left, at most 255 bytes, less
+  one byte per newline. A Line over its share is refused alone (*Too long: a chat line holds 255
+  bytes.*) and the other actions still send. The wiki's 255 for a secure button's whole macrotext is
+  not confirmed in game. Re-check trigger: smoke check ACTION-4; if it proves the cap larger, raising
+  `MAX_MACRO` is a one-line change.
+- A combined press reports one result: *sent* only when every chat action's echo came back, *dropped*
+  once, naming the action, when the first one did not. A ping or a marker beside a chat line is never
+  confirmed; only the chat actions are tracked.
 - A ping-only or marker-only press has no chat line to echo, so it reports *sent* at once and the button
   flashes (D16): the flash is not a confirmation that the ping or the mark landed.
 - Whether WoW Forever's servers deliver a ping (PING-3), and whether a mark lands in combat or during an
