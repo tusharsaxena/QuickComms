@@ -242,7 +242,7 @@ end)
 -- ── the click, the guard and the echo (spec §9.2, §9.3) ─────────────────────────────────────
 
 -- A Line-only press, as Pad's arm hands it on: its baked actions ride the meta (CA-M1-9).
-local META = { calloutId = "c1", surfaceId = "p1", chatType = "PARTY", name = "Pull",
+local META = { calloutId = "c1", surfaceId = "p1", name = "Pull",
     actions = { { kind = "line", chatType = "PARTY" } } }
 
 local function armed(NS, m, meta)
@@ -348,7 +348,7 @@ test("send: another player's message on the channel is not our echo", function()
 end)
 
 -- A CHAT_MSG_CHANNEL: the channel index is the 8th payload field (QF-04).
-local GENERAL_META = { calloutId = "c1", surfaceId = "p1", chatType = "CHANNEL", name = "Thanks",
+local GENERAL_META = { calloutId = "c1", surfaceId = "p1", name = "Thanks",
     actions = { { kind = "line", chatType = "CHANNEL" } } }
 local function channelEcho(m, index, sender, guid)
     m.__fire("CHAT_MSG_CHANNEL", "never read", sender or "Testchar-Testrealm", "", "2. Trade", "", "", 2, index,
@@ -399,7 +399,7 @@ test("send: [QFE-E1] the player's CHAT_MSG_EMOTE is an emote press's echo; anoth
     local NS, m = T.enableAddon()
     local out = results(NS)
     local b = NS.SendEngine.NewButton(m.UIParent)
-    NS.SendEngine.Arm(b, "/e waves", { calloutId = "c1", surfaceId = "p1", chatType = "EMOTE", name = "Wave",
+    NS.SendEngine.Arm(b, "/e waves", { calloutId = "c1", surfaceId = "p1", name = "Wave",
         actions = { { kind = "line", chatType = "EMOTE" } } })
     m.__now = 100
     m.__click(b)

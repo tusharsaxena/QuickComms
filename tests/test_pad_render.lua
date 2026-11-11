@@ -6,7 +6,7 @@ local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
-local ARMED = { calloutId = "c1", name = "Pull", line = "/p Pull", concrete = "party", chatType = "PARTY" }
+local ARMED = { calloutId = "c1", name = "Pull", line = "/p Pull", concrete = "party" }
 
 local function button(NS, m)
     local root = m.CreateFrame("Frame", "QuickCommsPadTest", m.UIParent)
@@ -78,7 +78,7 @@ end
 test("render: a locked button shows the padlock and names the lock; RefreshLock follows the slot", function()
     local NS, m = T.enableAddon()
     local b = button(NS, m)
-    local slot = { calloutId = "c3", name = "Shout", line = "/s Go", concrete = "say", chatType = "SAY", lock = "lockdown" }
+    local slot = { calloutId = "c3", name = "Shout", line = "/s Go", concrete = "say", lock = "lockdown" }
     m.__anchored(b.qcLabel, {})
     function b.qcLabel.ClearAllPoints(self) self.__anchors = {}; return self end
     NS.PadRender.Paint(b, slot, "iconLabel")
@@ -315,7 +315,7 @@ test("render: [icons] a glyph button is drawn in its color; the button repainted
     local NS, m = T.enableAddon()
     local b = button(NS, m)
     local star = NS.Icon("star")
-    NS.PadRender.Paint(b, { calloutId = "c1", name = "Star", line = "/p Go", concrete = "party", chatType = "PARTY",
+    NS.PadRender.Paint(b, { calloutId = "c1", name = "Star", line = "/p Go", concrete = "party",
         icon = star, iconColor = "ff0000" }, "iconLabel")
     assertEqual(b.qcIcon.__texture, star)
     -- red under: Paint setting the texture only

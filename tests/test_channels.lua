@@ -216,7 +216,6 @@ test("channels: [QFE-E1] a Groups row names Emote in the emote color; a tooltip 
     end
     -- red under: no SHORT_CHANNEL.emote, or no EMOTE color
     assertTrue(found, "the Emote row")
-    local lines = NS.PadRender.TooltipLines({ calloutId = "c", name = "Wave", line = "/e waves", concrete = "emote",
-        chatType = "EMOTE" })
+    local lines = NS.PadRender.TooltipLines({ calloutId = "c", name = "Wave", line = "/e waves", concrete = "emote" })
     assertEqual(lines[3], "Channel: |cffff8040Emote|r")
 end)

@@ -54,7 +54,7 @@ test("surfaces: in a key the default pad's plan is the M+ set, baked to /p", fun
     local pull = plan.sections[1].slots[1]
     assertEqual(pull.calloutId, T.seeded(NS, "bi.mplus.pull"))
     assertEqual(pull.line, "/p Pulling next pack")
-    assertEqual(pull.chatType, "PARTY")
+    assertEqual(table.concat(pull.chatTypes, ","), "PARTY")
     assertEqual(pull.surfaceId, "p1")
     assertEqual(pull.name, "Pulling")
 end)
@@ -64,7 +64,7 @@ test("surfaces: [review 5] a refused callout is a slot with its reason and no li
     local cid = userCallout(NS, { name = "Bad", text = "/run x", channel = "party" })
     local slot = slotOf(planFor(NS), cid)
     assertNil(slot.line)
-    assertNil(slot.chatType)
+    assertEqual(#slot.chatTypes, 0)
     assertEqual(slot.reason, "startsWithSlash")
     assertEqual(slotOf(planFor(NS), T.seeded(NS, "bi.mplus.pull")).line, "/p Pulling next pack", "the others still bake")
 end)
@@ -617,7 +617,8 @@ test("surfaces: [CA-M1-8] a slot carries its baked actions, chat types and locks
     assertEqual(#slot.skipped, 1) assertEqual(slot.skipped[1].kind, "marker")
     assertEqual(slot.skipped[1].reason, "noMarker")
     assertEqual(table.concat(slot.chatTypes, ","), "SAY")
-    assertEqual(slot.chatType, slot.chatTypes[1])
+    -- red under: S.ApplyActions still writing the single t.chatType (CA-M2-11 retires it)
+    assertNil(slot.chatType)
     assertEqual(table.concat(slot.locks, ","), "lockdown")
     assertEqual(slot.lock, "lockdown")
     assertNil(slot.reason)
@@ -694,4 +695,36 @@ test("surfaces: [CA-M1-R4] the chip lights when a later action is lockdown and t
     NS.Surfaces.RefreshLocks()
     -- red under: RefreshLocks lighting the chip on slot.lock == "lockdown"
     assertTrue(NS.State.surfacePlans.p1.lockdownChip)
+end)
+
+-- ── the single chatType is retired (CA-M2-11, combined actions §3) ─────────────────────────────
+
+test("surfaces: [CA-M2-11] no addon file reads or writes slot.chatType or meta.chatType", function()
+    local hits = {}
+    for _, rel in ipairs(T.loadAddon.tocFiles) do
+        if rel:match("%.lua$") then
+            local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
+            local src = fh:read("*a")
+            fh:close()
+            local n = 0
+            for line in src:gmatch("[^\n]+") do
+                n = n + 1
+                -- red under: Surfaces' t.chatType = t.chatTypes[1], Pad's meta chatType = slot.chatType
+                for _, pat in ipairs({ "slot%.chatType%f[^%w_]", "meta%.chatType%f[^%w_]", "t%.chatType%f[^%w_]",
+                    "chatType = slot%.", "chatType = t%." }) do
+                    if line:find(pat) then hits[#hits + 1] = rel .. ":" .. n end
+                end
+            end
+        end
+    end
+    assertEqual(#hits, 0, table.concat(hits, ", "))
+end)
+
+test("surfaces: [CA-M2-11] an armed button's meta carries chatTypes and no single chatType", function()
+    local NS = live()
+    local cid = userCallout(NS, { name = "Go", text = "go", channel = "party" })
+    local b = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertTrue(b.qcArmed)
+    assertEqual(table.concat(b.qcMeta.chatTypes, ","), "PARTY")
+    assertNil(b.qcMeta.chatType)
 end)

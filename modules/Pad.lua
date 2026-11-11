@@ -218,7 +218,7 @@ end
 local function arm(btn, slot)
     local preview = slot.preview == true
     local meta = { calloutId = slot.calloutId, surfaceId = slot.surfaceId, name = slot.name,
-        chatType = slot.chatType, chatTypes = slot.chatTypes, actions = slot.actions, locks = slot.locks,
+        chatTypes = slot.chatTypes, actions = slot.actions, locks = slot.locks,
         skipped = slot.skipped, selfText = (not preview) and slot.selfText or nil,
         echo = (preview or slot.reason == "testMode") and echoList(slot) or nil,
         lockText = (not preview) and function(lock) return lock and (R.LOCK_TEXT[lock] or tostring(lock)) end or nil }
@@ -226,7 +226,6 @@ local function arm(btn, slot)
         meta.rebake = slot.rebake
         NS.SendEngine.Arm(btn, slot.line, meta)
     else
-        meta.chatType = nil
         NS.SendEngine.Disarm(btn, meta)
     end
 end

@@ -1189,7 +1189,7 @@ Total.
 - dial layout: [autofit] automatic icon size scales with the ring and clamps
 - dial layout: [autofit] auto cap reads the automatic reach and icon size
 
-### test_surfaces.lua (34)
+### test_surfaces.lua (36)
 
 - surfaces: in a key the default pad's plan is the M+ set, baked to /p
 - surfaces: [review 5] a refused callout is a slot with its reason and no line
@@ -1225,6 +1225,8 @@ Total.
 - surfaces: [CA-M1-8] a ping-only and a marker-only callout arm; one whose only action was skipped does not
 - surfaces: [CA-M1-8] RefreshLocks relocks each action and lights the chip when any is lockdown
 - surfaces: [CA-M1-R4] the chip lights when a later action is lockdown and the first lock is not
+- surfaces: [CA-M2-11] no addon file reads or writes slot.chatType or meta.chatType
+- surfaces: [CA-M2-11] an armed button's meta carries chatTypes and no single chatType
 
 ### test_pad_render.lua (28)
 
@@ -2224,7 +2226,7 @@ Total.
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 31 |
-| test_surfaces.lua | 34 |
+| test_surfaces.lua | 36 |
 | test_pad_render.lua | 28 |
 | test_pad_looks.lua | 21 |
 | test_pad_header.lua | 9 |
@@ -2265,4 +2267,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1903** |
+| **Total** | **1905** |

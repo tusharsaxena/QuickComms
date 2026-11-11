@@ -107,7 +107,8 @@ end
 
 --- Write BakeActions' `info` into `t`, a slot or a button's press meta (combined actions §3):
 --- t.actions the baked actions, t.skipped the rest, t.chatTypes each baked chat action's chat type
---- (t.chatType the first), t.locks each lock (t.lock the first) and t.concrete the first concrete.
+--- (the single chatType is retired, CA-M2-11), t.locks each lock (t.lock the first) and t.concrete
+--- the first concrete.
 --- The slot's bake and SendEngine's press-time re-bake share it, so the echo never waits for an
 --- action the macro no longer holds.
 function S.ApplyActions(t, info)
@@ -119,7 +120,6 @@ function S.ApplyActions(t, info)
         if a.chatType then t.chatTypes[#t.chatTypes + 1] = a.chatType end
         t.concrete = t.concrete or a.concrete
     end
-    t.chatType = t.chatTypes[1]
     slotLocks(t)
     return t
 end
