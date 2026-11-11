@@ -90,7 +90,7 @@ listed task if the owner rules otherwise:
 | CA-M0-2 | `tests/test_locale.lua`: the locale union gates | done | a343b5e |
 | CA-M0-3 | Split settings-only strings into `locales/enUS_Settings.lua` | done | 1ac626d |
 | CA-M0-4 | M0 docs | done | a84354d |
-| CA-M0-5 | M0 checkpoint | done | (this commit) |
+| CA-M0-5 | M0 checkpoint | done | 0c74cfe |
 | CA-M1-1 | Mock: ping, marker and target surfaces | done | 3964c38 |
 | CA-M1-2 | Compat: ping, marker, target and rights readers | done | a6dcdd6 |
 | CA-M1-3 | Library: `ValidPing`, `ValidMarker`, `HasAction`, the M1 one-action rule | done | 1598baa |
@@ -103,8 +103,8 @@ listed task if the owner rules otherwise:
 | CA-M1-10 | Send path: press-time reasons read in PreClick | done | a43fa3e |
 | CA-M1-11 | Popup: the draft carries `emote`, `ping` and `marker` | done | 19f5d0d |
 | CA-M1-12 | Preview, tooltip and `/qc check` for a ping-only or marker-only callout | done | 6992297 |
-| CA-M1-13 | M1 docs and smoke checks | done | (this commit) |
-| CA-M1-14 | M1 checkpoint | todo | |
+| CA-M1-13 | M1 docs and smoke checks | done | 4243ff8 |
+| CA-M1-14 | M1 checkpoint | done | (this commit) |
 | CA-M2-1 | Lift the one-action rule | todo | |
 | CA-M2-2 | Bake: the multi-line macro, `MAX_MACRO`, the Line budget, partial bakes | todo | |
 | CA-M2-3 | Surfaces: the `{coordinates}` re-bake refreshes the press meta | todo | |
@@ -154,6 +154,7 @@ listed task if the owner rules otherwise:
 |---|---|---|---|---|
 | baseline | 2026-11-10 | 1780/0/1 skip; 1780/0/1 skip; 0/0 (172 files) | 37a1e7b | n/a |
 | M0 | 2026-11-11 | 1791/0/1 skip; 1791/0/1 skip; 0/0 (174 files) | a84354d | yes (no R fix commits in M0; no owner ruling asks at M0) |
+| M1 | 2026-11-11 | 1860/0/1 skip; 1860/0/1 skip; 0/0 (174 files) | 9891167 | yes (review fix commits CA-M1-R1 a75b0c9, R2 364bc97, R3 00b2182, R4 2f24385, R5 9891167; owner asks D10 and D16; on the M1 build a ping-only or marker-only callout cannot be set up, only a legacy callout with no action takes one through `/qc set`, so #17/#18 and PING-1..5, MARK-1..7 are reachable from CA-M2-1 on) |
 
 ---
 
