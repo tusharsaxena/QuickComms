@@ -474,6 +474,39 @@ test("autothank: [CA-M4-7] the diff waits while in combat or on the edge, and do
     assertEqual(#got, 0, "a clean set is not diffed")
 end)
 
+test("autothank: [CA-M4-R2] buffs held before a /reload in combat are not thanked after the fight", function()
+    local NS, m, got = detecting()
+    local held = {}
+    for i = 1, 3 do held[i] = buff(m, { spellId = 6000 + i }) end
+    -- the /reload in combat: the known set starts empty and the first snapshot reads restricted
+    NS.State.thankKnown, NS.State.thankDirty, NS.State.combatEdge = {}, false, nil
+    m.__setCombat(true)
+    local secret = {}
+    for i, a in ipairs(held) do secret[i] = T.secret(a.auraInstanceID) end
+    m.auraInstanceIDs = secret
+    assertFalse(NS.AutoThank.Snapshot())
+    NS.AutoThank.OnAura("player", m.secretAuraUpdate{ isFullUpdate = true })
+    m.auraInstanceIDs = nil
+    fightOver(m)
+    -- red under: a diff that takes every held buff as fresh against the empty set
+    assertEqual(#got, 0, "no burst for the buffs held before the reload")
+    assertTrue(NS.State.thankKnown[held[1].auraInstanceID], "they are the baseline now")
+    assertFalse(NS.State.thankDirty)
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { buff(m, { spellId = 1126 }) } })
+    assertEqual(#got, 1, "a buff gained after the baseline is still thanked")
+end)
+
+test("autothank: [CA-M4-R2] a known set kept across the fight still thanks the buff gained in it", function()
+    local NS, m, got = detecting()
+    buff(m, { spellId = 6001 })
+    assertTrue(NS.AutoThank.Snapshot())
+    edgeOn(m)
+    m.__setCombat(true)
+    NS.AutoThank.OnAura("player", m.secretAuraUpdate{ addedAuras = { buff(m, { spellId = 1126 }) } })
+    fightOver(m)
+    assertEqual(#got, 1, "only the new one")
+end)
+
 -- ── the toast host and its throttle (CA-M4-9, spec §9 The toast) ────────────────────────────────
 
 -- An enabled addon whose toast's Show calls are recorded with the time each was made.

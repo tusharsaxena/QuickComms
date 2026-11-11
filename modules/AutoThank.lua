@@ -135,7 +135,9 @@ end
 -- ── detection (spec §9 Detection, D3) ───────────────────────────────────────────────────────────
 -- State.thankKnown is the plain set of the player's helpful auraInstanceIDs, so a buff is offered
 -- once, when it is new. State.thankDirty says a change went unread (in combat, or a secret payload):
--- the after-combat diff (CA-M4-7) catches it up.
+-- the after-combat diff (CA-M4-7) catches it up. State.thankNeedsBaseline says the last snapshot was
+-- restricted (a login, /reload or registration in combat), so the set is no baseline at all: the next
+-- diff re-snapshots quietly instead of taking every buff the player holds as new.
 
 State.thankKnown = State.thankKnown or {}
 
@@ -145,16 +147,16 @@ function AT.Offer(candidate) -- luacheck: ignore 212
 end
 
 --- Re-read the known set from the player's helpful auras, quietly. A restricted read (nil) leaves
---- the set as it is and marks it dirty.
+--- the set as it is, marks it dirty and asks the next diff for a baseline.
 function AT.Snapshot()
     local ids = NS.Compat.HelpfulAuraIds()
     if not ids then
-        State.thankDirty = true
+        State.thankDirty, State.thankNeedsBaseline = true, true
         return false
     end
     local known = {}
     for _, id in ipairs(ids) do known[id] = true end
-    State.thankKnown = known
+    State.thankKnown, State.thankNeedsBaseline = known, nil
     return true
 end
 
@@ -206,10 +208,16 @@ local function byNewest(a, b) return a > b end
 --- Catch a dirty known set up: every helpful aura the player holds that the set lacks, the newest
 --- C.THANK.COMBAT_QUEUE first, is offered when it passes AT.Accept; an expired aura or an unreadable
 --- caster drops quietly. Does nothing when the set is clean, while fighting, when auto-thank is off
---- here, or while the read is still restricted (the set stays dirty).
+--- here, or while the read is still restricted (the set stays dirty). With no baseline (a restricted
+--- snapshot, State.thankNeedsBaseline) it only re-snapshots, so a login or /reload never bursts.
 --- @return boolean diffed
 function AT.Diff()
     if not State.thankDirty or fighting() or not wanted() then return false end
+    if State.thankNeedsBaseline then
+        if not AT.Snapshot() then return false end
+        State.thankDirty = false
+        return true
+    end
     local current = NS.Compat.HelpfulAuraIds()
     if not current then return false end
     local fresh = {}

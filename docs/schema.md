@@ -147,6 +147,7 @@ Session-only, in `NS.State` (`core/State.lua` declares the shared ones) and rese
 | `restrictionLiftTimer` | `modules/Restrictions.lua` | `R.RefreshAfterLift`; canceled by the stand-down | the one pending late re-read after an encounter or a key ends |
 | `thankKnown` | `modules/AutoThank.lua` | `AT.Snapshot` (when the frame registers, on a full update), `AT.OnAura` (plain payloads, out of combat), `AT.Diff` | the plain set of the player's helpful aura instance ids, so a buff is offered once, when it is new |
 | `thankDirty` | `modules/AutoThank.lua` | `AT.OnAura` (in combat, or a secret payload), `AT.Snapshot`, `AT.Diff` | a change went unread: the after-combat diff catches it up |
+| `thankNeedsBaseline` | `modules/AutoThank.lua` | `AT.Snapshot` (set when its read is restricted, cleared when it succeeds) | the known set is no baseline (a login, /reload or registration in combat): the next diff re-snapshots quietly and offers nothing |
 | `thankCooldown` | `modules/AutoThank.lua` | `AT.Stamp`, at the offer | the last toast time per caster GUID and spell id (`C.THANK.COOLDOWN`, 600 s) |
 
 Local to one file, never in `NS.State`: the callout popup's draft (`settings/CalloutPopup.lua`,
