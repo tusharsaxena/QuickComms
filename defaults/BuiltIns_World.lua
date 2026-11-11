@@ -12,13 +12,13 @@ BI.Group(ID, {
     name = L["Solo"], glyph = "gi:world", color = C.green,
     when = { content = { openWorld = true }, group = { solo = true } },
     callouts = BI.Callouts(ID, "general", {
-        { "rare",   L["Rare spotted"],  L["Rare spotted: {target} @ {coordinates}"], "gi:spyglass", C.gold },
-        { "elite",  L["Elite help"],    L["Can anyone help with this elite? {target} @ {coordinates}"], "gi:ogre", C.red },
+        { "rare",   L["Rare spotted"],  L["Rare spotted: {target} @ {coordinates}"], "gi:spyglass", C.gold, { emote = "POINT" } },
+        { "elite",  L["Elite help"],    L["Can anyone help with this elite? {target} @ {coordinates}"], "gi:ogre", C.red, { emote = "HELPME" } },
         { "quest",  L["Group quest"],   L["Anyone want to group up for this quest?"], "gi:scroll-unfurled", C.gold },
         { "boss",   L["World boss"],    L["World boss up: {target} @ {coordinates}"], "gi:crowned-skull", C.red },
         { "event",  L["Event here"],    L["World event starting @ {coordinates}, come join"], "gi:ringing-bell", C.orange },
         { "invite", L["Invite me"],     L["Invite please"], "gi:envelope", C.blue },
-        { "thanks", L["Thanks"],        L["Thanks for the help!"], "gi:shaking-hands", C.green },
+        { "thanks", L["Thanks"],        L["Thanks for the help!"], "gi:shaking-hands", C.green, { emote = "THANK" } },
     }),
 })
 

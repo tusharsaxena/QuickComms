@@ -14,17 +14,17 @@ BI.Group(ID, {
     name = L["In Group"], glyph = "ph:users-three", color = C.cyan,
     when = { group = { party = true, raid = true, instance = true } },
     callouts = BI.Callouts(ID, "smartGroup", {
-        { "hello",  L["Hello"],        L["Hello!"],              "ph:hand-waving",   C.sky },
+        { "hello",  L["Hello"],        L["Hello!"],              "ph:hand-waving",   C.sky, { emote = "WAVE" } },
         { "stone",  L["At Stone"],     L["At stone, WM off."],   "gi:tombstone-sbed", C.purple },
         { "summon", L["Summon"],       L["Summon please!"],      "gi:magic-portal",  C.purple },
         { "buffs",  L["Buffs please"], L["Buffs please!"],       "gi:muscle-up",     C.purple },
         { "hs",     L["Healthstone"],  L["Healthstone please!"], "gi:health-potion", C.purple },
-        { "tyff",   L["tyff"],         L["tyff"],                "gi:hot-meal",      C.purple },
+        { "tyff",   L["tyff"],         L["tyff"],                "gi:hot-meal",      C.purple, { emote = "THANK" } },
         { "brb",    L["brb"],          L["brb"],                 "gi:coffee-cup",    C.crimson },
-        { "ready",  L["Ready"],        L["Ready"],               "gi:check-mark",    C.green },
-        { "glhf",   L["GLHF"],         L["GLHF!"],               "ph:clover",        C.green },
-        { "ggty",   L["ggty"],         L["ggty"],                "gi:shaking-hands", C.gold },
-        { "ggnt",   L["ggnt"],         L["ggnt"],                "gi:thumb-up",      C.gold },
+        { "ready",  L["Ready"],        L["Ready"],               "gi:check-mark",    C.green, { emote = "READY" } },
+        { "glhf",   L["GLHF"],         L["GLHF!"],               "ph:clover",        C.green, { emote = "CHEER" } },
+        { "ggty",   L["ggty"],         L["ggty"],                "gi:shaking-hands", C.gold, { emote = "THANK" } },
+        { "ggnt",   L["ggnt"],         L["ggnt"],                "gi:thumb-up",      C.gold, { emote = "BYE" } },
     }),
 })
 

@@ -16,7 +16,7 @@ local raid = BI.Callouts(ID, "raid", {
 })
 local lead = BI.Callouts(ID, "smartLead", {
     { "pull10",  L["Pull in 10"],    L["Pull in 10"], "gi:stopwatch-lorc", C.gold },
-    { "wipe",    L["Wipe"],          L["Wipe it, run back"], "gi:skull-crossed-bones", C.red },
+    { "wipe",    L["Wipe"],          L["Wipe it, run back"], "gi:skull-crossed-bones", C.red, { emote = "FLEE" } },
 })
 for _, id in ipairs(lead) do raid[#raid + 1] = id end
 

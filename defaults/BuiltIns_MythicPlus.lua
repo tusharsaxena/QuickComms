@@ -11,9 +11,9 @@ BI.Group(ID, {
     name = L["Dungeon"], glyph = "gi:dungeon-gate", color = C.purple,
     when = { content = { dungeon = true, mythicPlus = true } },
     callouts = BI.Callouts(ID, "smartGroup", {
-        { "pull",   L["Pulling"],        L["Pulling next pack"], "gi:crossed-swords", C.orange },
+        { "pull",   L["Pulling"],        L["Pulling next pack"], "gi:crossed-swords", C.orange, { emote = "CHARGE" } },
         { "lust",   L["Lust"],           L["Lust on this pack"], "gi:enrage", C.red },
-        { "mana",   L["Need mana"],      L["Wait, need mana"], "gi:water-drop", C.blue },
+        { "mana",   L["Need mana"],      L["Wait, need mana"], "gi:water-drop", C.blue, { emote = "OOM" } },
         { "skip",   L["Skipping"],       L["Skipping with invis/shroud"], "gi:invisible", C.cyan },
         { "res",    L["Res me"],         L["Res me pls"], "gi:hospital-cross", C.green },
         { "chain",  L["Chain pull"],     L["Chain pulling"], "gi:crossed-chains", C.yellow },

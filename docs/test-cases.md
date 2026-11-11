@@ -470,7 +470,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (34)
+### test_builtins.lua (37)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -506,6 +506,9 @@ Total.
 - builtins: [CA-M1-6] the Emotes set's data is as it shipped
 - builtins: [CA-M1-6] every shipped callout passes the callout check and holds an action
 - builtins: [CA-M1-6] no seeded callout keeps the catalog glyph name
+- builtins: [CA-M3-1] twelve shipped callouts carry an emote beside their line, exactly the spec's list
+- builtins: [CA-M3-1] Arena and every battleground set carry no emote (F4b: pvpMatch padlocks one)
+- builtins: [CA-M3-1] #20: Hello in a party sends its line, then its wave, on one press
 
 ### test_gameids.lua (5)
 
@@ -2205,7 +2208,7 @@ Total.
 | test_emotes.lua | 19 |
 | test_bake.lua | 25 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 34 |
+| test_builtins.lua | 37 |
 | test_gameids.lua | 5 |
 | test_client_data.lua | 9 |
 | test_library.lua | 83 |
@@ -2271,4 +2274,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1909** |
+| **Total** | **1912** |
