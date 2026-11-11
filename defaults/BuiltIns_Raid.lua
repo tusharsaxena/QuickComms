@@ -13,6 +13,7 @@ local raid = BI.Callouts(ID, "raid", {
     { "spread",  L["Spread"],        L["Spread for mechanic"], "gi:divergence", C.cyan },
     { "stack",   L["Stack"],         L["Stack on {rt1}"], "gi:meeple-group", C.white },
     { "stones",  L["Healthstones"],  L["Healthstones/cauldron down"], "gi:emerald", C.green },
+    { "healme",  L["Heal me"],       L["Need heals on me!"], "gi:heart-plus", C.green, { emote = "HEALME" } },
 })
 local lead = BI.Callouts(ID, "smartLead", {
     { "pull10",  L["Pull in 10"],    L["Pull in 10"], "gi:stopwatch-lorc", C.gold },

@@ -701,7 +701,7 @@ test("groups page: [restore] Restore built-in groups brings back a deleted set a
     local pad = NS.db.profile.pads.p1.groups
     assertEqual(pad[#pad], raid, "at the end of the pad")
     local text = table.concat(m.prints, "\n")
-    assertTrue(text:find("1 groups and 8 callouts came back", 1, true) ~= nil, text)
+    assertTrue(text:find("1 groups and 9 callouts came back", 1, true) ~= nil, text)
     m.prints = {}
     P.flush()
     P.find(P.redraw("groups"), "Button", "Restore built-in groups"):__fire("OnClick")

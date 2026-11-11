@@ -50,7 +50,7 @@ test("surfaces: in a key the default pad's plan is the M+ set, baked to /p", fun
     assertTrue(plan.hasActive)
     assertEqual(plan.sections[1].title, "Dungeon")
     assertEqual(plan.sections[2].title, "In Group")
-    assertEqual(#plan.sections[1].slots, 7)
+    assertEqual(#plan.sections[1].slots, 8, "Heal me is the eighth (CA-M3-2)")
     local pull = plan.sections[1].slots[1]
     assertEqual(pull.calloutId, T.seeded(NS, "bi.mplus.pull"))
     assertEqual(pull.line, "/p Pulling next pack")

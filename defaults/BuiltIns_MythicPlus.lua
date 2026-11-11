@@ -18,6 +18,7 @@ BI.Group(ID, {
         { "res",    L["Res me"],         L["Res me pls"], "gi:hospital-cross", C.green },
         { "chain",  L["Chain pull"],     L["Chain pulling"], "gi:crossed-chains", C.yellow },
         { "kicks",  L["Kick order"],     L["Kick order: {rt1} {rt2} {rt3}"], "gi:foot-plaster", C.purple },
+        { "healme", L["Heal me"],        L["Need heals!"], "gi:heart-plus", C.green, { emote = "HEALME" } },
     }),
 })
 

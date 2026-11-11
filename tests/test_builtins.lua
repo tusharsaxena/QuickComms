@@ -659,7 +659,9 @@ test("builtins: [CA-M3-1] twelve shipped callouts carry an emote beside their li
     local _, BI = bi()
     local got = {}
     for cid, c in pairs(BI.callouts) do
-        if c.emote and not cid:match("^bi%.emotes%.") then got[#got + 1] = cid .. "=" .. c.emote end
+        if c.emote and not cid:match("^bi%.emotes%.") and not cid:match("%.healme$") then
+            got[#got + 1] = cid .. "=" .. c.emote
+        end
     end
     table.sort(got)
     local want = {}
@@ -699,4 +701,62 @@ test("builtins: [CA-M3-1] #20: Hello in a party sends its line, then its wave, o
     assertEqual(#lines, 2)
     assertEqual(lines[1], "/p Hello!")
     assertEqual(lines[2], EMOTES.commands[EMOTES[CLIENT].WAVE])
+end)
+
+test("builtins: [CA-M3-2] Dungeon and Raid gain a Heal me callout with the HEALME emote, in place", function()
+    local _, BI = bi()
+    local C = BI.COLOR
+    local want = { ["bi.mplus.healme"] = { "Need heals!", "smartGroup", "bi.mplus.kicks", 8 },
+        ["bi.raid.healme"] = { "Need heals on me!", "raid", "bi.raid.stones", 7 } }
+    for cid, w in pairs(want) do
+        local c = BI.callouts[cid]
+        -- red under: no healme row in defaults/BuiltIns_MythicPlus.lua or defaults/BuiltIns_Raid.lua
+        assertTrue(c ~= nil, cid .. " is shipped")
+        assertEqual(c.name, "Heal me", cid)
+        assertEqual(c.text, w[1], cid)
+        assertEqual(c.channel, w[2], cid)
+        assertEqual(c.emote, "HEALME", cid)
+        assertEqual(c.glyph, "gi:heart-plus", cid)
+        assertEqual(c.iconColor, C.green, cid)
+        assertNil(c.ping, cid) assertNil(c.marker, cid)
+        local list = BI.groups[cid:match("^(.*)%.healme$")].callouts
+        assertEqual(list[w[4]], cid, cid .. " in place")
+        assertEqual(list[w[4] - 1], w[3], cid .. " right after its predecessor")
+    end
+    assertEqual(BI.groups["bi.raid"].callouts[8], "bi.raid.pull10", "the lead list after the raid list")
+end)
+
+test("builtins: [CA-M3-2] set sizes: Solo 7, In Group 11, Dungeon 8, Raid 9; none over a dial's slices", function()
+    local NS, BI = bi()
+    local sizes = { ["bi.world"] = 7, ["bi.group"] = 11, ["bi.mplus"] = 8, ["bi.raid"] = 9 }
+    for gid, n in pairs(sizes) do assertEqual(#BI.groups[gid].callouts, n, gid) end
+    for gid in pairs(sizes) do
+        assertTrue(#BI.groups[gid].callouts <= NS.DialLayout.MAX_SLICES, gid .. " fits one Auto page")
+    end
+end)
+
+test("builtins: [CA-M3-2] a fresh profile seeds both Heal me callouts; no Auto dial gains a page", function()
+    local NS = T.enableAddon()
+    local p, Lib = NS.db.profile, NS.Library
+    local snap = NS.Situation.Current()
+    for _, set in ipairs({ "bi.world", "bi.group", "bi.mplus", "bi.raid" }) do
+        local gid = T.seeded(NS, set)
+        local group = { id = gid, title = set, slots = {} }
+        for _, cid in ipairs(Lib.Group(gid).callouts) do
+            group.slots[#group.slots + 1] = NS.Surfaces.Slot(cid, Lib.Callout(cid), snap, { soloFallback = "none", ctx = {} })
+        end
+        local rings, open = NS.DialLayout.Rings({ group }, { slices = NS.DialLayout.AUTO, title = "Comms Dial" })
+        assertEqual(rings[open].pages, 1, set .. " on one Auto page")
+    end
+    for _, set in ipairs({ "bi.mplus", "bi.raid" }) do
+        local id = T.seeded(NS, set .. ".healme")
+        -- red under: Heal me shipped but not seeded into its set
+        assertTrue(id ~= nil, set .. ".healme seeded")
+        local c = p.callouts[id]
+        assertEqual(c.emote, "HEALME")
+        assertEqual(c.icon, NS.Icon("gi:heart-plus"))
+        assertNil(c.glyph)
+    end
+    local list = p.groups[T.seeded(NS, "bi.raid")].callouts
+    assertEqual(p.callouts[list[7]].origin, "bi.raid.healme", "seeded in shipped order")
 end)
