@@ -102,9 +102,10 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
   voice calls first (`/incoming`, `/oom`, `/healme`...), then the social ones (`/wave`, `/thank`,
   `/dance`...).
 - Twelve of the built-in callouts perform a fitting emote with their line: Hello waves, Ready readies,
-  GLHF cheers, the thanks callouts `/thank`, Rare spotted points at the rare, Pulling charges, Need
-  mana says you are out of mana and Wipe flees. Dungeon and Raid each gain a Heal me callout ("Need
-  heals!") with the `/healme` voice emote. An existing profile gets the emote only on the callouts you
+  GLHF cheers, the three thanks callouts `/thank`, ggnt says bye, Rare spotted points at the rare,
+  Elite help asks for help, Pulling charges, Need mana says you are out of mana and Wipe flees. Dungeon
+  and Raid each gain a Heal me callout ("Need heals!" in Dungeon, "Need heals on me!" in Raid) with the
+  `/healme` voice emote. An existing profile gets the emote only on the callouts you
   left as shipped, and the Heal me callout once; arena and battleground callouts gain none, since the
   game locks emotes in a PvP match.
 - The ping is Attack, Warning, On my way or Assist, and the raid marker anything from star to skull.
