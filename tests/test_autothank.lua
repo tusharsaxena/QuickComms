@@ -882,6 +882,25 @@ test("autothank: [CA-M4-R1] the stand-down forgets a drag in progress", function
     assertNil(TH.dragging)
 end)
 
+test("autothank: [CA-M5-2] the toast's dragged spot is written through the schema seam, which refuses a bad point", function()
+    local NS, m, TH = hosting()
+    local t = NS.db.profile.thank
+    local f = TH.toast:FrameFor(offer(NS, m, 1))
+    f:ClearAllPoints()
+    f:SetPoint("BOTTOMLEFT", m.UIParent, "BOTTOMLEFT", 40, 60)
+    f:__fire("OnDragStart")
+    f:__fire("OnDragStop")
+    assertEqual(type(t.position), "table", "a drag stores the spot")
+    assertTrue(TH.SavePosition({ "TOP", "TOP", 0, -100 }))
+    assertEqual(table.concat(t.position, ","), "TOP,TOP,0,-100")
+    -- red under: setPosition writing db.profile.thank.position itself
+    assertFalse(TH.SavePosition({ "NOWHERE", "TOP", 0, 0 }), "an unknown anchor is refused")
+    assertFalse(TH.SavePosition({ "TOP", "TOP", 0, 1e9 }), "an off-screen point is refused")
+    assertEqual(table.concat(t.position, ","), "TOP,TOP,0,-100", "and the stored spot is kept")
+    assertTrue(TH.SavePosition(nil), "the library's reset")
+    assertEqual(t.position, false)
+end)
+
 test("autothank: [CA-M5-2] a drag the combat edge cuts short holds no later toast's fade", function()
     local NS, m, TH = hosting()
     local C = NS.Constants.THANK

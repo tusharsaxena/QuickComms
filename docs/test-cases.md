@@ -1040,7 +1040,7 @@ Total.
 - send: [CA-M2-4] every action a locked chat action: print each, then no tick and no echo
 - send: [CA-M2-4] a locked Line beside a ping ticks and reports sent at once
 
-### test_autothank.lua (65)
+### test_autothank.lua (66)
 
 - autothank: [CA-M4-4] Accept takes a stranger's helpful buff (isFromPlayerOrPlayerPet is any player's)
 - autothank: [CA-M4-4] Accept rejects a harmful aura, an NPC's, no caster, and anything not plainly true
@@ -1096,6 +1096,7 @@ Total.
 - autothank: [CA-M4-11] the library hides the toast at DURATION
 - autothank: [CA-M4-R1] a drag holds every toast's fade as the library holds its countdown
 - autothank: [CA-M4-R1] the stand-down forgets a drag in progress
+- autothank: [CA-M5-2] the toast's dragged spot is written through the schema seam, which refuses a bad point
 - autothank: [CA-M5-2] a drag the combat edge cuts short holds no later toast's fade
 - autothank: [CA-M4-12] the Thank click runs the macro of each mode
 - autothank: [CA-M4-12] a right-click never runs the macro
@@ -2337,7 +2338,7 @@ Total.
 | test_check.lua | 9 |
 | test_send_guard.lua | 13 |
 | test_sendengine.lua | 49 |
-| test_autothank.lua | 65 |
+| test_autothank.lua | 66 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
@@ -2387,4 +2388,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2021** |
+| **Total** | **2022** |

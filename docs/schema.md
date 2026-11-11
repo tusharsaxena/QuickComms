@@ -59,7 +59,7 @@ Exactly two (savedvariables-§4):
 | `thank.mute` | `"none"` | General, `/qc set` | whose buffs show no toast: `none`, `strangers` or `known` (friends and guildmates) |
 | `thank.content.<kind>` | `openWorld` `true`, the other eight `false` | the Where tab (one box per kind this client offers), `/qc set` | the content kinds auto-thank listens in; a row for each of the nine kinds on both clients, so the stored set has one shape |
 | `thank.raidBuffsOnly` | `false` | the Filter tab, `/qc set` | toast only the buffs in `NS.GameIds.THANK_RAID_BUFFS` |
-| `thank.position` | `false` (the library's spot, TOP 0,-180) | the toast's drag (`setPosition`), `/qc reset thank.position` | the toast's saved anchor, `{ point, relativePoint, x, y }`; drawn by no widget, reset-exempt, so a page's Defaults keeps it |
+| `thank.position` | `false` (the library's spot, TOP 0,-180) | the toast's drag (`TH.SavePosition`, through the seam, so `ValidPoint` refuses a bad point), `/qc reset thank.position` | the toast's saved anchor, `{ point, relativePoint, x, y }`; drawn by no widget, reset-exempt, so a page's Defaults keeps it |
 
 **Member rows** are how a member's fields are reached. Every field a player sets on a member is a
 row whose path starts with the member's kind (`callout.*`, `group.*`, `pad.*`, `dial.*`). The seam's

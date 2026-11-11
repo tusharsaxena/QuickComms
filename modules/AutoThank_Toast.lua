@@ -173,6 +173,16 @@ function TH.Build(frame, payload)
     return nil, nil
 end
 
+--- The toast's dragged spot ({ point, relativePoint, x, y }, or nil for the library's own), written
+--- through the schema seam as the `thank.position` row, the way a pad's drag writes `pad.point`
+--- (Library.SetSurfacePoint), so the row's ValidPoint refuses a malformed or off-screen point.
+--- @return boolean stored
+function TH.SavePosition(point)
+    local ok, err = NS.SchemaRuntime.Set("thank.position", point or false)
+    if not ok then NS.Debug("Thank", "toast move refused: %s", tostring(err)) end
+    return ok == true
+end
+
 TH.toast = TH.toast or NS.NewToast{
     name = "QuickCommsThankToast",
     build = function(frame, payload) return TH.Build(frame, payload) end,
@@ -185,10 +195,7 @@ TH.toast = TH.toast or NS.NewToast{
         local t = thankSettings()
         return t and type(t.position) == "table" and t.position or nil
     end,
-    setPosition = function(point)
-        local t = thankSettings()
-        if t then t.position = point or false end
-    end,
+    setPosition = function(point) TH.SavePosition(point) end,
     -- The library's point form, { point, relativePoint, x, y }: clear of the default pad (CENTER 0,-150).
     defaultPosition = { "TOP", "TOP", 0, -180 },
 }
