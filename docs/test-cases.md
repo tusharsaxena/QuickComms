@@ -666,7 +666,7 @@ Total.
 - editors: [preview table] TableRows draws a header, then a boxed row per entry: its name in one cell, its text in the other
 - editors: [preview table] a table row gives its text the width the name leaves, and grows with the text
 
-### test_callout_popup.lua (51)
+### test_callout_popup.lua (55)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -719,6 +719,10 @@ Total.
 - popup: [CA-M2-7] Add opens with no emote, ping or marker
 - popup: [CA-M2-7] D10: the Channel list and the Groups rows call gameEmote None (no chat line)
 - popup: [CA-M2-7] the window is measured again when the channel swaps the Text line in or out
+- popup: [CA-M2-8] the Line is counted in bytes: 255 two-byte letters' worth is refused, 255 bytes saves
+- popup: [CA-M2-8] no action at all is refused by the check, naming the rule, and nothing is created
+- popup: [CA-M2-8] a bad emote, ping or marker names its own field
+- popup: [CA-M2-8] a ping-only callout with an empty Line on a chat channel still saves
 
 ### test_icon_browser.lua (14)
 
@@ -2190,7 +2194,7 @@ Total.
 | test_library.lua | 83 |
 | test_members.lua | 28 |
 | test_editors.lua | 19 |
-| test_callout_popup.lua | 51 |
+| test_callout_popup.lua | 55 |
 | test_icon_browser.lua | 14 |
 | test_window_icons.lua | 5 |
 | test_groups_when.lua | 21 |
@@ -2250,4 +2254,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1888** |
+| **Total** | **1892** |

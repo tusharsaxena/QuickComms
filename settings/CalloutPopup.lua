@@ -119,11 +119,6 @@ local function copyFields(c)
     return out
 end
 
--- UTF-8 characters in `s`, as the EditBox counts its letters.
-local function chars(s)
-    return select(2, s:gsub("[^\128-\191]", ""))
-end
-
 -- Put every control and line the popup draws back to the draft (a draft write is no seam write, so
 -- nothing else refreshes them).
 local function refresh()
@@ -187,31 +182,81 @@ local function draftRows()
     return out
 end
 
--- Check the draft with the member rows' validators. Answers the field that failed and why.
-local function check(d)
+-- THE CHECK (combined actions §7, CA-M2-8): the draft's name, then each action, then the action rule,
+-- then the channel and the icon, each its own small function. A failure answers the field, the label
+-- the player reads it under (nil for the rule, which names itself) and why.
+
+-- The Line, only when Channel is not None: text that is a string, and at most MAX_BYTES bytes (the
+-- caps are bytes, Bake.lua; the box's maxLetters counts letters). An empty Line is no Line, which
+-- the action rule judges, so a ping-only callout on a chat channel still saves.
+local function checkLine(d)
+    if isGameEmote(d) then return nil end
+    local text = Ed.Row("callout.text")
+    local ok, why = text.validate(d.text)
+    if ok and NS.Bake.Length(d.text) > NS.Bake.MAX_BYTES then
+        ok, why = false, L["Text is at most %d bytes."]:format(NS.Bake.MAX_BYTES)
+    end
+    if not ok then return "text", text.label, why end
+    return nil
+end
+
+-- The emote, only when one is set: a token the picker could have picked.
+local function checkEmote(d)
+    if d.emote and not Ed.Row("callout.emote").validate(d.emote) then
+        return "emote", L["Emote (optional)"], L["Pick an emote from the list."]
+    end
+    return nil
+end
+
+-- A ping or a marker, only when set, by its member row's own check.
+local function checkChoice(field)
+    return function(d)
+        if d[field] == nil then return nil end
+        local row = Ed.Row("callout." .. field)
+        local ok, why = row.validate(d[field])
+        if not ok then return field, row.label, why end
+        return nil
+    end
+end
+local checkPing, checkMarker = checkChoice("ping"), checkChoice("marker")
+
+local function checkActions(d)
+    if not NS.Library.HasAction(d) then return "noAction", nil, NS.Library.ACTION_WHY.noAction end
+    return nil
+end
+
+local function checkName(d)
     local name = Ed.Row("callout.name")
     local ok, why = name.validate(d.name)
     if not ok then return "name", name.label, why end
-    if d.emote and not Ed.Row("callout.emote").validate(d.emote) then
-        return "emote", L["Game emote"], L["Pick an emote from the list."]
-    end
-    if not isGameEmote(d) then
-        local text = Ed.Row("callout.text")
-        ok, why = text.validate(d.text)
-        if ok and chars(d.text) > text.maxLetters then
-            ok, why = false, L["Text is at most %d characters."]:format(text.maxLetters)
-        end
-        if not ok then return "text", text.label, why end
-    end
+    return nil
+end
+
+local function checkChannel(d)
     local channel = Ed.Row("callout.channel")
-    ok, why = channel.validate(d.channel)
+    local ok, why = channel.validate(d.channel)
     if not ok then return "channel", channel.label, why end
-    -- The icon has no box to name: the error names the chooser under its "Icon" label.
+    return nil
+end
+
+-- The icon has no box to name: the error names the chooser under its "Icon" label.
+local function checkIcon(d)
     if not NS.Library.ValidIcon(d.icon) then
         return "icon", L["Icon"], L["That is not a texture. Click Choose icon… and pick another."]
     end
     if not NS.Library.ValidIconColor(d.iconColor) then
         return "iconColor", Ed.Row("callout.iconColor").label, L["An icon color is six hex digits (rrggbb), or empty for none."]
+    end
+    return nil
+end
+
+local CHECKS = { checkName, checkLine, checkEmote, checkPing, checkMarker, checkActions, checkChannel, checkIcon }
+
+-- Check the draft. Answers the field that failed, its label and why, or nil.
+local function check(d)
+    for _, fn in ipairs(CHECKS) do
+        local field, label, why = fn(d)
+        if field then return field, label, why end
     end
     return nil
 end
@@ -642,7 +687,7 @@ function Pop.Save()
     if isGameEmote(draft) then draft.text = "" end
     local field, label, why = check(draft)
     if field then
-        showError(L["%s: %s"]:format(label, tostring(why)))
+        showError(label and L["%s: %s"]:format(label, tostring(why)) or tostring(why))
         return false, field
     end
     local ok, reason

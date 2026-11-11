@@ -1209,3 +1209,91 @@ test("popup: [CA-M2-7] the window is measured again when the channel swaps the T
     P.find(w, "Dropdown", "Channel"):__fire("OnValueChanged", "gameEmote")
     assertTrue(#heights > 0, "fit() sized the window after the re-render")
 end)
+
+-- ── the split check (CA-M2-8, combined actions §7) ───────────────────────────────────────────
+
+-- The error line's text with its color escape taken off.
+local function errorText(P, w, needle)
+    local label = labelWith(P, w, needle)
+    return label and label.text:gsub("^|c%x%x%x%x%x%x%x%x", ""):gsub("|r$", "")
+end
+
+test("popup: [CA-M2-8] the Line is counted in bytes: 255 two-byte letters' worth is refused, 255 bytes saves", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    -- 128 letters of two bytes: 256 bytes, well under 255 characters
+    Pop.Draft().text = ("\195\169"):rep(128)
+    local ok, field = Pop.Save()
+    -- red under: counting characters (chars() <= 255 passes it)
+    assertFalse(ok)
+    assertEqual(field, "text")
+    assertEqual(errorText(P, w, "Text: Text is at most"), "Text: Text is at most 255 bytes.")
+    assertEqual(NS.db.profile.callouts[cid].text, "Kick", "nothing written")
+    Pop.Draft().text = ("\195\169"):rep(127) .. "a"
+    assertTrue(Pop.Save(), "255 bytes is the cap, not over it")
+    assertEqual(#NS.db.profile.callouts[cid].text, 255)
+end)
+
+test("popup: [CA-M2-8] no action at all is refused by the check, naming the rule, and nothing is created", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local w = P.during(function() Pop.Open(gid) end)
+    Pop.Draft().name = "Nothing"
+    Pop.Draft().channel = "gameEmote"
+    local create = NS.Library.CreateCalloutIn
+    local asked = 0
+    NS.Library.CreateCalloutIn = function(...) asked = asked + 1 return create(...) end
+    local ok, field = Pop.Save()
+    assertFalse(ok)
+    assertEqual(field, "noAction")
+    -- red under: leaving the rule to CreateCalloutIn (the check lets the draft through)
+    assertEqual(asked, 0, "the check refuses it before any write")
+    assertEqual(errorText(P, w, "Set at least one action"),
+        "Set at least one action: a line, an emote, a ping or a marker.", "the rule names itself, no field prefix")
+    assertTrue(Pop.IsOpen())
+    -- an empty Line on a chat channel is no Line either (Bake.HasLine)
+    Pop.Draft().channel = "party"
+    Pop.Draft().text = "   "
+    ok, field = Pop.Save()
+    assertFalse(ok)
+    assertEqual(field, "noAction")
+end)
+
+test("popup: [CA-M2-8] a bad emote, ping or marker names its own field", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    local L = NS.L
+    local cases = {
+        { "emote", "two words", L["Emote (optional)"] .. ": " .. L["Pick an emote from the list."] },
+        { "ping", "threat", L["Ping"] .. ": " .. L["A ping is attack, warning, onmyway or assist, or none."] },
+        { "marker", 9, L["Raid marker"] .. ": " .. L["A marker is a number from 1 (star) to 8 (skull), or 0 for none."] },
+    }
+    for _, case in ipairs(cases) do
+        local d = Pop.Draft()
+        d.emote, d.ping, d.marker = nil, nil, nil
+        d[case[1]] = case[2]
+        local ok, field = Pop.Save()
+        assertFalse(ok, case[1])
+        -- red under: no checkPing / checkMarker (the seam's write refuses it, naming no field)
+        assertEqual(field, case[1])
+        assertEqual(errorText(P, w, case[3]), case[3])
+    end
+    local c = NS.db.profile.callouts[cid]
+    assertTrue(not c.emote and not c.ping and not c.marker, "nothing written")
+end)
+
+test("popup: [CA-M2-8] a ping-only callout with an empty Line on a chat channel still saves", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local w = P.during(function() Pop.Open(gid) end)
+    P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Go")
+    P.find(w, "Dropdown", NS.L["Ping"]):__fire("OnValueChanged", "onmyway")
+    -- red under: checkLine refusing an empty Line when another action is set
+    assertTrue(Pop.Save())
+    local g = NS.Library.Group(gid)
+    local c = NS.db.profile.callouts[g.callouts[#g.callouts]]
+    assertEqual(c.ping, "onmyway")
+    assertEqual(c.text, "")
+end)
