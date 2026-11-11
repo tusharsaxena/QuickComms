@@ -55,6 +55,23 @@ function B.Length(text, live, prefix)
     return head + #text + (live or 0) * NS.Tokens.LIVE_NOMINAL
 end
 
+-- The fewest bytes a channel's prefix takes ("/s", "/p", "/i", "/1"): a smart channel resolves to
+-- one of them, so a draft on it is measured with the shortest.
+local SHORTEST_PREFIX = "/s"
+
+--- Bytes a draft's Line takes as the bake measures it (CA-M2-R3): sanitized (pipes doubled), its
+--- tokens expanded with no context (a baked token counts nothing here, a live one its nominal 12),
+--- and its channel's prefix, the shortest for a smart channel. Pure; 0 for no text.
+--- @param text string|nil
+--- @param channel string|nil the callout's channel kind
+--- @return number
+function B.DraftLength(text, channel)
+    local clean = B.Sanitize(text)
+    if not clean then return 0 end
+    local out, _, _, live = NS.Tokens.Expand(clean)
+    return B.Length(squeeze(out), live, NS.Channels.Prefix(channel) or SHORTEST_PREFIX)
+end
+
 --- Bake a game-emote callout (QFE-E2): its line is the client's own command for its token
 --- ("/point"), from Emotes' map and never from user text, so no typed "/" ever reaches the line. Its
 --- text is ignored. A token this client lacks bakes nothing: "noEmote" with none set, else

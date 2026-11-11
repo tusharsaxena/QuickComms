@@ -477,7 +477,8 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   when the box is released (an `OnRelease` callback, the library's landing-logo pattern), so a
   frame AceGUI hands to another EditBox never shows it.
 - **Save** checks the draft with the member rows' own validators, one check per field (the name;
-  the Line's text and its length in bytes, only when Channel is not None; the emote, *Pick an emote
+  the Line's text and its length in bytes as the bake counts it, with the channel's prefix and
+  each live token's nominal bytes (`Bake.DraftLength`), only when Channel is not None; the emote, *Pick an emote
   from the list.*; the ping; the marker; at least one action; the channel; the icon, the icon's
   color). Channel None writes `text = ""`, since the hidden box keeps nothing; every other action is
   kept beside the Line. A field that fails keeps the popup open and names the field

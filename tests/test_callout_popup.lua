@@ -1228,11 +1228,30 @@ test("popup: [CA-M2-8] the Line is counted in bytes: 255 two-byte letters' worth
     -- red under: counting characters (chars() <= 255 passes it)
     assertFalse(ok)
     assertEqual(field, "text")
-    assertEqual(errorText(P, w, "Text: Text is at most"), "Text: Text is at most 255 bytes.")
+    local refusal = "Text: Too long: with its channel and tokens, a line is at most 255 bytes."
+    assertEqual(errorText(P, w, "Text: Too long"), refusal)
     assertEqual(NS.db.profile.callouts[cid].text, "Kick", "nothing written")
-    Pop.Draft().text = ("\195\169"):rep(127) .. "a"
-    assertTrue(Pop.Save(), "255 bytes is the cap, not over it")
-    assertEqual(#NS.db.profile.callouts[cid].text, 255)
+    -- CA-M2-R3: "/p " and 253 bytes is 256, which the bake refuses (red under: the raw text alone counted)
+    Pop.Draft().text = ("\195\169"):rep(126) .. "a"
+    assertFalse((Pop.Save()), "253 bytes of text and the /p prefix is over the cap")
+    -- the largest Save is a Line that bakes: "/p " and 252 bytes is 255
+    Pop.Draft().text = ("\195\169"):rep(126)
+    assertTrue(Pop.Save(), "255 bytes with the prefix is the cap, not over it")
+    local stored = NS.db.profile.callouts[cid]
+    local line, reason = NS.Bake.Bake(stored, { group = "party" }, {})
+    assertEqual(reason, nil) assertEqual(#line, 255)
+end)
+
+test("popup: [CA-M2-R3] a live token counts what the game may fill in, as the bake does", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    P.during(function() Pop.Open(gid, cid) end)
+    -- "/p " + 240 + " %t" is 246, plus LIVE_NOMINAL (12) for %t: 258, over the cap
+    Pop.Draft().text = ("a"):rep(240) .. " {target}"
+    -- red under: the raw text's 249 bytes measured alone
+    assertFalse((Pop.Save()))
+    Pop.Draft().text = ("a"):rep(237) .. " {target}"
+    assertTrue(Pop.Save(), "255 with the prefix and the token's nominal bytes")
 end)
 
 test("popup: [CA-M2-8] no action at all is refused by the check, naming the rule, and nothing is created", function()

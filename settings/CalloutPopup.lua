@@ -186,15 +186,16 @@ end
 -- then the channel and the icon, each its own small function. A failure answers the field, the label
 -- the player reads it under (nil for the rule, which names itself) and why.
 
--- The Line, only when Channel is not None: text that is a string, and at most MAX_BYTES bytes (the
--- caps are bytes, Bake.lua; the box's maxLetters counts letters). An empty Line is no Line, which
--- the action rule judges, so a ping-only callout on a chat channel still saves.
+-- The Line, only when Channel is not None: text that is a string, and at most MAX_BYTES bytes as the
+-- bake counts it (Bake.DraftLength: the channel's prefix and each live token's nominal bytes too, so
+-- a saved Line can bake; the caps are bytes, the box's maxLetters counts letters). An empty Line is
+-- no Line, which the action rule judges, so a ping-only callout on a chat channel still saves.
 local function checkLine(d)
     if isGameEmote(d) then return nil end
     local text = Ed.Row("callout.text")
     local ok, why = text.validate(d.text)
-    if ok and NS.Bake.Length(d.text) > NS.Bake.MAX_BYTES then
-        ok, why = false, L["Text is at most %d bytes."]:format(NS.Bake.MAX_BYTES)
+    if ok and NS.Bake.DraftLength(d.text, d.channel) > NS.Bake.MAX_BYTES then
+        ok, why = false, L["Too long: with its channel and tokens, a line is at most %d bytes."]:format(NS.Bake.MAX_BYTES)
     end
     if not ok then return "text", text.label, why end
     return nil
