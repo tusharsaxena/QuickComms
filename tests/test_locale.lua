@@ -70,6 +70,20 @@ local function indexAt(src, i)
     return key, assigned
 end
 
+-- One identifier at `i`; when it is `L` followed by a single `[`, the index it reads is recorded in
+-- `out`. Returns the position after the identifier.
+local function scanWord(src, i, out)
+    local _, e = src:find("^[%w_]+", i)
+    if src:sub(i, e) ~= "L" then return e + 1 end
+    local b = skipSpace(src, e + 1)
+    if src:sub(b, b) == "[" and src:sub(b + 1, b + 1) ~= "[" and src:sub(b + 1, b + 1) ~= "=" then
+        local key, assigned = indexAt(src, b + 1)
+        local _, lines = src:sub(1, b):gsub("\n", "")
+        out[#out + 1] = { key = key, assigned = assigned or false, line = lines + 1 }
+    end
+    return e + 1
+end
+
 --- Every `L[...]` in `src`, in order: { key = <string|nil>, assigned = <bool>, line = <n> }.
 local function scan(src)
     local out, i, n = {}, 1, #src
@@ -82,17 +96,7 @@ local function scan(src)
         elseif c == "[" and longBracket(src, i) then
             i = longBracket(src, i)
         elseif c:match("[%a_]") then
-            local _, e = src:find("^[%w_]+", i)
-            local word = src:sub(i, e)
-            i = e + 1
-            if word == "L" then
-                local b = skipSpace(src, i)
-                if src:sub(b, b) == "[" and src:sub(b + 1, b + 1) ~= "[" and src:sub(b + 1, b + 1) ~= "=" then
-                    local key, assigned = indexAt(src, b + 1)
-                    local _, lines = src:sub(1, b):gsub("\n", "")
-                    out[#out + 1] = { key = key, assigned = assigned or false, line = lines + 1 }
-                end
-            end
+            i = scanWord(src, i, out)
         else
             i = i + 1
         end

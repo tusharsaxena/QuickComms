@@ -471,9 +471,9 @@ at 418. `tests/test_dial.lua` was split the same way at 1471 lines (2026-10-31):
 `locales/enUS_Settings.lua`, so `enUS.lua` was 693 lines then, beside `enUS_Settings.lua` at 826, and
 `tests/test_locale.lua` holds the union gates and the placement both ways; auto-thank added a third
 topic file, `locales/enUS_AutoThank.lua`, the strings only `modules/AutoThank*.lua` reads. Today
-`enUS.lua` is 729 lines, `enUS_Settings.lua` 889 and `enUS_AutoThank.lua` 21. Nine files sit in the
+`enUS.lua` is 729 lines, `enUS_Settings.lua` 889 and `enUS_AutoThank.lua` 21. Ten files sit in the
 1000-1500 band (`modules/Library.lua` 1455, `core/Compat.lua` 1014, `settings/SchemaMembers.lua` 1019,
-`tests/test_callout_popup.lua` 1318, `tests/test_library.lua` 1271, `tests/wow_mock.lua` 1203,
-`tests/test_page_groups.lua` 1182, `tests/test_pad.lua` 1049, `tests/test_skin_flip.lua` 1064; recounted
-at the end of combined actions M4, 2026-11-11); `modules/Library.lua` is the nearest the cap, and the
+`tests/test_callout_popup.lua` 1318, `tests/test_library.lua` 1271, `tests/wow_mock.lua` 1208,
+`tests/test_page_groups.lua` 1182, `tests/test_autothank.lua` 1073, `tests/test_pad.lua` 1049,
+`tests/test_skin_flip.lua` 1064; recounted at the CA-M5-3 complexity pass, 2026-11-11); `modules/Library.lua` is the nearest the cap, and the
 automated-test record's watch list gives each its disposition.

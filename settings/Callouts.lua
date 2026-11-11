@@ -123,25 +123,33 @@ end
 -- The rows of one action: baked, its row, a voice emote's note and its bytes (an emote alone, none); solo with "self", that
 -- it prints to you; skipped, why (alone, a callout's one action, in today's words) and an unknown
 -- emote's token. Then its lock.
+local function bakedRows(out, a, alone)
+    out[#out + 1] = head(a)
+    if a.kind == "emote" and NS.Emotes.IsVoice(a.value) then out[#out + 1] = L["A voice emote: it also plays its sound."] end
+    -- an emote alone keeps today's rows: its command is its whole macro
+    if a.kind ~= "emote" or not alone then out[#out + 1] = L["%d of 255 bytes"]:format(a.length) end
+end
+
+local function skippedRows(out, a, alone)
+    -- a Line held by the macro's budget says so, and is measured against its share (CA-M2-R2)
+    local held = heldByMacro(a)
+    out[#out + 1] = (alone and L["Sends nothing here: %s"] or NS.PadRender.SKIPPED_TEXT[a.kind])
+        :format(held and L["Too long to send with its other actions."] or why(a.reason))
+    if a.reason == "unknownEmote" then out[#out + 1] = L["Emote token: %s"]:format(tostring(a.value)) end
+    if held then
+        out[#out + 1] = L["%d of %d bytes"]:format(a.length, a.budget)
+    elseif a.length then
+        out[#out + 1] = L["%d of 255 bytes"]:format(a.length)
+    end
+end
+
 local function actionRows(out, a, alone)
     if a.line then
-        out[#out + 1] = head(a)
-        if a.kind == "emote" and NS.Emotes.IsVoice(a.value) then out[#out + 1] = L["A voice emote: it also plays its sound."] end
-        -- an emote alone keeps today's rows: its command is its whole macro
-        if a.kind ~= "emote" or not alone then out[#out + 1] = L["%d of 255 bytes"]:format(a.length) end
+        bakedRows(out, a, alone)
     elseif a.reason == "solo" and a.selfPrint then
         out[#out + 1] = L["Solo: prints to you, sends nothing."]
     else
-        -- a Line held by the macro's budget says so, and is measured against its share (CA-M2-R2)
-        local held = heldByMacro(a)
-        out[#out + 1] = (alone and L["Sends nothing here: %s"] or NS.PadRender.SKIPPED_TEXT[a.kind])
-            :format(held and L["Too long to send with its other actions."] or why(a.reason))
-        if a.reason == "unknownEmote" then out[#out + 1] = L["Emote token: %s"]:format(tostring(a.value)) end
-        if held then
-            out[#out + 1] = L["%d of %d bytes"]:format(a.length, a.budget)
-        elseif a.length then
-            out[#out + 1] = L["%d of 255 bytes"]:format(a.length)
-        end
+        skippedRows(out, a, alone)
     end
     if a.lock then out[#out + 1] = NS.PadRender.LOCK_TEXT[a.lock] or tostring(a.lock) end
 end

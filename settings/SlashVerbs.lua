@@ -419,12 +419,10 @@ end
 -- as listed when any of its ids is), and the maps it lists that no shipped id carries, "Name (id)",
 -- each once in the order read. Zone activities (maxNumPlayers 0) are not places; a nil count is kept.
 -- An empty list reads as not checked, never as "none".
-local function groupFinderLine(acts)
-    if #acts == 0 then return L["  group finder: not checked, the group finder listed no activities"] end
-    local G, listed, shipped, missing, extra, seen = NS.GameIds, {}, {}, {}, {}, {}
-    for _, a in ipairs(acts) do
-        if a.mapID then listed[a.mapID] = true end
-    end
+-- The shipped ids the group finder does not list, each "dungeon 123", "raid 456" or a whole
+-- battleground set; every shipped id is marked in `shipped` on the way.
+local function missingShipped(listed, shipped)
+    local G, missing = NS.GameIds, {}
     for _, kind in ipairs({ { G.DUNGEONS, L["dungeon %d"] }, { G.RAIDS, L["raid %d"] } }) do
         for _, id in ipairs(kind[1] or {}) do
             shipped[id] = true
@@ -438,6 +436,12 @@ local function groupFinderLine(acts)
         end
         if not any then missing[#missing + 1] = L["battleground set %s (%s)"]:format(s.key, table.concat(s.ids, ", ")) end
     end
+    return missing
+end
+
+-- The maps the group finder lists that no shipped id carries, "Name (id)", each once.
+local function extraMaps(acts, shipped)
+    local extra, seen = {}, {}
     for _, a in ipairs(acts) do
         local id = a.mapID
         if id and a.maxNumPlayers ~= 0 and not shipped[id] and not seen[id] then
@@ -445,6 +449,17 @@ local function groupFinderLine(acts)
             extra[#extra + 1] = L["%s (%d)"]:format(orDash(a.name), id)
         end
     end
+    return extra
+end
+
+local function groupFinderLine(acts)
+    if #acts == 0 then return L["  group finder: not checked, the group finder listed no activities"] end
+    local listed, shipped = {}, {}
+    for _, a in ipairs(acts) do
+        if a.mapID then listed[a.mapID] = true end
+    end
+    local missing = missingShipped(listed, shipped)
+    local extra = extraMaps(acts, shipped)
     return L["  group finder: %d activities; shipped ids it does not list: %s; maps it lists that no shipped id carries: %s"]
         :format(#acts, listOrNone(missing), listOrNone(extra))
 end

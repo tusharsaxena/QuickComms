@@ -978,6 +978,51 @@ local function build()
         function f:GetFont() local t = self.__font or {} return t[1], t[2], t[3] end
         return f
     end
+    -- A plain Button records its registered clicks too (the client's default is LeftButtonUp), so
+    -- `__click` and a CLICK binding (`__pressKey`) reach one only on an edge it registered.
+    local function plainClicks(f)
+        f.__clicks = { "LeftButtonUp" }
+        f.RegisterForClicks = function(self, ...)
+            self.__clicks = { ... }
+            return self
+        end
+    end
+    -- A Secure template's frame: refused in combat, its attributes, clicks and handle methods, a
+    -- header when it is a SecureHandler, and it and its ancestors protected.
+    local function dressSecure(f, name, parent, template)
+        if M.inCombat then refuse(f, "CreateFrame") end
+        f.__attrs, f.__clicks = {}, {}
+        f.GetName = function() return name end
+        f.SetAttribute = function(self, key, value)
+            self.__attrs[key] = value
+            return self
+        end
+        f.GetAttribute = function(self, key) return self.__attrs[key] end
+        f.RegisterForClicks = function(self, ...)
+            self.__clicks = { ... }
+            return self
+        end
+        f.__scripts.OnClick = secureOnClick
+        -- Button:Click(button): a virtual press, down then up as `__click` presses it (a
+        -- `type = "click"` forward reaches its delegate this way).
+        f.Click = function(self, mouseButton) M.__click(self, mouseButton) end
+        -- A wrap must come before an OnClick hook (makeHeader's WrapScript checks this flag).
+        local hook = f.HookScript
+        f.HookScript = function(self, script, fn)
+            if script == "OnClick" then self.__hooked = true end
+            return hook(self, script, fn)
+        end
+        addHandleMethods(f)
+        if template:find("SecureHandler", 1, true) then makeHeader(f) end
+        liveShow(f)
+        protect(f)
+        local p = parent
+        while type(p) == "table" and p ~= M.UIParent do
+            protect(p)
+            p = p.__parent
+        end
+        secureFrames[#secureFrames + 1] = f
+    end
     M.CreateFrame = function(frameType, name, parent, template)
         if type(template) == "string" and M.missingTemplates[template] then
             error("CreateFrame: Couldn't find inherited node \"" .. template .. "\"", 2)
@@ -994,49 +1039,9 @@ local function build()
         if ours(f) then dress(f) end
         adopt(parent, f)
         if type(name) == "string" then M.__named[name] = f end
-        -- A plain Button records its registered clicks too (the client's default is LeftButtonUp), so
-        -- `__click` and a CLICK binding (`__pressKey`) reach one only on an edge it registered.
-        if frameType == "Button" and not (type(template) == "string" and template:find("Secure", 1, true)) then
-            f.__clicks = { "LeftButtonUp" }
-            f.RegisterForClicks = function(self, ...)
-                self.__clicks = { ... }
-                return self
-            end
-        end
-        if type(template) == "string" and template:find("Secure", 1, true) then
-            if M.inCombat then refuse(f, "CreateFrame") end
-            f.__attrs, f.__clicks = {}, {}
-            f.GetName = function() return name end
-            f.SetAttribute = function(self, key, value)
-                self.__attrs[key] = value
-                return self
-            end
-            f.GetAttribute = function(self, key) return self.__attrs[key] end
-            f.RegisterForClicks = function(self, ...)
-                self.__clicks = { ... }
-                return self
-            end
-            f.__scripts.OnClick = secureOnClick
-            -- Button:Click(button): a virtual press, down then up as `__click` presses it (a
-            -- `type = "click"` forward reaches its delegate this way).
-            f.Click = function(self, mouseButton) M.__click(self, mouseButton) end
-            -- A wrap must come before an OnClick hook (makeHeader's WrapScript checks this flag).
-            local hook = f.HookScript
-            f.HookScript = function(self, script, fn)
-                if script == "OnClick" then self.__hooked = true end
-                return hook(self, script, fn)
-            end
-            addHandleMethods(f)
-            if template:find("SecureHandler", 1, true) then makeHeader(f) end
-            liveShow(f)
-            protect(f)
-            local p = parent
-            while type(p) == "table" and p ~= M.UIParent do
-                protect(p)
-                p = p.__parent
-            end
-            secureFrames[#secureFrames + 1] = f
-        end
+        local secure = type(template) == "string" and template:find("Secure", 1, true)
+        if frameType == "Button" and not secure then plainClicks(f) end
+        if secure then dressSecure(f, name, parent, template) end
         return f
     end
     M.__secureFrames = function() return secureFrames end

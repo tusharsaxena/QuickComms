@@ -551,6 +551,29 @@ local function pressThank(b, meta)
     if b.qcOnPress then b.qcOnPress(b) end
 end
 
+-- The armed half of a press: the press-time notes, the lock notes, then one G.Decide, one lastSendAt
+-- stamp and one qcOnPress for the open actions.
+local function pressArmed(b, meta, notes)
+    if not (b.qcArmed and hasActions(meta)) then return end
+    -- Why a ping or a mark cannot land (D15): read in PreClick, before the macro ran, printed once;
+    -- and why the press-time re-bake dropped the Line (CA-M2-3).
+    printNotes(notes)
+    if meta.lineNote then NS.Print(meta.lineNote) end
+    -- A padlocked action stays in the armed macro (spec §8.4), but the game is expected to refuse it:
+    -- it prints its note and awaits no echo. When every action is a locked chat action, no guard is
+    -- stamped either, so a refusal is never blamed on the spam guard.
+    local open, locked = chatActions(meta)
+    lockNotes(meta, locked)
+    if #locked == #meta.actions then return end
+    local now = GetTime()
+    local window = NS.Setting("behavior.spamGuard")
+    local verdict = G.Decide(now, State.lastSendAt, window)
+    State.lastSendAt = now
+    if verdict == "guarded" then result(meta, "guarded") end
+    track(meta, open, now)
+    if b.qcOnPress then b.qcOnPress(b, verdict, window) end
+end
+
 -- The press (combined actions §4). One G.Decide, one lastSendAt stamp and one qcOnPress per press,
 -- however many actions it has (D7).
 local function press(b)
@@ -575,24 +598,7 @@ local function press(b)
         NS.Print(meta.selfText)
         if not hasActions(meta) then return end
     end
-    if not (b.qcArmed and hasActions(meta)) then return end
-    -- Why a ping or a mark cannot land (D15): read in PreClick, before the macro ran, printed once;
-    -- and why the press-time re-bake dropped the Line (CA-M2-3).
-    printNotes(notes)
-    if meta.lineNote then NS.Print(meta.lineNote) end
-    -- A padlocked action stays in the armed macro (spec §8.4), but the game is expected to refuse it:
-    -- it prints its note and awaits no echo. When every action is a locked chat action, no guard is
-    -- stamped either, so a refusal is never blamed on the spam guard.
-    local open, locked = chatActions(meta)
-    lockNotes(meta, locked)
-    if #locked == #meta.actions then return end
-    local now = GetTime()
-    local window = NS.Setting("behavior.spamGuard")
-    local verdict = G.Decide(now, State.lastSendAt, window)
-    State.lastSendAt = now
-    if verdict == "guarded" then result(meta, "guarded") end
-    track(meta, open, now)
-    if b.qcOnPress then b.qcOnPress(b, verdict, window) end
+    return pressArmed(b, meta, notes)
 end
 
 -- Whether this click edge is the one a press acts on. A catcher's forward clicks a wedge with its
