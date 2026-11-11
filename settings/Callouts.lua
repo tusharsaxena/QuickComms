@@ -78,38 +78,103 @@ function C.TokenHelp(channel)
     return out
 end
 
---- What a callout sends here (spec §13.1: the live preview of the baked line, under the current or
---- previewed situation, with the padlock when locked): the line and its bytes, or why it sends
---- nothing; then any lock, the unknown tokens and the tokens empty here.
+-- A channel kind's short name (the Groups rows' and the preview summary's), the no-Line kind as the
+-- Channel list calls it (D10).
+C.SHORT_CHANNEL = {
+    smartGroup = L["Smart group"], smartLead = L["Smart lead"], party = L["Party"], raid = L["Raid"],
+    instance = L["Instance"], raidWarning = L["Raid warning"], say = L["Say"], yell = L["Yell"],
+    general = L["General"], emote = L["Emote"], gameEmote = L["None (no chat line)"],
+}
+
+-- The marker names by number (1 star to 8 skull), as the token help words them.
+local MARKER_BY_N = { "star", "circle", "diamond", "triangle", "moon", "square", "cross", "skull" }
+local function markerName(n) return MARKER_NAMES[MARKER_BY_N[n] or ""] or tostring(n) end
+local function pingName(v) return NS.Preview.PING_NAME[v] or tostring(v) end
+
+-- One baked action, as the summary line says it: the Line quoted with its channel, an emote its
+-- command, a ping and a marker by name.
+local function short(a, callout)
+    if a.kind == "line" then
+        return L['"%s" in %s']:format(NS.Bake.CleanText(callout.text) or "", C.SHORT_CHANNEL[a.concrete] or tostring(a.concrete))
+    end
+    if a.kind == "emote" then return a.line end
+    if a.kind == "ping" then return L["ping %s"]:format(pingName(a.value)) end
+    return L["mark %s"]:format(markerName(a.value))
+end
+
+-- A baked action's own row, as "Sends: /p Kick", "Emotes: /point", "Pings: Attack", "Marks: Skull".
+local function head(a)
+    if a.kind == "line" then return L["Sends: %s"]:format(a.line) end
+    if a.kind == "emote" then return L["Emotes: %s"]:format(a.line) end
+    if a.kind == "ping" then return L["Pings: %s"]:format(pingName(a.value)) end
+    return L["Marks: %s"]:format(markerName(a.value))
+end
+
+-- A skipped action's row, by its kind, with why.
+local SKIPPED = { line = L["No line: %s"], emote = L["No emote: %s"], ping = L["No ping: %s"], marker = L["No mark: %s"] }
+
+local function why(reason)
+    return NS.PadRender.REASON_TEXT[reason] or tostring(reason)
+end
+
+-- The rows of one action: baked, its row, a voice emote's note and its bytes (an emote alone, none); solo with "self", that
+-- it prints to you; skipped, why (alone, a callout's one action, in today's words) and an unknown
+-- emote's token. Then its lock.
+local function actionRows(out, a, alone)
+    if a.line then
+        out[#out + 1] = head(a)
+        if a.kind == "emote" and NS.Emotes.IsVoice(a.value) then out[#out + 1] = L["A voice emote: it also plays its sound."] end
+        -- an emote alone keeps today's rows: its command is its whole macro
+        if a.kind ~= "emote" or not alone then out[#out + 1] = L["%d of 255 bytes"]:format(a.length) end
+    elseif a.reason == "solo" and a.selfPrint then
+        out[#out + 1] = L["Solo: prints to you, sends nothing."]
+    else
+        out[#out + 1] = (alone and L["Sends nothing here: %s"] or SKIPPED[a.kind]):format(why(a.reason))
+        if a.reason == "unknownEmote" then out[#out + 1] = L["Emote token: %s"]:format(tostring(a.value)) end
+        if a.length then out[#out + 1] = L["%d of 255 bytes"]:format(a.length) end
+    end
+    if a.lock then out[#out + 1] = NS.PadRender.LOCK_TEXT[a.lock] or tostring(a.lock) end
+end
+
+-- The summary line of a callout with several actions: what bakes, joined; or why nothing does.
+local function summary(info, reason, callout)
+    local parts = {}
+    for _, a in ipairs(info.baked) do parts[#parts + 1] = short(a, callout) end
+    if #parts == 0 then return L["Sends nothing here: %s"]:format(why(reason)) end
+    return table.concat(parts, ", ")
+end
+
+-- The Line's token notes, the target note for a ping or a marker, and the preview's situation.
+local function notes(out, info)
+    local target = false
+    for _, a in ipairs(info.actions) do
+        if a.unknown and #a.unknown > 0 then
+            out[#out + 1] = L["Unknown tokens, sent as typed: %s"]:format(table.concat(a.unknown, ", "))
+        end
+        if a.missing and #a.missing > 0 then out[#out + 1] = L["Empty here: %s"]:format(table.concat(a.missing, ", ")) end
+        target = target or ((a.kind == "ping" or a.kind == "marker") and a.line ~= nil)
+    end
+    if target then out[#out + 1] = L["Needs a target when pressed."] end
+    local key = NS.Preview.PreviewAs()
+    if key then out[#out + 1] = L["Previewing: %s"]:format(NS.Preview.Label(key)) end
+end
+
+--- What a callout sends here (spec §13.1, combined actions §7: the live preview of the baked macro,
+--- under the current or previewed situation, with the padlock when locked). With several actions,
+--- [1] sums them up on one line ('"Kick on me" in Party, /point, ping Attack, mark Skull'; the Groups
+--- page's What it sends reads only [1]), then each action's rows, baked or skipped, and the macro's
+--- bytes; with one, [1] is that action's own row. Then the token notes and the target note.
 --- @return string[]
 function C.PreviewLines(callout)
     local snap = Ed.Snapshot()
-    local line, reason, info = NS.Bake.Bake(callout, snap,
+    local _, reason, info = NS.Bake.BakeActions(callout, snap,
         { soloFallback = NS.Setting("behavior.soloFallback"), ctx = NS.Surfaces.BakeContext(snap) })
-    local R = NS.PadRender
     local out = {}
-    if line and info.concrete == "gameEmote" then
-        -- A game emote (QFE-E2): the client's command, on your target as the game does it.
-        out[1] = L["Emotes: %s"]:format(line)
-        if NS.Emotes.IsVoice(info.emote) then out[2] = L["A voice emote: it also plays its sound."] end
-    elseif line then
-        out[1] = L["Sends: %s"]:format(line)
-        out[2] = L["%d of 255 bytes"]:format(info.length)
-    elseif reason == "solo" and info.selfPrint then
-        out[1] = L["Solo: prints to you, sends nothing."]
-    else
-        out[1] = L["Sends nothing here: %s"]:format(R.REASON_TEXT[reason] or tostring(reason))
-        if reason == "unknownEmote" then out[#out + 1] = L["Emote token: %s"]:format(tostring(info.emote)) end
-        if info.length then out[2] = L["%d of 255 bytes"]:format(info.length) end
-    end
-    if info.lock then out[#out + 1] = R.LOCK_TEXT[info.lock] or tostring(info.lock) end
-    if info.unknown and #info.unknown > 0 then
-        out[#out + 1] = L["Unknown tokens, sent as typed: %s"]:format(table.concat(info.unknown, ", "))
-    end
-    if info.missing and #info.missing > 0 then
-        out[#out + 1] = L["Empty here: %s"]:format(table.concat(info.missing, ", "))
-    end
-    local key = NS.Preview.PreviewAs()
-    if key then out[#out + 1] = L["Previewing: %s"]:format(NS.Preview.Label(key)) end
+    local several = #info.actions > 1
+    if several then out[1] = summary(info, reason, callout) end
+    if #info.actions == 0 then out[1] = L["Sends nothing here: %s"]:format(why(reason)) end
+    for _, a in ipairs(info.actions) do actionRows(out, a, not several) end
+    if #info.baked > 1 then out[#out + 1] = L["Macro: %d of 255 bytes"]:format(info.total) end
+    notes(out, info)
     return out
 end

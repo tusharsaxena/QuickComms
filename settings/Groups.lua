@@ -220,12 +220,6 @@ end
 -- text in muted white, cut at PREVIEW_CHARS characters. User text is drawn literal (literal below),
 -- so a typed "|" never opens an escape; the cut keeps every row one line (options-ui-§18's stride).
 local PREVIEW_CHARS = 40
-local SHORT_CHANNEL = {
-    smartGroup = L["Smart group"], smartLead = L["Smart lead"], party = L["Party"], raid = L["Raid"],
-    instance = L["Instance"], raidWarning = L["Raid warning"], say = L["Say"], yell = L["Yell"],
-    -- the no-Line kind (D10), as the Channel list calls it
-    general = L["General"], emote = L["Emote"], gameEmote = L["None (no chat line)"],
-}
 
 local function hex(r, g, b)
     local function byte(v) return math.floor(v * 255 + 0.5) end
@@ -250,23 +244,48 @@ local function preview(text)
     return literal(head)
 end
 
---- What a callout row previews: its text, or for a game emote (QFE-E2) the client's command for its
---- token, or the token and that this client lacks it.
-function G.CalloutSummary(c)
+-- What a callout row previews first: its text, or with no Line (QFE-E2) the client's command for its
+-- emote, the token and that this client lacks it, or nothing when the callout has another action.
+local function summaryHead(c)
     if not NS.Channels.IsGameEmote(c.channel) then return c.text or "" end
     local cmd = NS.Emotes.Command(c.emote)
     if cmd then return cmd end
-    if not c.emote then return L["(no emote)"] end
-    return L["%s (not on this client)"]:format(tostring(c.emote))
+    if c.emote then return L["%s (not on this client)"]:format(tostring(c.emote)) end
+    if c.ping or c.marker then return "" end
+    return L["(no emote)"]
+end
+
+-- The callout's other actions, as short suffixes (combined actions §7): "+/point" for an emote beside
+-- a Line, "+ping", "+{rtN}" for a marker.
+local function summaryTail(c)
+    local parts = {}
+    if c.emote and not NS.Channels.IsGameEmote(c.channel) then
+        parts[#parts + 1] = "+" .. (NS.Emotes.Command(c.emote) or tostring(c.emote))
+    end
+    if c.ping then parts[#parts + 1] = "+ping" end
+    if c.marker then parts[#parts + 1] = "+{rt" .. tostring(c.marker) .. "}" end
+    return table.concat(parts, " ")
+end
+
+local function joined(a, b)
+    if a == "" or b == "" then return a .. b end
+    return a .. " " .. b
+end
+
+--- What a callout row previews: its text (or with no Line its emote's command), then its other
+--- actions' suffixes.
+function G.CalloutSummary(c)
+    return joined(summaryHead(c), summaryTail(c))
 end
 
 local function calloutLabel(c, cid)
     if not c then return cid end
     -- The name in the heading gold and the preview in the tooltip's subtle gray, read from the skin
-    -- at call time; the channel keeps WoW's chat-type color (a game meaning, rung 4).
+    -- at call time; the channel keeps WoW's chat-type color (a game meaning, rung 4). The text is
+    -- cut, never the suffixes.
     return ("%s  |cff%s%s|r  %s"):format(NS.SkinMarkup("text.heading", literal(c.name or cid)),
-        channelColor(c.channel), SHORT_CHANNEL[c.channel] or tostring(c.channel),
-        NS.SkinMarkup("gtip.subtle", preview(G.CalloutSummary(c))))
+        channelColor(c.channel), Settings.Callouts.SHORT_CHANNEL[c.channel] or tostring(c.channel),
+        NS.SkinMarkup("gtip.subtle", joined(preview(summaryHead(c)), literal(summaryTail(c)))))
 end
 G.CalloutLabel = calloutLabel
 
@@ -501,7 +520,7 @@ local function renderCallouts(ctx)
         entries[i] = { id = cid, label = calloutLabel(c, cid), ghost = c and c.name or cid,
             icon = c and c.icon or Ed.NoIcon("callout"), iconColor = c and c.iconColor or nil,
             edit = function() Settings.CalloutPopup.Open(gid, cid) end,
-            editTooltip = L["Edit this callout: its name, text, channel and icon."],
+            editTooltip = L["Edit its name, actions and icon."],
             remove = function() G.RemoveCallout(gid, cid) end,
             removeTooltip = L["Delete this callout. Asks first."] }
     end

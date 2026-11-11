@@ -149,6 +149,19 @@ L["Pick an emote from the list."] = "Pick an emote from the list."
 L["None (no chat line)"] = "None (no chat line)"
 L["Emote (optional)"] = "Emote (optional)"
 
+-- What a callout with several actions sends (settings/Callouts.lua PreviewLines, CA-M2-9).
+L['"%s" in %s'] = '"%s" in %s'
+L["ping %s"] = "ping %s"
+L["mark %s"] = "mark %s"
+L["Pings: %s"] = "Pings: %s"
+L["Marks: %s"] = "Marks: %s"
+L["No line: %s"] = "No line: %s"
+L["No emote: %s"] = "No emote: %s"
+L["No ping: %s"] = "No ping: %s"
+L["No mark: %s"] = "No mark: %s"
+L["Macro: %d of 255 bytes"] = "Macro: %d of 255 bytes"
+L["Needs a target when pressed."] = "Needs a target when pressed."
+
 -- Pings and raid target markers (#17, #18; CA-M1-5).
 L["Ping"] = "Ping"
 L["Raid marker"] = "Raid marker"
@@ -419,7 +432,7 @@ L["Add callout"] = "Add callout"
 L["Make a new callout at the end of this group: its name, text, channel and icon, saved when you click Save."] = "Make a new callout at the end of this group: its name, text, channel and icon, saved when you click Save."
 L["Reuse callout"] = "Reuse callout"
 L["Add a copy of the picked callout to the end of this group. Editing the copy leaves the original as it is."] = "Add a copy of the picked callout to the end of this group. Editing the copy leaves the original as it is."
-L["Edit this callout: its name, text, channel and icon."] = "Edit this callout: its name, text, channel and icon."
+L["Edit its name, actions and icon."] = "Edit its name, actions and icon."
 L["Delete this callout. Asks first."] = "Delete this callout. Asks first."
 L["This group has no callouts yet."] = "This group has no callouts yet."
 L["Which group this page edits. A green dot marks a group active now (or in the preview)."] = "Which group this page edits. A green dot marks a group active now (or in the preview)."
