@@ -340,3 +340,72 @@ test("compat: [CA-M1-R3] MarkerRights: a secret leader, assist or everyone-assis
     m.isAssist, m.everyoneAssist = false, false
     assertEqual(C.MarkerRights(), "noRights", "every answer plainly false")
 end)
+
+-- ── the aura, GUID, friend and guild surfaces (CA-M4-1) ────────────────────────────────────────
+
+test("mock: [CA-M4-1] the player's auras answer by instance id, their casters by GUID, and the helpful id list", function()
+    local _, m = T.newAddon()
+    assertEqual(#m.C_UnitAuras.GetUnitAuraInstanceIDs("player", "HELPFUL"), 0, "no aura by default")
+    local a = m.addAura{ casterGUID = "Player-2-0000000A" }
+    local b = m.addAura{ spellId = 21562, isHelpful = false }
+    assertEqual(a.auraInstanceID, 1)
+    assertEqual(b.auraInstanceID, 2)
+    assertEqual(m.C_UnitAuras.GetAuraDataByAuraInstanceID("player", 1), a)
+    assertNil(m.C_UnitAuras.GetAuraDataByAuraInstanceID("target", 1), "only the player's auras are modeled")
+    assertEqual(m.C_UnitAuras.GetAuraCasterGUID("player", 1), "Player-2-0000000A")
+    assertNil(m.C_UnitAuras.GetAuraCasterGUID("player", 2))
+    local ids = m.C_UnitAuras.GetUnitAuraInstanceIDs("player", "HELPFUL")
+    assertEqual(#ids, 1, "a harmful aura is not helpful")
+    assertEqual(ids[1], 1)
+    assertTrue(a.isFromPlayerOrPlayerPet)
+    assertEqual(a.duration, 3600)
+    local s = T.secret(5)
+    m.auraInstanceIDs = { 1, s }
+    assertTrue(T.isSecret(m.C_UnitAuras.GetUnitAuraInstanceIDs("player", "HELPFUL")[2]), "a planted secret is handed back")
+end)
+
+test("mock: [CA-M4-1] auraUpdate builds a UNIT_AURA payload, and secretAuraUpdate wraps it", function()
+    local _, m = T.newAddon()
+    local u = m.auraUpdate{ addedAuras = { { auraInstanceID = 3 } }, removedAuraInstanceIDs = { 1 } }
+    assertFalse(u.isFullUpdate)
+    assertEqual(u.addedAuras[1].auraInstanceID, 3)
+    assertEqual(u.removedAuraInstanceIDs[1], 1)
+    assertNil(u.updatedAuraInstanceIDs)
+    assertTrue(m.auraUpdate{ isFullUpdate = true }.isFullUpdate)
+    assertTrue(T.isSecret(m.secretAuraUpdate{ isFullUpdate = true }))
+end)
+
+test("mock: [CA-M4-1] GUIDs, player info, group, friend and guild answers are settable", function()
+    local _, m = T.newAddon()
+    assertEqual(m.UnitGUID("player"), m.playerGUID)
+    assertNil(m.UnitGUID("target"))
+    m.unitGUIDs.target = "Player-2-0000000B"
+    assertEqual(m.UnitGUID("target"), "Player-2-0000000B")
+    assertNil(m.GetPlayerInfoByGUID("Player-2-0000000B"))
+    m.players["Player-2-0000000B"] = { name = "Bob", realm = "Argent Dawn", classToken = "MAGE" }
+    local _, token, _, _, _, name, realm = m.GetPlayerInfoByGUID("Player-2-0000000B")
+    assertEqual(token, "MAGE")
+    assertEqual(name, "Bob")
+    assertEqual(realm, "Argent Dawn")
+    assertFalse(m.C_PartyInfo.IsGUIDInGroup("Player-2-0000000B"))
+    assertFalse(m.C_FriendList.IsFriend("Player-2-0000000B"))
+    assertFalse(m.IsGuildMember("Player-2-0000000B"))
+    m.groupGUIDs["Player-2-0000000B"] = true
+    m.friendGUIDs["Player-2-0000000B"] = true
+    m.guildGUIDs["Player-2-0000000B"] = true
+    assertTrue(m.C_PartyInfo.IsGUIDInGroup("Player-2-0000000B"))
+    assertTrue(m.C_FriendList.IsFriend("Player-2-0000000B"))
+    assertTrue(m.IsGuildMember("Player-2-0000000B"))
+    assertEqual(m.SLASH_WHISPER1, "/w")
+end)
+
+test("mock: [CA-M4-1] every frame answers its alpha and whether the cursor is over it", function()
+    local _, m = T.newAddon()
+    local f = m.CreateFrame("Frame")
+    assertEqual(f:GetAlpha(), 1)
+    f:SetAlpha(0.5)
+    assertEqual(f:GetAlpha(), 0.5)
+    assertFalse(f:IsMouseOver())
+    f.__mouseOver = true
+    assertTrue(f:IsMouseOver())
+end)
