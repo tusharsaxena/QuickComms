@@ -193,7 +193,9 @@ combat end behind the stale hint.
 Auto-thank's toast is LibKa0s-Toast-1.0's frame (`core/ToastSetup.lua`), insecure, at the library's
 HIGH strata. Its Thank button is a SendEngine send button (`SE.NewThankButton`, `modules/SendEngine.lua`,
 still the only secure writer), made once per pool frame on its first draw out of combat and armed with
-`AT.Macro`'s one or two lines (`/thank Name`, the whisper, or both) by `SE.Arm`. It registers left clicks
+`AT.Macro`'s macro (the emote aimed at the caster: `/targetexact` the caster, `/thank`, then the player's
+target back; the whisper; or both) by `SE.Arm`, and re-aimed by the PreClick hook out of combat
+(`meta.retarget`), so the target it restores is the one the player holds at the click. It registers left clicks
 alone (`qcLeftOnly`), so the toast's right-click dismiss never runs its macro; its press (`pressThank`)
 stamps no spam guard and reads its own locks (chat lockdown for the whisper, the emote's lock state).
 

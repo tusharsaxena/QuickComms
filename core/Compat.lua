@@ -666,6 +666,27 @@ function Compat.WhisperCommand()
     return PlainString(_G.SLASH_WHISPER1)
 end
 
+--- The client's localized /targetexact, /targetlasttarget and /cleartarget (the Thank emote's aim:
+--- the emote parser hands "/thank Name" to PerformEmote as a bare name, which does not resolve for a
+--- stranger, so the emote targets the caster instead), or nil when any is missing.
+--- @return string|nil exact, string|nil last, string|nil clear
+function Compat.TargetCommands()
+    local exact = PlainString(_G.SLASH_TARGET_EXACT1)
+    local last = PlainString(_G.SLASH_TARGET_LAST_TARGET1)
+    local clear = PlainString(_G.SLASH_CLEARTARGET1)
+    if not (exact and last and clear) then return nil end
+    return exact, last, clear
+end
+
+--- Where the player's aim stands for the caster `guid`, read out of combat at a Thank press:
+--- { onCaster, hadTarget, token }. `token` is a unit the client knows the caster by (a nameplate, the
+--- focus), nil when none; a secret or missing read is no target and no token.
+function Compat.ThankAim(guid)
+    local target = UnitGUID and PlainString(UnitGUID("target")) or nil
+    local token = (type(guid) == "string" and UnitTokenFromGUID) and PlainString(UnitTokenFromGUID(guid)) or nil
+    return { onCaster = target ~= nil and target == guid, hadTarget = target ~= nil, token = token }
+end
+
 local function pingsEnabled(ping)
     if not ping.IsPingSystemEnabled then return nil end
     local on = plainBool(ping.IsPingSystemEnabled())
@@ -802,7 +823,9 @@ local function outsideGroup(guid)
     return not Compat.IsSecret(inGroup) and inGroup ~= true
 end
 
---- Who cast the player's aura `auraInstanceID`, as { guid, name, whisperName, known }, or nil when
+--- Who cast the player's aura `auraInstanceID`, as { guid, name, whisperName, targetName, known }
+--- (`targetName` is what /targetexact finds them by: the regional name as it reads, else the whisper
+--- name), or nil when
 --- it is not another player outside the group, or any needed read is nil or secret. NPCs, pets and
 --- vehicles fail the "Player-" GUID test; `known` is a friend or a guildmate (a secret reads not known).
 function Compat.AuraCaster(auraInstanceID, aura)
@@ -817,7 +840,9 @@ function Compat.AuraCaster(auraInstanceID, aura)
     local friends = C_FriendList
     local known = (friends ~= nil and friends.IsFriend ~= nil and plainTrue(friends.IsFriend(guid)))
         or (IsGuildMember ~= nil and plainTrue(IsGuildMember(guid)))
-    return { guid = guid, name = PlainString(name), whisperName = whisperName, known = known == true }
+    local plain = PlainString(name)
+    local targetName = Compat.RegionalNames() and plain or whisperName
+    return { guid = guid, name = plain, whisperName = whisperName, targetName = targetName, known = known == true }
 end
 
 --- The player's aura `auraInstanceID` as a plain table, or nil when it is gone, secret or unreadable.

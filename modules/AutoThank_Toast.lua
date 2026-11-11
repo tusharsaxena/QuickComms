@@ -86,33 +86,42 @@ local function thankButton(frame)
     return b
 end
 
--- The actions a Thank macro carries, for the press's echo and lock reads.
-local function actionsOf(send, macro)
+-- The actions a Thank macro carries, for the press's echo and lock reads (the emote's aim lines
+-- echo nothing, so a newline never means a whisper: AT.Macro says whether one is in).
+local function actionsOf(send, whisper)
     local actions = {}
     if send ~= "line" then actions[#actions + 1] = { kind = "emote", chatType = "TEXT_EMOTE" } end
-    if send == "line" or (send == "both" and macro:find("\n", 1, true)) then
-        actions[#actions + 1] = { kind = "whisper", chatType = "WHISPER" }
-    end
+    if whisper then actions[#actions + 1] = { kind = "whisper", chatType = "WHISPER" } end
     return actions
 end
 
--- Arm the frame's Thank button for `payload`, or disarm it with the reason on the toast.
+-- The macro for `payload`, aimed as things stand now (Compat.ThankAim).
+local function thankMacro(payload, settings)
+    local caster = payload.caster
+    local aim = NS.Compat.ThankAim(type(caster) == "table" and caster.guid or nil)
+    return AT.Macro(caster, payload.buff, settings, aim)
+end
+
+-- Arm the frame's Thank button for `payload`, or disarm it with the reason on the toast. The meta's
+-- `retarget` re-aims at the press (SendEngine's PreClick, out of combat): the player's target, and
+-- the caster's unit, may have changed since the toast was drawn.
 local function armThank(frame, payload)
     local b = thankButton(frame)
     local settings = thankSettings() or {}
-    local macro, why = AT.Macro(payload.caster, payload.buff, settings)
+    local macro, why, whisper = thankMacro(payload, settings)
     frame.qcNote:SetText(macro and "" or (AT.REASON[why] or ""))
     if not b then return end
     if not macro then
         NS.SendEngine.Disarm(b)
         return
     end
-    local actions = actionsOf(settings.send or "emote", macro)
+    local actions = actionsOf(settings.send or "emote", whisper)
     local chatTypes = {}
     for i, a in ipairs(actions) do chatTypes[i] = a.chatType end
     NS.SendEngine.Arm(b, macro, {
         kind = "thank", name = L["Thank"], calloutId = payload.key, surfaceId = "thank",
         actions = actions, chatTypes = chatTypes, lockText = lockText,
+        retarget = function() return (thankMacro(payload, thankSettings() or {})) end,
     })
 end
 

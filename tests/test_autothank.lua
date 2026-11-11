@@ -133,18 +133,50 @@ test("autothank: [CA-M4-4] Macro per mode: the THANK emote on the caster, a whis
     local AT = NS.AutoThank
     local thank = NS.Emotes.Command("THANK")
     assertTrue(thank ~= nil, "the client has /thank")
-    assertEqual(AT.Macro(caster(), "Arcane Intellect", settings{ send = "emote" }), thank .. " Bob-ArgentDawn")
-    assertEqual(AT.Macro(caster(), "Arcane Intellect", settings{ send = "line" }),
-        m.SLASH_WHISPER1 .. " Bob-ArgentDawn Thanks for the Arcane Intellect, Bob!")
-    local both = AT.Macro(caster(), "Arcane Intellect", settings{ send = "both" })
-    assertEqual(both, thank .. " Bob-ArgentDawn\n" .. m.SLASH_WHISPER1 .. " Bob-ArgentDawn Thanks for the Arcane Intellect, Bob!")
+    local aimed = "/targetexact Bob-ArgentDawn\n" .. thank .. "\n/cleartarget"
+    local macro, why, whisper = AT.Macro(caster(), "Arcane Intellect", settings{ send = "emote" })
+    assertEqual(macro, aimed) assertNil(why) assertFalse(whisper)
+    macro, why, whisper = AT.Macro(caster(), "Arcane Intellect", settings{ send = "line" })
+    assertEqual(macro, m.SLASH_WHISPER1 .. " Bob-ArgentDawn Thanks for the Arcane Intellect, Bob!")
+    assertNil(why) assertTrue(whisper)
+    macro, why, whisper = AT.Macro(caster(), "Arcane Intellect", settings{ send = "both" })
+    assertNil(why)
+    assertEqual(macro, aimed .. "\n" .. m.SLASH_WHISPER1 .. " Bob-ArgentDawn Thanks for the Arcane Intellect, Bob!")
+    assertTrue(whisper)
+end)
+
+-- The thank-you emote names nobody: the client's emote parser hands "/thank Name" to PerformEmote as a
+-- bare name, which does not resolve for a stranger, so the emote went to "everyone around you" (owner's
+-- smoke, 2026-11-11). It targets the caster, thanks, then puts the player's target back.
+test("autothank: [CA-THX-1] the emote targets the caster, thanks, then restores the player's target", function()
+    local NS = boot()
+    local AT = NS.AutoThank
+    local thank = NS.Emotes.Command("THANK")
+    local emote = settings{ send = "emote" }
+    assertEqual(AT.Macro(caster(), "x", emote, { hadTarget = false }),
+        "/targetexact Bob-ArgentDawn\n" .. thank .. "\n/cleartarget", "red under: /thank Bob-ArgentDawn")
+    assertEqual(AT.Macro(caster(), "x", emote, { hadTarget = true }),
+        "/targetexact Bob-ArgentDawn\n" .. thank .. "\n/targetlasttarget", "a target is restored")
+    assertEqual(AT.Macro(caster(), "x", emote, { hadTarget = true, token = "nameplate3" }),
+        "/targetexact nameplate3\n" .. thank .. "\n/targetlasttarget", "a unit token beats the name")
+    assertEqual(AT.Macro(caster(), "x", emote, { hadTarget = true, onCaster = true }), thank,
+        "already on the caster: the emote alone")
+    assertEqual(AT.Macro(caster{ targetName = "Bob Smith", whisperName = "Bob-Smith" }, "x", emote, {}),
+        "/targetexact Bob Smith\n" .. thank .. "\n/cleartarget", "a regional name targets as it reads")
+end)
+
+test("autothank: [CA-THX-1] with no targeting commands the emote falls back to naming the caster", function()
+    local NS, m = boot()
+    local AT = NS.AutoThank
+    m.SLASH_TARGET_EXACT1 = nil
+    assertEqual(AT.Macro(caster(), "x", settings{ send = "emote" }, {}), NS.Emotes.Command("THANK") .. " Bob-ArgentDawn")
 end)
 
 test("autothank: [CA-M4-4] Macro holds the whole macro to 255 bytes, the whisper's text cut to fit", function()
     local NS = boot()
     local AT = NS.AutoThank
     local long = settings{ send = "both", text = string.rep("x", 400) }
-    local macro = AT.Macro(caster(), "Arcane Intellect", long)
+    local macro = AT.Macro(caster(), "Arcane Intellect", long, { hadTarget = true })
     assertEqual(#macro, NS.Bake.MAX_MACRO, "both, cut to the cap")
     local line = AT.Macro(caster(), "Arcane Intellect", settings{ send = "line", text = string.rep("x", 400) })
     assertEqual(#line, NS.Bake.MAX_BYTES, "a whisper alone is one line of 255")
@@ -159,11 +191,13 @@ test("autothank: [CA-M4-4] Macro refuses a / text and an empty one; both keeps t
     macro, why = AT.Macro(caster(), "x", settings{ send = "line", text = "" })
     assertNil(macro) assertEqual(why, "empty")
     assertEqual(AT.REASON.empty, NS.L["Nothing to whisper: the thank-you text is empty."])
-    macro, why = AT.Macro(caster(), "x", settings{ send = "both", text = "" })
-    assertEqual(macro, thank .. " Bob-ArgentDawn", "both keeps the emote")
+    local whisper
+    macro, why, whisper = AT.Macro(caster(), "x", settings{ send = "both", text = "" }, { onCaster = true })
+    assertEqual(macro, thank, "both keeps the emote")
     assertEqual(why, "empty", "and says why the whisper was dropped")
-    macro = AT.Macro(caster(), "x", settings{ send = "both", text = "/run x()" })
-    assertEqual(macro, thank .. " Bob-ArgentDawn")
+    assertFalse(whisper, "no whisper line")
+    macro = AT.Macro(caster(), "x", settings{ send = "both", text = "/run x()" }, { onCaster = true })
+    assertEqual(macro, thank)
     local nameless = caster()
     nameless.whisperName = nil
     assertNil((AT.Macro(nameless, "x", settings())), "no whisper name")
@@ -177,7 +211,7 @@ test("autothank: [CA-M4-4] Macro reads the client's own /w through Compat: none 
     m.SLASH_WHISPER1 = nil
     local macro, why = AT.Macro(caster(), "x", settings{ send = "line", text = "ty" })
     assertNil(macro) assertEqual(why, "noWhisper")
-    assertEqual(AT.Macro(caster(), "x", settings{ send = "both", text = "ty" }), NS.Emotes.Command("THANK") .. " Bob-ArgentDawn")
+    assertEqual(AT.Macro(caster(), "x", settings{ send = "both", text = "ty" }, { onCaster = true }), NS.Emotes.Command("THANK"))
 end)
 
 -- ── the unit-filter frame (CA-M4-5, events-frames-taint-§1's carve-out) ─────────────────────────
@@ -958,12 +992,25 @@ test("autothank: [CA-M4-12] the Thank click runs the macro of each mode", functi
         m.__click(b)
         assertEqual(#m.sentMacros, 1, send)
         local lines = m.sentLines()
-        local emote = "/thank " .. whisperName(NS)
+        local emote = "/targetexact " .. whisperName(NS) .. "|/thank|/cleartarget"
         local whisper = "/w " .. whisperName(NS) .. " Thanks for the Arcane Intellect, Caster1!"
         if send == "emote" then assertEqual(table.concat(lines, "|"), emote) end
         if send == "line" then assertEqual(table.concat(lines, "|"), whisper) end
         if send == "both" then assertEqual(table.concat(lines, "|"), emote .. "|" .. whisper) end
     end
+end)
+
+test("autothank: [CA-THX-1] the click aims at the caster as things stand when it is pressed", function()
+    local _, m, _, _, _, b = thanking("emote")
+    -- drawn with no target; by the click the player targets someone else and the caster has a nameplate
+    m.unitGUIDs.target = "Player-2-0000FFFF"
+    m.unitGUIDs.nameplate5 = "Player-2-00000101"
+    m.__click(b)
+    assertEqual(table.concat(m.sentLines(), "|"), "/targetexact nameplate5|/thank|/targetlasttarget",
+        "red under: the macro armed at the draw")
+    m.unitGUIDs.target = "Player-2-00000101"
+    m.__click(b)
+    assertEqual(table.concat(m.sentLines(), "|"), "/thank", "already targeting the caster")
 end)
 
 test("autothank: [CA-M4-12] a right-click never runs the macro", function()
@@ -1030,7 +1077,8 @@ test("autothank: [CA-M4-12] an empty thank-you text leaves the whisper unarmed, 
     local NS2, m2, _, _, f2, b2 = thanking("both", { text = "" })
     assertTrue(b2.qcArmed, "both keeps the emote")
     m2.__click(b2)
-    assertEqual(table.concat(m2.sentLines(), "|"), "/thank " .. whisperName(NS2))
+    assertEqual(table.concat(m2.sentLines(), "|"), "/targetexact " .. whisperName(NS2) .. "|/thank|/cleartarget")
+    assertEqual(NS2.SendEngine.EchoState().pending, 1, "red under: the aimed emote's newlines read as a whisper")
     assertEqual(f2.qcNote:GetText() or "", "")
 end)
 

@@ -83,32 +83,47 @@ function AT.Fill(text, name, buff, budget)
     return s
 end
 
+-- The emote's lines. "/thank Name" does not reach a stranger: the client's emote parser hands the
+-- name to PerformEmote, which resolves only a unit it knows, and otherwise thanks "everyone around
+-- you" (the owner's smoke, 2026-11-11). So the emote acts on the target: already on the caster, the
+-- emote alone; else /targetexact the caster (a unit token when the client has one, else the name),
+-- the emote, then the player's target back (/targetlasttarget, or /cleartarget when there was none).
+-- A client without those commands names the caster, as before.
+local function emoteLines(cmd, caster, aim)
+    if aim.onCaster then return cmd end
+    local exact, last, clear = NS.Compat.TargetCommands()
+    if not exact then return cmd .. " " .. caster.whisperName end
+    local who = aim.token or caster.targetName or caster.whisperName
+    return exact .. " " .. who .. "\n" .. cmd .. "\n" .. (aim.hadTarget and last or clear)
+end
+
 --- The Thank button's macro for `caster` (Compat.AuraCaster's answer) and the buff named `buff`,
---- under `settings` (the profile's `thank`): "emote" is the client's /thank on the caster, "line"
+--- under `settings` (the profile's `thank`), aimed by `aim` (Compat.ThankAim's answer; nil reads as
+--- no target and no token): "emote" is the client's /thank on the caster (emoteLines above), "line"
 --- a whisper of the filled text, "both" the emote, a newline, then the whisper. The whole macro is
 --- held to B.MAX_MACRO and the whisper line to B.MAX_BYTES. A whisper that cannot be built (an
 --- empty filled text, or one that starts with "/") refuses "line" and leaves "both" the emote alone,
---- with the reason either way (AT.REASON says it).
---- @return string|nil macro, string|nil reason
-function AT.Macro(caster, buff, settings)
-    if type(caster) ~= "table" or type(caster.whisperName) ~= "string" then return nil, "noCaster" end
+--- with the reason either way (AT.REASON says it). The third answer is whether a whisper line is in.
+--- @return string|nil macro, string|nil reason, boolean whisper
+function AT.Macro(caster, buff, settings, aim)
+    if type(caster) ~= "table" or type(caster.whisperName) ~= "string" then return nil, "noCaster", false end
     local B = NS.Bake
     local send = settings.send or "emote"
     local emote
     if send == "emote" or send == "both" then
         local cmd = NS.Emotes.Command("THANK")
-        if not cmd then return nil, "noEmote" end
-        emote = cmd .. " " .. caster.whisperName
-        if send == "emote" then return emote end
+        if not cmd then return nil, "noEmote", false end
+        emote = emoteLines(cmd, caster, aim or {})
+        if send == "emote" then return emote, nil, false end
     end
     local whisper = NS.Compat.WhisperCommand()
-    if not whisper then return emote, "noWhisper" end
+    if not whisper then return emote, "noWhisper", false end
     local head = whisper .. " " .. caster.whisperName .. " "
     local cap = math.min(B.MAX_BYTES, B.MAX_MACRO - (emote and #emote + 1 or 0))
     local text, why = AT.Fill(settings.text, caster.name, buff, cap - #head)
-    if not text then return emote, why end
-    if emote then return emote .. "\n" .. head .. text end
-    return head .. text
+    if not text then return emote, why, false end
+    if emote then return emote .. "\n" .. head .. text, nil, true end
+    return head .. text, nil, true
 end
 
 -- ── the unit-filter frame (spec §9 The event; events-frames-taint-§1's carve-out) ───────────────

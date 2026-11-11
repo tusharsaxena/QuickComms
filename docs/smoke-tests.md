@@ -2671,22 +2671,25 @@ character or a stranger who can cast a long buff on you.
 
 - **THANK-1. A stranger's buff, thanked (#19).** In the open world, out of combat, not grouped, a stranger
   casts Arcane Intellect on you → one toast: the buff's icon and *<name> buffed you with Arcane
-  Intellect*. Click **Thank** → you `/thank` them (the client's own emote line in chat), and the toast
-  goes. Again, and leave it → it fades over its last two seconds and goes after about ten; hovering it
+  Intellect*. Click **Thank** → *You thank <name>.* in chat (never *You thank everyone around you.*), your
+  target is what it was before the click, and the toast goes. With a target of your own, and with none,
+  both: the target is put back, or cleared. Again, and leave it → it fades over its last two seconds and goes after about ten; hovering it
   holds it. Result: owed
 - **THANK-2. Whether the caster reads for a stranger (R1).** With friendly nameplates off and the stranger
   not your target, then targeted: run `/dump C_UnitAuras.GetAuraCasterGUID("player", <id>)` first and the
   aura's `sourceUnit` second (`/dump C_UnitAuras.GetAuraDataByAuraInstanceID("player", <id>).sourceUnit`),
   and record each answer both ways; then record `GetPlayerInfoByGUID(<guid>)`'s name and realm (the 6th and
   7th returns) for that stranger. A caster that reads in neither way shows no toast. Result: owed
-- **THANK-3. `/thank Name` out of range or out of sight (UNVERIFIED).** Let the stranger walk out of range,
-  or behind a wall, before you click Thank → record whether the emote names them or falls back to the
-  untargeted form. Result: owed
+- **THANK-3. The caster out of range or out of sight (UNVERIFIED).** The Thank emote targets the caster
+  (`/targetexact`, then `/thank`, then your target back). Let the stranger walk out of range, or behind a
+  wall, before you click Thank → record whether the emote names them; with a target of your own, record
+  whether the thank went to that target instead (`/targetexact` found no one). Result: owed
 - **THANK-4. The whisper and the emote reach a cross-realm caster.** Set Thank button sends to Whisper →
   a click whispers *Thanks for the Arcane Intellect, <name>!*, the whisper reaches the caster and no drop
   note prints (the echo is matched). On Retail use a cross-realm caster whose realm name has a space; on
-  Forever a "First Surname" caster. Then Emote: `/thank Name-Realm` lands on the cross-realm caster on
-  Retail, and `/thank First-Surname` on Forever. Then Both: one click sends the emote, then the whisper.
+  Forever a "First Surname" caster. Then Emote: *You thank <name>.* lands on the cross-realm caster on
+  Retail (`/targetexact Name-Realm`, or the caster's nameplate unit), and on Forever's "First Surname"
+  caster (`/targetexact First Surname`). Then Both: one click sends the emote, then the whisper.
   Result: owed
 - **THANK-5. A buff mid-fight.** Get buffed by a stranger while in combat → no toast in combat; one after
   it. Repeat after a `/reload` in combat (the toast still comes after the fight). Result: owed
