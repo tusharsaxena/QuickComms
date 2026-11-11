@@ -403,7 +403,7 @@ Total.
 - channels: [QFE-E1] the channel row offers Emote; the seam accepts it
 - channels: [QFE-E1] a Groups row names Emote in the emote color; a tooltip names its channel
 
-### test_emotes.lua (16)
+### test_emotes.lua (19)
 
 - emotes: [QFE-E2] the map is EMOTEn_TOKEN to its first free EMOTEn_CMDj over the client's indices, first index wins
 - emotes: [QFE-REV] a command the chat parser runs before an emote is skipped for the token's next one
@@ -417,6 +417,9 @@ Total.
 - emotes: [QFE-E2] the channel row offers Game emote; a Groups row previews the command
 - emotes: [QFE-E2] a pad button arms the command, and its echo is the player's CHAT_MSG_TEXT_EMOTE
 - emotes: [QFE-E2] a previewed game emote prints would emote /point and sends nothing
+- emotes: [CA-M2-4] an emote beside a Line: its echo is the TEXT_EMOTE, the Line's the PARTY
+- emotes: [CA-M2-4] #16: Kick on me in Party with /point, ping Attack and Skull, out of combat
+- emotes: [CA-M2-4] #16: Kick on me in Party with /point, ping Attack and Skull, in combat
 - emotes: [QFE-E2] picking Game emote swaps the Text box for the emote picker; a pick names the callout
 - emotes: [QFE-E2] Save with Game emote and no pick stays open and names the picker
 - emotes: [QFE-E2] a user name is kept, and leaving Game emote drops the token on Save
@@ -903,7 +906,7 @@ Total.
 - check: [final minor 4] solo with soloFallback=self says it would print locally
 - check: [CA-M1-12] a ping-only or marker-only callout prints its line and bytes
 
-### test_send_guard.lua (11)
+### test_send_guard.lua (13)
 
 - guard: Decide is ok outside the window and guarded inside it
 - guard: Remaining counts down to zero
@@ -916,8 +919,10 @@ Total.
 - echo: Expire drops only presses older than the window, oldest first
 - queue: a key replaces its earlier entry and keeps its place
 - echo: [QF-04] only channel 1 is the General echo; an unreadable index is left to the sender rule
+- echo: [CA-M2-4] a press's entries settle once, when every one has echoed
+- echo: [CA-M2-4] Expire reports one drop per press: the first of its entries to expire
 
-### test_sendengine.lua (43)
+### test_sendengine.lua (48)
 
 - sendengine: a send button is a named secure button registered for both edges
 - sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
@@ -962,6 +967,11 @@ Total.
 - send: [CA-M1-10] a target that cannot be marked, and a raid member without rights, are named
 - send: [CA-M1-10] pings off and a running cooldown print; the press's own ping never reads as cooldown
 - send: [CA-M1-10] a secret target prints nothing, and PreClick writes no attribute
+- send: [CA-M2-4] a Line and an emote await two echoes and report one sent
+- send: [CA-M2-4] the emote's echo missing gives one dropped, and the note names the emote
+- send: [CA-M2-4] a locked Line beside an emote prints its note and awaits only the emote
+- send: [CA-M2-4] every action a locked chat action: print each, then no tick and no echo
+- send: [CA-M2-4] a locked Line beside a ping ticks and reports sent at once
 
 ### test_dial_secure.lua (20)
 
@@ -2160,7 +2170,7 @@ Total.
 | test_situation.lua | 20 |
 | test_tokens.lua | 11 |
 | test_channels.lua | 18 |
-| test_emotes.lua | 16 |
+| test_emotes.lua | 19 |
 | test_bake.lua | 25 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 34 |
@@ -2178,8 +2188,8 @@ Total.
 | test_page_pads.lua | 28 |
 | test_page_dials.lua | 28 |
 | test_check.lua | 7 |
-| test_send_guard.lua | 11 |
-| test_sendengine.lua | 43 |
+| test_send_guard.lua | 13 |
+| test_sendengine.lua | 48 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 39 |
 | test_edit_preview.lua | 17 |
@@ -2229,4 +2239,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1867** |
+| **Total** | **1877** |

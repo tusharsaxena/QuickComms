@@ -243,6 +243,80 @@ test("emotes: [QFE-E2] a previewed game emote prints would emote /point and send
     assertEqual(#m.sentMacros, 0)
 end)
 
+-- ── an Emote action beside a Line (CA-M2-4, combined actions §4, #16) ─────────────────────────
+
+local function partyLive()
+    local NS, env, m = live()
+    NS.Situation.ReadInputs = function() return { inGroup = true } end
+    NS.Situation.RefreshNow("test")
+    return NS, env, m
+end
+
+local function comboGroup(NS, f)
+    local Lib = NS.Library
+    local cid = Lib.CreateCallout(f)
+    Lib.AddGroupToSurface("pad", "p1", Lib.CreateGroup({ name = "Combo", callouts = { cid } }), 1)
+    return cid
+end
+
+test("emotes: [CA-M2-4] an emote beside a Line: its echo is the TEXT_EMOTE, the Line's the PARTY", function()
+    local NS, _, m = partyLive()
+    local cid = comboGroup(NS, { name = "Kick", text = "Kick on me", channel = "party", emote = "POINT" })
+    local b = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertEqual(b:GetAttribute("macrotext"), "/p Kick on me\n/point")
+    local out = {}
+    NS.Bus:NewTarget():RegisterMessage(NS.MSG.SEND_RESULT, function(_, _, _, what) out[#out + 1] = what end)
+    m.__now = 100
+    m.__click(b)
+    assertEqual(NS.SendEngine.EchoState().pending, 2)
+    m.__fire("CHAT_MSG_EMOTE", "never read", "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1, m.playerGUID)
+    assertEqual(NS.SendEngine.EchoState().pending, 2, "a custom emote line is not the echo")
+    m.__fire("CHAT_MSG_TEXT_EMOTE", "never read", "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1, m.playerGUID)
+    assertEqual(#out, 0, "the Line has not echoed")
+    m.__fire("CHAT_MSG_PARTY", "never read", "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1, m.playerGUID)
+    assertEqual(table.concat(out, ","), "sent")
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+end)
+
+-- #16's acceptance, pressed headless: a Line, an emote, a ping and a marker on one press.
+local function kickOnMe(inCombat)
+    local NS, _, m = partyLive()
+    m.__unitExists.target = true
+    local cid = comboGroup(NS, { name = "Kick", text = "Kick on me", channel = "party", emote = "POINT",
+        ping = "attack", marker = 8 })
+    local b = NS.Pad.ButtonsFor("p1", cid)[1]
+    local out, decided = {}, 0
+    NS.Bus:NewTarget():RegisterMessage(NS.MSG.SEND_RESULT, function(_, _, _, what) out[#out + 1] = what end)
+    local decide = NS.SendGuard.Decide
+    NS.SendGuard.Decide = function(...) decided = decided + 1 return decide(...) end
+    if inCombat then
+        m.__setCombat(false)
+        m.__fire("PLAYER_REGEN_DISABLED")
+        m.__setCombat(true)
+    end
+    m.__now = 100
+    m.__click(b)
+    local lines = m.sentLines()
+    assertEqual(#lines, 4)
+    assertEqual(lines[1], "/p Kick on me") assertEqual(lines[2], "/point")
+    assertEqual(lines[3], "/ping [@target,exists] 1") assertEqual(lines[4], "/tm [@target,exists] !8")
+    assertEqual(decided, 1, "one guard decision")
+    assertEqual(NS.SendEngine.GuardState().last, 100, "one stamp")
+    assertEqual(NS.SendEngine.EchoState().pending, 2, "the Line and the emote")
+    m.__fire("CHAT_MSG_PARTY", "never read", "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1, m.playerGUID)
+    m.__fire("CHAT_MSG_TEXT_EMOTE", "never read", "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1, m.playerGUID)
+    assertEqual(table.concat(out, ","), "sent", "one result")
+    assertEqual(#m.blocked, 0)
+end
+
+test("emotes: [CA-M2-4] #16: Kick on me in Party with /point, ping Attack and Skull, out of combat", function()
+    kickOnMe(false)
+end)
+
+test("emotes: [CA-M2-4] #16: Kick on me in Party with /point, ping Attack and Skull, in combat", function()
+    kickOnMe(true)
+end)
+
 -- ── the callout popup ────────────────────────────────────────────────────────────────────────
 
 local function popup()

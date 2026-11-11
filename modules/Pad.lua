@@ -200,8 +200,8 @@ end
 
 -- Armed when the slot baked; otherwise disarmed, keeping only what a click may still do (a solo
 -- self-print). A refused or placeholder button carries no chat type, so its click reports nothing.
--- lockText reads the slot's live lock (RefreshLocks keeps it current in combat), so a press on a
--- padlocked button is explained by its lock, never tracked as a send.
+-- lockText names an action's live lock (RefreshLocks keeps each baked action's lock current in combat),
+-- so a padlocked action in a press is explained by its lock, never tracked as a send.
 -- A previewed button (spec §13.3) keeps its line for the tooltip and is disarmed, and carries neither
 -- the solo self-line nor the lock text: a previewed button sends and reports nothing. It carries an
 -- `echo` instead (QC-07: Surfaces.MarkPreview's NS.Preview.SlotEcho, its line with missing tokens
@@ -221,7 +221,7 @@ local function arm(btn, slot)
         chatType = slot.chatType, chatTypes = slot.chatTypes, actions = slot.actions, locks = slot.locks,
         skipped = slot.skipped, selfText = (not preview) and slot.selfText or nil,
         echo = (preview or slot.reason == "testMode") and echoList(slot) or nil,
-        lockText = (not preview) and function() return slot.lock and (R.LOCK_TEXT[slot.lock] or tostring(slot.lock)) end or nil }
+        lockText = (not preview) and function(lock) return lock and (R.LOCK_TEXT[lock] or tostring(lock)) end or nil }
     if slot.line and slot.actions and #slot.actions > 0 and not preview then
         meta.rebake = slot.rebake
         NS.SendEngine.Arm(btn, slot.line, meta)

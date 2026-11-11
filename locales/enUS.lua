@@ -390,6 +390,7 @@ L["A deferred update failed (%s): %s"] = "A deferred update failed (%s): %s"
 L["%s may have been dropped by the game (sent too soon after another message)."] =
     "%s may have been dropped by the game (sent too soon after another message)."
 L["%s may not have been sent. %s"] = "%s may not have been sent. %s"
+L["%s (emote) may not have been sent."] = "%s (emote) may not have been sent."
 -- Press-time reasons: why a ping or a mark cannot land, read in PreClick before the macro runs
 L["%s: no target to ping."] = "%s: no target to ping."
 L["%s: no target to mark."] = "%s: no target to mark."

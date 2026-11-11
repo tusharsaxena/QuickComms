@@ -416,14 +416,19 @@ local function result(meta, what)
     NS.addon:SendMessage(NS.MSG.SEND_RESULT, meta.calloutId, meta.surfaceId, what)
 end
 
+-- A drop note names the callout, and the emote when that is what dropped (CA-M2-4).
+local DROP_NOTE = {
+    emote = L["%s (emote) may not have been sent."],
+}
+
 local function expire()
     local e = State.sendEcho
     if not e then return end
     for _, p in ipairs(G.Expire(e, GetTime())) do
         result(p.meta, "dropped")
         if NS.Setting("behavior.dropNotes") then
-            NS.Print(L["%s may have been dropped by the game (sent too soon after another message)."]
-                :format(tostring(p.meta.name)))
+            local note = DROP_NOTE[p.kind] or L["%s may have been dropped by the game (sent too soon after another message)."]
+            NS.Print(note:format(tostring(p.meta.name)))
         end
     end
 end
@@ -458,15 +463,46 @@ local function printEcho(echo)
     for _, e in ipairs(echo) do NS.Print(NS.Preview.FillEcho(e)) end
 end
 
+-- A press's baked chat actions, split by their live lock (combined actions §4 step 6): the open ones
+-- await an echo, each locked one prints its note ("may not have been sent", with why) and awaits none.
+local function chatActions(meta)
+    local open, locked = {}, {}
+    for _, a in ipairs(meta.actions) do
+        if a.chatType then
+            if a.lock then locked[#locked + 1] = a else open[#open + 1] = a end
+        end
+    end
+    return open, locked
+end
+
+local function lockNotes(meta, locked)
+    if not NS.Setting("behavior.dropNotes") then return end
+    for _, a in ipairs(locked) do
+        local why = meta.lockText and meta.lockText(a.lock) or tostring(a.lock)
+        NS.Print(L["%s may not have been sent. %s"]:format(tostring(meta.name), why))
+    end
+end
+
+-- One entry per open chat action, all sharing one press, so the press reports one result (D7); with
+-- none to await, "sent" at once (D16: the flash is not a confirmation).
+local function track(meta, open, now)
+    if not open[1] then
+        result(meta, "sent")
+        return
+    end
+    local p = { need = #open, got = 0, done = false }
+    for _, a in ipairs(open) do G.Record(echoState(), now, a.chatType, meta, p, a.kind) end
+    scheduleExpiry()
+end
+
 -- The press (combined actions §4). One G.Decide, one lastSendAt stamp and one qcOnPress per press,
--- however many actions it has (D7). Each chat action awaits its echo; a press with no chat action
--- has nothing to echo, so it reports "sent" at once (D16: the flash is not a confirmation).
+-- however many actions it has (D7).
 local function press(b)
     local meta, notes = b.qcMeta, b.qcPressNotes
     b.qcPressNotes = nil
     if not meta or NS.IsStoodDown() then return end
     NS.Debug(TAG_S, "press %s on %s -> %s%s", tostring(meta.calloutId), tostring(meta.surfaceId),
-        tostring(meta.chatType or "none"), b.qcArmed and "" or " (disarmed)")
+        table.concat(meta.chatTypes or {}, "+"), b.qcArmed and "" or " (disarmed)")
     -- A previewed button or wedge (disarmed, spec §13.3) or a test placeholder: the line it would have
     -- sent, its tokens filled at the click (NS.Preview.FillEcho, QC-07), or why it would send
     -- nothing, printed locally and nothing more. No attribute is read or written, no guard stamped
@@ -487,27 +523,18 @@ local function press(b)
     -- and why the press-time re-bake dropped the Line (CA-M2-3).
     printNotes(notes)
     if meta.lineNote then NS.Print(meta.lineNote) end
-    -- A padlocked button stays armed (spec §8.4), but the game is expected to refuse it: no echo is
-    -- awaited and no guard stamped, so a refusal is never blamed on the spam guard.
-    local lockText = meta.lockText and meta.lockText()
-    if lockText then
-        if NS.Setting("behavior.dropNotes") then
-            NS.Print(L["%s may not have been sent. %s"]:format(tostring(meta.name), lockText))
-        end
-        return
-    end
+    -- A padlocked action stays in the armed macro (spec §8.4), but the game is expected to refuse it:
+    -- it prints its note and awaits no echo. When every action is a locked chat action, no guard is
+    -- stamped either, so a refusal is never blamed on the spam guard.
+    local open, locked = chatActions(meta)
+    lockNotes(meta, locked)
+    if #locked == #meta.actions then return end
     local now = GetTime()
     local window = NS.Setting("behavior.spamGuard")
     local verdict = G.Decide(now, State.lastSendAt, window)
     State.lastSendAt = now
-    local chatType = meta.chatTypes and meta.chatTypes[1] or meta.chatType
     if verdict == "guarded" then result(meta, "guarded") end
-    if chatType then
-        G.Record(echoState(), now, chatType, meta)
-        scheduleExpiry()
-    else
-        result(meta, "sent")
-    end
+    track(meta, open, now)
     if b.qcOnPress then b.qcOnPress(b, verdict, window) end
 end
 
@@ -598,7 +625,7 @@ function NS.addon.OnSendEcho(_, event, ...)
     local sender = select(2, ...)
     local guid = select(12, ...)
     local hit = G.Match(e, G.CHAT_TYPE_BY_EVENT[event], GetTime(), NS.Compat.SenderIsPlayer(sender, guid))
-    if hit then result(hit.meta, "sent") end
+    if hit and G.Settle(hit) then result(hit.meta, "sent") end
     if t0 then Perf.Note("echoMatch", debugprofilestop() - t0) end
 end
 

@@ -124,3 +124,42 @@ test("echo: [QF-04] only channel 1 is the General echo; an unreadable index is l
     assertNil(g.IsGeneralEcho(nil))
     assertNil(g.IsGeneralEcho("1"))
 end)
+
+-- ── one result per press (CA-M2-4, combined actions §4 step 8, D7) ────────────────────────────
+
+test("echo: [CA-M2-4] a press's entries settle once, when every one has echoed", function()
+    local g = G()
+    local e = g.NewEcho()
+    local press = { need = 2, got = 0, done = false }
+    g.Record(e, 10, "PARTY", { id = "a" }, press, "line")
+    g.Record(e, 10, "TEXT_EMOTE", { id = "a" }, press, "emote")
+    assertEqual(#e.pending, 2, "one entry per chat action")
+    local hit = g.Match(e, "TEXT_EMOTE", 10.4, true)
+    assertEqual(hit.kind, "emote")
+    -- red under: no G.Settle (every matched entry reported sent)
+    assertFalse(g.Settle(hit), "one of two echoed")
+    assertTrue(g.Settle(g.Match(e, "PARTY", 10.5, true)), "both echoed: the press is sent")
+    assertTrue(press.done)
+    assertTrue(g.Settle({ meta = {} }), "an entry with no press settles alone")
+end)
+
+test("echo: [CA-M2-4] Expire reports one drop per press: the first of its entries to expire", function()
+    local g = G()
+    local e = g.NewEcho()
+    local both = { need = 2, got = 0, done = false }
+    g.Record(e, 10, "PARTY", { id = "a" }, both, "line")
+    g.Record(e, 10, "TEXT_EMOTE", { id = "a" }, both, "emote")
+    local half = { need = 2, got = 0, done = false }
+    g.Record(e, 10.1, "PARTY", { id = "b" }, half, "line")
+    g.Record(e, 10.1, "TEXT_EMOTE", { id = "b" }, half, "emote")
+    assertFalse(g.Settle(g.Match(e, "PARTY", 10.3, true)), "a's Line echoed; a's emote did not")
+    local out = g.Expire(e, 12)
+    -- red under: one drop per expired entry
+    assertEqual(#out, 2, "one per press")
+    assertEqual(out[1].meta.id, "a") assertEqual(out[1].kind, "emote")
+    assertEqual(out[2].meta.id, "b")
+    assertTrue(both.done) assertTrue(half.done)
+    assertEqual(#e.pending, 0, "every expired entry leaves the tracker")
+    assertEqual(e.dropped, 2)
+    assertFalse(g.Settle({ meta = {}, press = both }), "a dropped press never reports sent")
+end)

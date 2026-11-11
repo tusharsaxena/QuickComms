@@ -242,7 +242,8 @@ end)
 -- ── the click, the guard and the echo (spec §9.2, §9.3) ─────────────────────────────────────
 
 -- A Line-only press, as Pad's arm hands it on: its baked actions ride the meta (CA-M1-9).
-local META = { calloutId = "c1", surfaceId = "p1", chatType = "PARTY", name = "Pull", actions = { { kind = "line" } } }
+local META = { calloutId = "c1", surfaceId = "p1", chatType = "PARTY", name = "Pull",
+    actions = { { kind = "line", chatType = "PARTY" } } }
 
 local function armed(NS, m, meta)
     local b = NS.SendEngine.NewButton(m.UIParent)
@@ -348,7 +349,7 @@ end)
 
 -- A CHAT_MSG_CHANNEL: the channel index is the 8th payload field (QF-04).
 local GENERAL_META = { calloutId = "c1", surfaceId = "p1", chatType = "CHANNEL", name = "Thanks",
-    actions = { { kind = "line" } } }
+    actions = { { kind = "line", chatType = "CHANNEL" } } }
 local function channelEcho(m, index, sender, guid)
     m.__fire("CHAT_MSG_CHANNEL", "never read", sender or "Testchar-Testrealm", "", "2. Trade", "", "", 2, index,
         "Trade", 0, 1, guid or m.playerGUID)
@@ -399,7 +400,7 @@ test("send: [QFE-E1] the player's CHAT_MSG_EMOTE is an emote press's echo; anoth
     local out = results(NS)
     local b = NS.SendEngine.NewButton(m.UIParent)
     NS.SendEngine.Arm(b, "/e waves", { calloutId = "c1", surfaceId = "p1", chatType = "EMOTE", name = "Wave",
-        actions = { { kind = "line" } } })
+        actions = { { kind = "line", chatType = "EMOTE" } } })
     m.__now = 100
     m.__click(b)
     echo(m, "CHAT_MSG_SAY")
@@ -702,4 +703,112 @@ test("send: [CA-M1-10] a secret target prints nothing, and PreClick writes no at
     assertEqual(#m.prints, 0, "an unknown answer is no reason")
     assertEqual(writes, 0)
     assertEqual(#m.blocked, 0)
+end)
+
+-- ── one result per press, and a lock per action (CA-M2-4, combined actions §4 steps 6 to 8) ────
+
+local function lineAndEmote(lineLock, emoteLock)
+    return { calloutId = "c8", surfaceId = "p1", name = "Kick", chatTypes = { "PARTY", "TEXT_EMOTE" },
+        lockText = function(lock) return lock and ("locked: " .. lock) or nil end,
+        actions = { { kind = "line", line = "/p Kick on me", chatType = "PARTY", lock = lineLock },
+            { kind = "emote", line = "/point", chatType = "TEXT_EMOTE", lock = emoteLock } } }
+end
+
+local function armedMacro(NS, m, meta)
+    local b = NS.SendEngine.NewButton(m.UIParent)
+    local lines = {}
+    for _, a in ipairs(meta.actions) do lines[#lines + 1] = a.line end
+    NS.SendEngine.Arm(b, table.concat(lines, "\n"), meta)
+    return b
+end
+
+test("send: [CA-M2-4] a Line and an emote await two echoes and report one sent", function()
+    local NS, m = T.enableAddon()
+    local out = results(NS)
+    local b = armedMacro(NS, m, lineAndEmote())
+    m.__now = 100
+    m.__click(b)
+    -- red under: one G.Record per press (the first chat type only)
+    assertEqual(NS.SendEngine.EchoState().pending, 2)
+    echo(m, "CHAT_MSG_PARTY")
+    assertEqual(#out, 0, "the emote has not echoed yet")
+    echo(m, "CHAT_MSG_TEXT_EMOTE")
+    assertEqual(table.concat(out, ","), "c8@p1=sent", "one result per press")
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+    m.__now = 103
+    m.__fireTimers()
+    assertEqual(table.concat(out, ","), "c8@p1=sent", "nothing left to drop")
+end)
+
+test("send: [CA-M2-4] the emote's echo missing gives one dropped, and the note names the emote", function()
+    local NS, m = T.enableAddon()
+    local L = NS.L
+    local out = results(NS)
+    m.__now = 100
+    m.__click(armedMacro(NS, m, lineAndEmote()))
+    echo(m, "CHAT_MSG_PARTY")
+    m.prints = {}
+    m.__now = 103
+    m.__fireTimers()
+    -- red under: a "sent" on the Line's echo, or no kind in the note
+    assertEqual(table.concat(out, ","), "c8@p1=dropped")
+    assertEqual(#m.prints, 1)
+    assertEqual(m.prints[1], NS.PREFIX .. " " .. L["%s (emote) may not have been sent."]:format("Kick"))
+    -- neither echoed: still one dropped and one note, for the first entry to expire
+    out[1] = nil
+    m.__now = 200
+    m.__click(armedMacro(NS, m, lineAndEmote()))
+    m.prints = {}
+    m.__now = 203
+    m.__fireTimers()
+    assertEqual(table.concat(out, ","), "c8@p1=dropped")
+    assertEqual(#m.prints, 1)
+end)
+
+test("send: [CA-M2-4] a locked Line beside an emote prints its note and awaits only the emote", function()
+    local NS, m = T.enableAddon()
+    local L = NS.L
+    local out = results(NS)
+    local pressed = 0
+    local b = armedMacro(NS, m, lineAndEmote("notInGroup"))
+    b.qcOnPress = function() pressed = pressed + 1 end
+    m.prints = {}
+    m.__now = 100
+    m.__click(b)
+    -- red under: the press returning on the first lock, or awaiting the locked Line
+    assertEqual(m.prints[1], NS.PREFIX .. " " .. L["%s may not have been sent. %s"]:format("Kick", "locked: notInGroup"))
+    assertEqual(pressed, 1, "the emote still ticks")
+    assertEqual(NS.SendEngine.EchoState().pending, 1)
+    echo(m, "CHAT_MSG_TEXT_EMOTE")
+    assertEqual(table.concat(out, ","), "c8@p1=sent")
+end)
+
+test("send: [CA-M2-4] every action a locked chat action: print each, then no tick and no echo", function()
+    local NS, m = T.enableAddon()
+    local out = results(NS)
+    local pressed = 0
+    local b = armedMacro(NS, m, lineAndEmote("notInGroup", "lockdown"))
+    b.qcOnPress = function() pressed = pressed + 1 end
+    m.prints = {}
+    m.__now = 100
+    m.__click(b)
+    assertEqual(#m.prints, 2, "one note per locked action")
+    assertEqual(pressed, 0) assertEqual(#out, 0)
+    assertNil(NS.SendEngine.GuardState().last, "no guard stamped")
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+end)
+
+test("send: [CA-M2-4] a locked Line beside a ping ticks and reports sent at once", function()
+    local NS, m = T.enableAddon()
+    m.__unitExists.target = true
+    local out = results(NS)
+    local meta = lineAndEmote("notInGroup")
+    meta.actions[2] = { kind = "ping", line = "/ping [@target,exists] 1" }
+    local b = armedMacro(NS, m, meta)
+    local pressed = 0
+    b.qcOnPress = function() pressed = pressed + 1 end
+    m.__click(b)
+    assertEqual(pressed, 1)
+    assertEqual(table.concat(out, ","), "c8@p1=sent", "nothing to echo")
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
 end)

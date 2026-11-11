@@ -84,9 +84,25 @@ function G.NewEcho()
     return { pending = {}, sent = 0, dropped = 0, unknown = 0, ignored = 0 }
 end
 
---- Remember a press that should come back as a CHAT_MSG_* of `chatType`.
-function G.Record(e, at, chatType, meta)
-    e.pending[#e.pending + 1] = { at = at, chatType = chatType, meta = meta }
+--- Remember a press that should come back as a CHAT_MSG_* of `chatType`. A press with several chat
+--- actions (combined actions §4 step 8, D7) records one entry per unlocked chat action, each sharing
+--- `press` ({ need, got, done }), so it reports one result however many it awaits; `kind` names the
+--- action ("line", "emote") for a drop note.
+function G.Record(e, at, chatType, meta, press, kind)
+    e.pending[#e.pending + 1] = { at = at, chatType = chatType, meta = meta, press = press, kind = kind }
+end
+
+--- A matched entry's press is complete: true when every entry it awaits has echoed now (once only),
+--- false while one is still pending or after the press was reported dropped. An entry with no press
+--- settles alone.
+--- @return boolean sent
+function G.Settle(entry)
+    local p = entry.press
+    if not p then return true end
+    p.got = p.got + 1
+    if p.done or p.got < p.need then return false end
+    p.done = true
+    return true
 end
 
 --- An echo arrived. `fromMe` is true (the player sent it), false (someone else did) or nil (the
@@ -109,13 +125,16 @@ function G.Match(e, chatType, now, fromMe)
     return nil
 end
 
---- The presses whose window has passed with no echo, oldest first: each one is a drop.
+--- The presses whose window has passed with no echo, oldest first: each one is a drop. A press with
+--- several entries drops once, on the first of them to expire, which marks it done; its other
+--- expired entries leave the tracker with it.
 --- @return table entries
 function G.Expire(e, now)
     local out, keep = {}, {}
     for _, p in ipairs(e.pending) do
         if type(now) == "number" and now - p.at > G.ECHO_WINDOW then
-            out[#out + 1] = p
+            if not (p.press and p.press.done) then out[#out + 1] = p end
+            if p.press then p.press.done = true end
         else
             keep[#keep + 1] = p
         end
