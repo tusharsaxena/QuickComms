@@ -231,7 +231,7 @@ Total.
 - slash: [toggle] the hidden state is this character's: a /reload or the next login restores it
 - slash: [characterization] PreviewLines' every branch: refused starts, a repeat, list's header, off with nothing on
 
-### test_disabled.lua (26)
+### test_disabled.lua (27)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
 - disabled 2: through /qc disable, nothing is registered, heard or scheduled
@@ -259,6 +259,7 @@ Total.
 - disabled [by hold]: under the perf hold alone, the Toggle Comms Pads key press refuses as /qc toggle does
 - disabled [by hold]: under the perf hold alone, test mode and Preview as refuse with the capture line
 - disabled [by hold]: with both holds the disabled line wins
+- disabled: [CA-M4-5] auto-thank's unit-filter frame holds UNIT_AURA for the player, and the stand-down takes it down
 
 ### test_diagnostics.lua (14)
 
@@ -1029,7 +1030,7 @@ Total.
 - send: [CA-M2-4] every action a locked chat action: print each, then no tick and no echo
 - send: [CA-M2-4] a locked Line beside a ping ticks and reports sent at once
 
-### test_autothank.lua (13)
+### test_autothank.lua (18)
 
 - autothank: [CA-M4-4] Accept takes a stranger's helpful buff (isFromPlayerOrPlayerPet is any player's)
 - autothank: [CA-M4-4] Accept rejects a harmful aura, an NPC's, no caster, and anything not plainly true
@@ -1044,6 +1045,11 @@ Total.
 - autothank: [CA-M4-4] Macro holds the whole macro to 255 bytes, the whisper's text cut to fit
 - autothank: [CA-M4-4] Macro refuses a / text and an empty one; both keeps the emote
 - autothank: [CA-M4-4] Macro reads the client's own /w through Compat: none refuses the whisper
+- autothank: [CA-M4-5] the frame hears UNIT_AURA for the player alone, on in the open world
+- autothank: [CA-M4-5] off, in a dungeon by default, or stood down, the frame hears nothing
+- autothank: [CA-M4-5] a profile switch re-reads the thank settings
+- autothank: [CA-M4-5] the stand-down unregisters the frame, and the stand-up re-uses it
+- autothank: [CA-M4-5] the frame's UNIT_AURA reaches AT.OnAura with its payload
 
 ### test_dial_secure.lua (20)
 
@@ -2240,7 +2246,7 @@ Total.
 | test_profile.lua | 12 |
 | test_schema.lua | 24 |
 | test_slash.lua | 22 |
-| test_disabled.lua | 26 |
+| test_disabled.lua | 27 |
 | test_diagnostics.lua | 14 |
 | test_compat.lua | 32 |
 | test_identity.lua | 11 |
@@ -2269,7 +2275,7 @@ Total.
 | test_check.lua | 9 |
 | test_send_guard.lua | 13 |
 | test_sendengine.lua | 48 |
-| test_autothank.lua | 13 |
+| test_autothank.lua | 18 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
@@ -2319,4 +2325,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1953** |
+| **Total** | **1959** |

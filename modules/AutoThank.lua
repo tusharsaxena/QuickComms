@@ -110,3 +110,73 @@ function AT.Macro(caster, buff, settings)
     if emote then return emote .. "\n" .. head .. text end
     return head .. text
 end
+
+-- ── the unit-filter frame (spec §9 The event; events-frames-taint-§1's carve-out) ───────────────
+-- A private frame whose one job is UNIT_AURA filtered to "player" by the client, so no unit compare
+-- (the payload may be secret) is ever made. Made once at load and re-used across a disable and an
+-- enable; registered only while auto-thank is on for the current content kind, so the default (the
+-- open world alone, R-B) costs nothing in an instance. AceAddon's UnregisterAllEvents never reaches
+-- it, so the stand-down below takes it down itself.
+
+--- The UNIT_AURA handler (CA-M4-6 fills it): `unit` is "player" (the frame's filter), `info` the
+--- client's updateInfo, possibly secret.
+function AT.OnAura(unit, info) -- luacheck: ignore 212
+end
+
+AT.frame = AT.frame or CreateFrame("Frame")
+AT.frame:SetScript("OnEvent", function(_, _, unit, info) AT.OnAura(unit, info) end)
+
+local function thankSettings()
+    local db = NS.db
+    return db and db.profile and db.profile.thank
+end
+
+-- True when auto-thank should hear the player's auras now.
+local function wanted()
+    if NS.IsStoodDown() then return false end
+    local t = thankSettings()
+    if not (t and t.enabled) then return false end
+    local content = NS.Situation.Current().content
+    return type(t.content) == "table" and t.content[content] == true
+end
+
+--- Register the frame's UNIT_AURA when auto-thank is on, the addon is up and the current content kind
+--- is switched on; otherwise unregister it. Runs on SITUATION_CHANGED, PROFILE_CHANGED, a thank.*
+--- setting change (the rows' onChange) and the stand-up.
+function AT.Rewire()
+    local frame = AT.frame
+    if wanted() then
+        if not frame.qcAuraOn then
+            frame.qcAuraOn = NS.SafeRegisterUnitEvent(frame, "UNIT_AURA", NS.rejectedEvents, "player") or nil
+        end
+    else
+        frame:UnregisterAllEvents()
+        frame.qcAuraOn = nil
+    end
+end
+
+-- Its own target (core/Bus.lua); on the tracked bus the stand-down and stand-up take it down and
+-- replay it, on the degraded bus this module does both itself.
+local HANDLERS = {
+    { NS.MSG.SITUATION_CHANGED, function() AT.Rewire() end },
+    { NS.MSG.PROFILE_CHANGED, function() AT.Rewire() end },
+}
+local receiver
+local function listen()
+    receiver = receiver or NS.Bus:NewTarget()
+    if not receiver then return end
+    for _, h in ipairs(HANDLERS) do receiver:RegisterMessage(h[1], h[2]) end
+end
+listen()
+
+NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
+    AT.frame:UnregisterAllEvents()
+    AT.frame.qcAuraOn = nil
+    if receiver and not NS.Bus.tracked then
+        for _, h in ipairs(HANDLERS) do receiver:UnregisterMessage(h[1]) end
+    end
+end
+NS.STAND_UP[#NS.STAND_UP + 1] = function()
+    if not NS.Bus.tracked then listen() end
+    AT.Rewire()
+end

@@ -179,3 +179,76 @@ test("autothank: [CA-M4-4] Macro reads the client's own /w through Compat: none 
     assertNil(macro) assertEqual(why, "noWhisper")
     assertEqual(AT.Macro(caster(), "x", settings{ send = "both", text = "ty" }), NS.Emotes.Command("THANK") .. " Bob-ArgentDawn")
 end)
+
+-- ── the unit-filter frame (CA-M4-5, events-frames-taint-§1's carve-out) ─────────────────────────
+
+local DUNGEON = { inInstance = true, instanceType = "party", difficultyID = 1, inGroup = true }
+
+local function live(inputs)
+    local NS, _, m = T.enableAddon()
+    m.issecretvalue = T.isSecret
+    NS.Situation.ReadInputs = function() return inputs or {} end
+    NS.Situation.RefreshNow("test")
+    return NS, m
+end
+
+local function auraUnits(NS)
+    local u = NS.AutoThank.frame.__unitEvents.UNIT_AURA
+    return u and table.concat(u, ",") or ""
+end
+
+test("autothank: [CA-M4-5] the frame hears UNIT_AURA for the player alone, on in the open world", function()
+    local NS = live()
+    assertEqual(NS.Situation.Current().content, "openWorld")
+    -- red under: AT.Rewire never called on SITUATION_CHANGED
+    assertEqual(auraUnits(NS), "player")
+    assertNil(NS.AutoThank.frame.__frameEvents.UNIT_AURA, "a unit event, never the unfiltered one")
+end)
+
+test("autothank: [CA-M4-5] off, in a dungeon by default, or stood down, the frame hears nothing", function()
+    local NS = live()
+    NS.db.profile.thank.enabled = false
+    NS.AutoThank.Rewire()
+    assertEqual(auraUnits(NS), "", "switched off")
+    NS.db.profile.thank.enabled = true
+    NS.AutoThank.Rewire()
+    assertEqual(auraUnits(NS), "player", "back on")
+    NS.Situation.ReadInputs = function() return DUNGEON end
+    NS.Situation.RefreshNow("test")
+    assertEqual(NS.Situation.Current().content, "dungeon")
+    assertEqual(auraUnits(NS), "", "a dungeon is off by default (R-B)")
+    NS.db.profile.thank.content.dungeon = true
+    NS.AutoThank.Rewire()
+    assertEqual(auraUnits(NS), "player", "a content kind switched on")
+end)
+
+test("autothank: [CA-M4-5] a profile switch re-reads the thank settings", function()
+    local NS = live()
+    NS.db.profile.thank.enabled = false
+    NS.addon:SendMessage(NS.MSG.PROFILE_CHANGED)
+    assertEqual(auraUnits(NS), "")
+end)
+
+test("autothank: [CA-M4-5] the stand-down unregisters the frame, and the stand-up re-uses it", function()
+    local NS = live()
+    local frame = NS.AutoThank.frame
+    NS.addon:OnSlashCommand("disable")
+    assertTrue(NS.IsStoodDown())
+    -- red under: no NS.STAND_DOWN step (AceAddon's UnregisterAllEvents never reaches this frame)
+    assertEqual(auraUnits(NS), "", "stood down")
+    NS.AutoThank.Rewire()
+    assertEqual(auraUnits(NS), "", "a rewire while stood down registers nothing")
+    NS.addon:OnSlashCommand("enable")
+    assertTrue(NS.AutoThank.frame == frame, "the same frame, never rebuilt")
+    assertEqual(auraUnits(NS), "player", "the stand-up registers it again")
+end)
+
+test("autothank: [CA-M4-5] the frame's UNIT_AURA reaches AT.OnAura with its payload", function()
+    local NS, m = live()
+    local got
+    NS.AutoThank.OnAura = function(unit, info) got = { unit, info } end
+    local info = m.auraUpdate{ isFullUpdate = true }
+    NS.AutoThank.frame:GetScript("OnEvent")(NS.AutoThank.frame, "UNIT_AURA", "player", info)
+    assertEqual(got[1], "player")
+    assertTrue(got[2] == info)
+end)

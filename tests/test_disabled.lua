@@ -31,11 +31,23 @@ local PROBED = (function()
     return table.concat(all, ",")
 end)()
 
--- Game-event registrations only; bus receivers are asserted by what they hear.
+-- Game-event registrations only; bus receivers are asserted by what they hear. A unit-filter frame's
+-- unit events (auto-thank's UNIT_AURA, events-frames-taint-§1's carve-out) are not on NS.addon, so
+-- PINNED does not list them: unitRegistered pins them, and the stand-down cases below.
 local function registered(m)
     local out = {}
     for _, r in ipairs(m.__registrations()) do
-        if r.kind ~= "message" then out[#out + 1] = r.event end
+        if r.kind ~= "message" and r.kind ~= "unit" then out[#out + 1] = r.event end
+    end
+    table.sort(out)
+    return table.concat(out, ",")
+end
+
+-- The unit events every frame holds, as "EVENT:unit" (sorted).
+local function unitRegistered(m)
+    local out = {}
+    for _, r in ipairs(m.__registrations()) do
+        if r.kind == "unit" then out[#out + 1] = r.event .. ":" .. tostring(r.unit) end
     end
     table.sort(out)
     return table.concat(out, ",")
@@ -543,4 +555,19 @@ test("disabled [by hold]: with both holds the disabled line wins", function()
     assertFalse(NS.Preview.SetTestMode(true))
     assertEqual(#m.prints, 1)
     assertTrue(m.prints[1]:find(line, 1, true) ~= nil, m.prints[1])
+end)
+
+test("disabled: [CA-M4-5] auto-thank's unit-filter frame holds UNIT_AURA for the player, and the stand-down takes it down", function()
+    local NS, _, m = T.enableAddon()
+    NS.Situation.ReadInputs = function() return {} end
+    NS.Situation.RefreshNow("test")
+    assertEqual(unitRegistered(m), "UNIT_AURA:player", "on in the open world (R-B)")
+    for _, way in ipairs(DISABLES) do
+        way[2](NS)
+        assertTrue(NS.IsStoodDown())
+        -- red under: drop auto-thank's NS.STAND_DOWN step (modules/AutoThank.lua)
+        assertEqual(unitRegistered(m), "", "through " .. way[1] .. ", no unit event is left")
+        NS.addon:OnSlashCommand("enable")
+        assertEqual(unitRegistered(m), "UNIT_AURA:player", "the stand-up registers it again")
+    end
 end)
