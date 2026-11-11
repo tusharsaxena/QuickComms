@@ -644,7 +644,7 @@ Total.
 - members: [inherit] the Enabled tooltip names whose When a sub-group is shown by
 - members: [arena] the CLI sets the arena row by id, name or all, and prints it back
 
-### test_editors.lua (23)
+### test_editors.lua (25)
 
 - editors: [review 2] Select keeps the selection, and nothing else; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -669,6 +669,8 @@ Total.
 - editors: [CA-M2-9] PreviewLines lists each action with its bytes, the macro total and the target note
 - editors: [CA-M2-9] one action keeps today's rows: no summary, no macro total
 - editors: [CA-M2-9] a skipped action says why; a locked Line gets its own lock row
+- editors: [CA-M2-R2] the summary draws a stored pipe literal, never as a UI escape
+- editors: [CA-M2-R2] a Line skipped for the macro's budget is measured against that budget
 
 ### test_callout_popup.lua (55)
 
@@ -2207,7 +2209,7 @@ Total.
 | test_client_data.lua | 9 |
 | test_library.lua | 83 |
 | test_members.lua | 28 |
-| test_editors.lua | 23 |
+| test_editors.lua | 25 |
 | test_callout_popup.lua | 55 |
 | test_icon_browser.lua | 14 |
 | test_window_icons.lua | 5 |
@@ -2268,4 +2270,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1906** |
+| **Total** | **1908** |

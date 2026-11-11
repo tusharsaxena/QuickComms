@@ -34,6 +34,9 @@ local function actionLines(out, a)
     if not a.line then
         if a.kind == "line" and a.reason == "solo" and a.selfPrint then
             out[#out + 1] = L["  %s: would print locally, not sent (solo fallback: self)"]:format(a.kind)
+        elseif a.kind == "line" and a.reason == "tooLong" and a.budget then
+            -- held by the macro's budget (D13): its bytes against the share it had (CA-M2-R2)
+            out[#out + 1] = L["  %s: not sent here (%s), %d of %d bytes"]:format(a.kind, a.reason, a.length, a.budget)
         else
             out[#out + 1] = L["  %s: not sent here (%s)"]:format(a.kind, tostring(a.reason))
         end

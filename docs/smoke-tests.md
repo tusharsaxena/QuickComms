@@ -2548,8 +2548,9 @@ row per action, `Channel: Party` under the line only.
   target, as typed), and chat shows `[QC] Kick: no target to ping.` and `[QC] Kick: no target to mark.`;
   no ping lands on a unit you did not pick and nothing is marked (`exists`). Result: owed
 - **ACTION-4. The macro cap (D13, UNVERIFIED).** Set the Text to a 250-byte line, keep the emote and the
-  ping, clear the marker → What it sends reads `No line: Too long: a chat line holds 255 bytes.` and the
-  others still bake; a press performs the emote and the ping and sends no line. Then, on a dev build
+  ping, clear the marker → What it sends reads `No line: Too long to send with its other actions.` and
+  `253 of <n> bytes`, the Line's share of the macro (`/qc check <id>`: `line: not sent here (tooLong),
+  253 of <n> bytes`), and the others still bake; a press performs the emote and the ping and sends no line. Then, on a dev build
   with `B.MAX_MACRO` raised, check whether a 300-byte, four-line macro runs in full: if it does, the
   total cap is larger than 255 and `MAX_MACRO` can be raised (the re-check trigger in
   `known-limitations.md`). Result: owed

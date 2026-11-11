@@ -41,8 +41,8 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   burst does not land. Nothing in the addon counts them.
 - The 255-byte cap covers the whole macro, not each line (`B.MAX_MACRO`, combined actions §3, D13). The
   emote, ping and marker lines are baked first; the Line gets what is left, at most 255 bytes, less
-  one byte per newline. A Line over its share is refused alone (*Too long: a chat line holds 255
-  bytes.*) and the other actions still send. The wiki's 255 for a secure button's whole macrotext is
+  one byte per newline. A Line over its share is refused alone (*Too long to send with its other
+  actions.*, its bytes shown against that share) and the other actions still send. The wiki's 255 for a secure button's whole macrotext is
   not confirmed in game. Re-check trigger: smoke check ACTION-4; if it proves the cap larger, raising
   `MAX_MACRO` is a one-line change.
 - A combined press reports one result: *sent* only when every chat action's echo came back, *dropped*

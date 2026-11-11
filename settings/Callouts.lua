@@ -95,7 +95,8 @@ local function pingName(v) return NS.Preview.PING_NAME[v] or tostring(v) end
 -- command, a ping and a marker by name.
 local function short(a, callout)
     if a.kind == "line" then
-        return L['"%s" in %s']:format(NS.Bake.CleanText(callout.text) or "", C.SHORT_CHANNEL[a.concrete] or tostring(a.concrete))
+        -- pipes doubled (Bake.Sanitize), so a stored "|" is drawn literal, never as a UI escape
+        return L['"%s" in %s']:format(NS.Bake.Sanitize(callout.text) or "", C.SHORT_CHANNEL[a.concrete] or tostring(a.concrete))
     end
     if a.kind == "emote" then return a.line end
     if a.kind == "ping" then return L["ping %s"]:format(pingName(a.value)) end
@@ -114,6 +115,11 @@ local function why(reason)
     return NS.PadRender.REASON_TEXT[reason] or tostring(reason)
 end
 
+-- A Line that fit the line cap but not what the macro left it (D13): it carries that share, `budget`.
+local function heldByMacro(a)
+    return a.kind == "line" and a.reason == "tooLong" and a.budget ~= nil
+end
+
 -- The rows of one action: baked, its row, a voice emote's note and its bytes (an emote alone, none); solo with "self", that
 -- it prints to you; skipped, why (alone, a callout's one action, in today's words) and an unknown
 -- emote's token. Then its lock.
@@ -126,9 +132,16 @@ local function actionRows(out, a, alone)
     elseif a.reason == "solo" and a.selfPrint then
         out[#out + 1] = L["Solo: prints to you, sends nothing."]
     else
-        out[#out + 1] = (alone and L["Sends nothing here: %s"] or NS.PadRender.SKIPPED_TEXT[a.kind]):format(why(a.reason))
+        -- a Line held by the macro's budget says so, and is measured against its share (CA-M2-R2)
+        local held = heldByMacro(a)
+        out[#out + 1] = (alone and L["Sends nothing here: %s"] or NS.PadRender.SKIPPED_TEXT[a.kind])
+            :format(held and L["Too long to send with its other actions."] or why(a.reason))
         if a.reason == "unknownEmote" then out[#out + 1] = L["Emote token: %s"]:format(tostring(a.value)) end
-        if a.length then out[#out + 1] = L["%d of 255 bytes"]:format(a.length) end
+        if held then
+            out[#out + 1] = L["%d of %d bytes"]:format(a.length, a.budget)
+        elseif a.length then
+            out[#out + 1] = L["%d of 255 bytes"]:format(a.length)
+        end
     end
     if a.lock then out[#out + 1] = NS.PadRender.LOCK_TEXT[a.lock] or tostring(a.lock) end
 end

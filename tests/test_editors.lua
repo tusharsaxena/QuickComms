@@ -457,11 +457,26 @@ test("editors: [CA-M2-9] a skipped action says why; a locked Line gets its own l
     -- the Line over its share of the macro is skipped; the ping still bakes
     assertEqual(lines[1], "ping Attack", "the summary names what bakes")
     -- red under: a skipped action left out of the rows
-    assertTrue(has(lines, "No line: Too long: a chat line holds 255 bytes."), table.concat(lines, " | "))
+    assertTrue(has(lines, "No line: Too long to send with its other actions."), table.concat(lines, " | "))
     local NS
     NS, lines = previewIn({}, { name = "Stack", text = "Stack", channel = "raid", emote = "POINT" })
     local R = NS.PadRender
     local lockRows = 0
     for _, l in ipairs(lines) do if l == R.LOCK_TEXT.notInRaid then lockRows = lockRows + 1 end end
     assertEqual(lockRows, 1, "one lock row for the locked Line: " .. table.concat(lines, " | "))
+end)
+
+test("editors: [CA-M2-R2] the summary draws a stored pipe literal, never as a UI escape", function()
+    local _, lines = previewIn(MPLUS, { name = "Pipe", text = "go |cffff0000now", channel = "party", ping = "attack" })
+    -- red under: short() quoting NS.Bake.CleanText, which leaves the pipe single
+    assertEqual(lines[1], '"go ||cffff0000now" in Party, ping Attack')
+end)
+
+test("editors: [CA-M2-R2] a Line skipped for the macro's budget is measured against that budget", function()
+    -- "/p " + 250 is 253 bytes; the ping's 24 and its newline leave the Line 230
+    local _, lines = previewIn(MPLUS, { name = "Long", text = ("x"):rep(250), channel = "party", ping = "attack" })
+    -- red under: the skip worded as the 255-byte line cap, and its bytes counted against 255
+    assertTrue(has(lines, "No line: Too long to send with its other actions."), table.concat(lines, " | "))
+    assertTrue(has(lines, "253 of 230 bytes"), table.concat(lines, " | "))
+    assertTrue(not has(lines, "253 of 255 bytes"), "never against the line cap")
 end)
