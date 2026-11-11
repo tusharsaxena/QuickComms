@@ -12,6 +12,9 @@ NS.Bake = NS.Bake or {}
 local B = NS.Bake
 
 B.MAX_BYTES = 255
+-- The whole macro's cap, measured as BakeActions' info.total (D13, conservative: the wiki's
+-- SecureActionButtonTemplate page says 255 in total; ACTION-4 re-checks it in game).
+B.MAX_MACRO = 255
 
 local function squeeze(s)
     s = s:gsub("%s+", " ")
@@ -141,12 +144,28 @@ function B.HasLine(f)
     return clean ~= nil or why == "startsWithSlash"
 end
 
+-- Hold the Line to what the macro has left (D13): the other actions bake first, and the Line gets
+-- min(MAX_BYTES, MAX_MACRO - their lengths - the one newline each puts between it and them). A Line
+-- over it alone fails "tooLong"; the others still bake.
+local function holdLine(list)
+    local line = list[1]
+    if not (line and line.kind == "line" and line.line) then return end
+    local others = 0
+    for i = 2, #list do
+        if list[i].line then others = others + list[i].length + 1 end
+    end
+    line.budget = math.min(B.MAX_BYTES, B.MAX_MACRO - others)
+    if line.length > line.budget then line.line, line.reason = nil, "tooLong" end
+end
+
 --- Bake every set action of one callout (combined actions §3).
 --- info.actions lists every set action, baked or not, as { kind, line, reason, concrete, chatType,
---- lock, length, unknown, missing, selfPrint }; info.baked only those that baked (line ~= nil), in
---- the same order; info.total the macro's budgeted length (each baked length plus one per "\n").
---- `reason` is set only when nothing baked: the Line's if there was one, else the first action's,
---- else "noAction".
+--- lock, length, unknown, missing, selfPrint } (the Line's also carries `budget`, its share of
+--- MAX_MACRO); info.baked only those that baked (line ~= nil), in the same order; info.total the
+--- macro's budgeted length (each baked length plus one per "\n", at most MAX_MACRO). `reason` is set
+--- only when nothing baked (D14): the Line's if there was one, else the first action's, else
+--- "noAction". Solo with the "self" fallback the Line bakes no line (its reason is "solo") and the
+--- other actions still arm.
 --- @param callout table
 --- @param s table snapshot
 --- @param opts table|nil as B.Bake's
@@ -164,6 +183,7 @@ function B.BakeActions(callout, s, opts)
         list[#list + 1] = targetEntry("marker", NS.Compat.MarkerCommand(), markerArg(callout.marker), "noMarker",
             callout.marker)
     end
+    holdLine(list)
     local lines = {}
     for _, a in ipairs(list) do
         if a.line then

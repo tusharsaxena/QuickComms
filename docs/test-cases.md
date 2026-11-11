@@ -422,7 +422,7 @@ Total.
 - emotes: [QFE-E2] a user name is kept, and leaving Game emote drops the token on Save
 - emotes: [QFE-E2] the popup's preview names the emote, and an unknown token's reason
 
-### test_bake.lua (20)
+### test_bake.lua (25)
 
 - bake: a plain callout bakes to prefix + text
 - bake: [review 1] a leading slash is refused, even after whitespace
@@ -444,6 +444,11 @@ Total.
 - bake: [CA-M1-7] a marker bakes /tm [@target,exists] !N, which never toggles a mark off
 - bake: [CA-M1-7] a localized client's commands bake; an absent one gives noPing or noMarker and drops only that action
 - bake: [CA-M1-7] no action is noAction; a non-table is badCallout; Bake's contract is unchanged
+- bake: [CA-M2-2] the macro joins line, emote, ping, marker in that order, and no data byte follows a newline
+- bake: [CA-M2-2] info.total counts each line's budgeted length, a live token at its nominal, and one per newline
+- bake: [CA-M2-2] the Line's budget is the macro's 255 less the other actions and their newlines
+- bake: [CA-M2-2] nothing bakes: the Line's reason when it had one, else the first action's
+- bake: [CA-M2-2] solo with the self fallback: the Line gives no macro line and the other actions arm
 
 ### test_resolver.lua (13)
 
@@ -2154,7 +2159,7 @@ Total.
 | test_tokens.lua | 11 |
 | test_channels.lua | 18 |
 | test_emotes.lua | 16 |
-| test_bake.lua | 20 |
+| test_bake.lua | 25 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 34 |
 | test_gameids.lua | 5 |
@@ -2222,4 +2227,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1860** |
+| **Total** | **1865** |

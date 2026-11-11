@@ -219,7 +219,7 @@ test("bake: [CA-M1-7] a localized client's commands bake; an absent one gives no
     assertEqual(#info.actions, 1) assertEqual(#info.baked, 0) assertEqual(info.actions[1].kind, "ping")
     macro, reason = B.BakeActions(none{ marker = 8 }, PARTY)
     assertNil(macro) assertEqual(reason, "noMarker")
-    -- a Line beside the dropped ping still bakes (the join and the budget are CA-M2-2's)
+    -- a Line beside the dropped ping still bakes (the join and the budget: CA-M2-2)
     macro, reason = B.BakeActions(callout("go"), PARTY)
     assertEqual(macro, "/p go") assertNil(reason)
     m.C_Ping = nil
@@ -236,4 +236,84 @@ test("bake: [CA-M1-7] no action is noAction; a non-table is badCallout; Bake's c
     -- the game-emote kind with no emote, as Bake has always answered it
     assertEqual(select(2, B.Bake(none(), PARTY)), "noEmote")
     assertEqual((B.Bake(none{ emote = "POINT" }, PARTY)), "/point")
+end)
+
+-- ── The multi-line macro and its caps (CA-M2-2, combined actions §3, D13, D14) ───────────────────
+
+local function all4(text, over)
+    local c = { name = "Kick on me", text = text or "Kick on me", channel = "party", emote = "POINT",
+        ping = "attack", marker = 8 }
+    for k, v in pairs(over or {}) do c[k] = v end
+    return c
+end
+
+test("bake: [CA-M2-2] the macro joins line, emote, ping, marker in that order, and no data byte follows a newline", function()
+    local B = actions()
+    assertEqual(B.MAX_MACRO, 255)
+    -- red under: no B.MAX_MACRO
+    local macro, reason, info = B.BakeActions(all4("Kick\n/run x()"), PARTY)
+    assertNil(reason)
+    assertEqual(macro, "/p Kick /run x()\n/point\n/ping [@target,exists] 1\n/tm [@target,exists] !8")
+    assertEqual(#info.actions, 4) assertEqual(#info.baked, 4)
+    local kinds = {}
+    for i, a in ipairs(info.baked) do kinds[i] = a.kind end
+    assertEqual(table.concat(kinds, ","), "line,emote,ping,marker")
+    -- every line after a newline is one of the fixed command lines, never callout text
+    local fixed = { ["/point"] = true, ["/ping [@target,exists] 1"] = true, ["/tm [@target,exists] !8"] = true }
+    local n = 0
+    for after in macro:gmatch("\n([^\n]*)") do n = n + 1 assertTrue(fixed[after], after) end
+    assertEqual(n, 3)
+end)
+
+test("bake: [CA-M2-2] info.total counts each line's budgeted length, a live token at its nominal, and one per newline", function()
+    local B = actions()
+    local _, _, info = B.BakeActions(all4("go {target}"), PARTY)
+    local _, _, linfo = B.Bake(all4("go {target}"), PARTY)
+    local lineLen = linfo.length
+    assertEqual(lineLen, B.Length(linfo.text, 1, "/p"), "the live token counted at its nominal")
+    assertEqual(info.baked[1].length, lineLen)
+    assertEqual(info.total, lineLen + #"/point" + #"/ping [@target,exists] 1" + #"/tm [@target,exists] !8" + 3)
+    -- red under: info.total read from #macro (the raw token is shorter than its nominal)
+    assertTrue(info.total > #select(1, B.BakeActions(all4("go {target}"), PARTY)))
+end)
+
+test("bake: [CA-M2-2] the Line's budget is the macro's 255 less the other actions and their newlines", function()
+    local B = actions()
+    local others = #"/point" + #"/ping [@target,exists] 1" + #"/tm [@target,exists] !8" + 3
+    local budget = B.MAX_MACRO - others
+    local fits = string.rep("a", budget - 3)                  -- "/p " + text = budget
+    local macro, reason, info = B.BakeActions(all4(fits), PARTY)
+    assertNil(reason) assertEqual(#info.baked, 4) assertEqual(info.total, B.MAX_MACRO)
+    assertEqual(info.actions[1].budget, budget) assertTrue(macro:find("^/p a") ~= nil)
+    -- red under: a Line held only to MAX_BYTES (the macro would run over 255)
+    macro, reason, info = B.BakeActions(all4(fits .. "a"), PARTY)
+    assertNil(reason, "the others still bake: reason is set only when none did")
+    assertEqual(info.actions[1].kind, "line") assertNil(info.actions[1].line)
+    assertEqual(info.actions[1].reason, "tooLong")
+    assertEqual(#info.baked, 3)
+    assertEqual(macro, "/point\n/ping [@target,exists] 1\n/tm [@target,exists] !8")
+    assertTrue(info.total <= B.MAX_MACRO)
+    -- alone, the Line keeps the per-line MAX_BYTES
+    assertTrue((B.BakeActions(callout(string.rep("a", 252)), PARTY)) ~= nil, "/p + 252 = 255, alone")
+end)
+
+test("bake: [CA-M2-2] nothing bakes: the Line's reason when it had one, else the first action's", function()
+    local B, m = actions()
+    m.SLASH_PING1, m.SLASH_TARGET_MARKER1 = nil, nil
+    local macro, reason = B.BakeActions(all4("/run x()", { emote = "FROMRETAIL" }), PARTY)
+    assertNil(macro) assertEqual(reason, "startsWithSlash")
+    macro, reason = B.BakeActions(none{ emote = "FROMRETAIL", ping = "attack", marker = 8 }, PARTY)
+    assertNil(macro) assertEqual(reason, "unknownEmote")
+    macro, reason = B.BakeActions(none{ ping = "attack", marker = 8 }, PARTY)
+    assertNil(macro) assertEqual(reason, "noPing")
+end)
+
+test("bake: [CA-M2-2] solo with the self fallback: the Line gives no macro line and the other actions arm", function()
+    local B = actions()
+    local SOLO = { group = "solo", lockdown = {} }
+    local macro, reason, info = B.BakeActions(all4("Kick", { channel = "smartGroup" }), SOLO, { soloFallback = "self" })
+    assertNil(reason)
+    assertEqual(macro, "/point\n/ping [@target,exists] 1\n/tm [@target,exists] !8")
+    assertEqual(info.actions[1].reason, "solo") assertTrue(info.actions[1].selfPrint)
+    assertEqual(#info.baked, 3)
 end)
