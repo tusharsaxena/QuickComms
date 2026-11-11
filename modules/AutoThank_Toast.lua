@@ -120,7 +120,9 @@ end
 -- The library has no fade, so an unclicked toast fades here over its last C.THANK.FADE seconds and
 -- the library's own timer hides it at the same moment. The pointer holds it as the library's hover
 -- pause does (the button sits inside the frame, so IsMouseOver covers it), pushing the due time by
--- what it held; leaving with under a second left gives one second, the library's MIN_RESUME.
+-- what it held; leaving with under a second left gives one second, the library's MIN_RESUME. A drag
+-- on any toast holds every toast on screen (the library's onDragStart pauses each), so TH.dragging,
+-- set from each pool frame's OnDragStart and cleared by its OnDragStop, holds every fade the same way.
 -- OnUpdate runs only while the frame is shown, and does nothing in combat.
 
 local MIN_LEFT = 1
@@ -128,7 +130,7 @@ local MIN_LEFT = 1
 local function fade(frame, elapsed)
     if NS.Compat.InCombat() or not frame.qcDue then return end
     local now = GetTime()
-    if frame:IsMouseOver() then
+    if TH.dragging or frame:IsMouseOver() then
         frame.qcDue = frame.qcDue + (elapsed or 0)
         frame.qcHovered = true
         frame:SetAlpha(1)
@@ -141,11 +143,16 @@ local function fade(frame, elapsed)
     frame:SetAlpha(math.max(0, math.min(1, (frame.qcDue - now) / C.THANK.FADE)))
 end
 
+local function dragStart() TH.dragging = true end
+local function dragStop() TH.dragging = nil end
+
 -- Hooked once per pool frame, on its first draw; every draw starts the fade's clock again.
 local function startFade(frame)
     if not frame.qcFadeHooked then
         frame.qcFadeHooked = true
         frame:HookScript("OnUpdate", fade)
+        frame:HookScript("OnDragStart", dragStart)
+        frame:HookScript("OnDragStop", dragStop)
     end
     frame.qcDue = GetTime() + C.THANK.DURATION
     frame.qcHovered = nil
@@ -285,6 +292,7 @@ NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
         TH.pumpTimer = nil
     end
     TH.pending = {}
+    TH.dragging = nil
     lastShowAt = nil
     TH.toast:Clear()
     if receiver and not NS.Bus.tracked then receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED) end

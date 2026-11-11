@@ -794,6 +794,38 @@ test("autothank: [CA-M4-11] the library hides the toast at DURATION", function()
     assertEqual(TH.toast:Stats().visible, 0)
 end)
 
+test("autothank: [CA-M4-R1] a drag holds every toast's fade as the library holds its countdown", function()
+    local NS, m, TH = hosting()
+    local C = NS.Constants.THANK
+    local k1 = offer(NS, m, 1)
+    local k2 = offer(NS, m, 2)
+    pumpAfter(m, TH, C.GAP)
+    local head, follower = TH.toast:FrameFor(k1), TH.toast:FrameFor(k2)
+    assertTrue(head ~= nil and follower ~= nil and head ~= follower, "two toasts up")
+    local t0 = m.__now
+    head:__fire("OnDragStart")
+    m.__now = t0 + C.DURATION + 5
+    follower:__fire("OnUpdate", C.DURATION + 5)
+    head:__fire("OnUpdate", C.DURATION + 5)
+    -- red under: a fade that holds only the frame under the pointer
+    assertEqual(follower:GetAlpha(), 1, "the follower is held through the drag")
+    assertEqual(head:GetAlpha(), 1, "and the head")
+    head:__fire("OnDragStop")
+    follower:__fire("OnUpdate", 0)
+    assertTrue(follower:GetAlpha() > 0, "it fades from where the drag held it")
+    m.__now = m.__now + C.DURATION
+    follower:__fire("OnUpdate", C.DURATION)
+    assertEqual(follower:GetAlpha(), 0, "and runs out after the drag")
+end)
+
+test("autothank: [CA-M4-R1] the stand-down forgets a drag in progress", function()
+    local NS, m, TH = hosting()
+    local f = TH.toast:FrameFor(offer(NS, m, 1))
+    f:__fire("OnDragStart")
+    NS.addon:OnSlashCommand("disable")
+    assertNil(TH.dragging)
+end)
+
 -- ── the Thank button and its press (CA-M4-12, D4, spec §9 The Thank button) ─────────────────────
 
 -- hosting(), with the client's THANK emote known, `send` set, and one stranger's toast up: its key,
