@@ -1030,7 +1030,7 @@ Total.
 - send: [CA-M2-4] every action a locked chat action: print each, then no tick and no echo
 - send: [CA-M2-4] a locked Line beside a ping ticks and reports sent at once
 
-### test_autothank.lua (25)
+### test_autothank.lua (32)
 
 - autothank: [CA-M4-4] Accept takes a stranger's helpful buff (isFromPlayerOrPlayerPet is any player's)
 - autothank: [CA-M4-4] Accept rejects a harmful aura, an NPC's, no caster, and anything not plainly true
@@ -1057,6 +1057,13 @@ Total.
 - autothank: [CA-M4-6] in combat, or on the combat edge, it only marks dirty
 - autothank: [CA-M4-6] stood down, or the content kind off, gives nothing
 - autothank: [CA-M4-6] registering the frame snapshots the player's helpful auras silently
+- autothank: [CA-M4-7] a buff in the edge window is not diffed at the edge, and is thanked after the fight
+- autothank: [CA-M4-7] a secret payload in combat gives the new aura once at the end of combat
+- autothank: [CA-M4-7] a /reload in combat with no RESTRICTION_CHANGED still diffs at PLAYER_REGEN_ENABLED
+- autothank: [CA-M4-7] a still restricted read stays dirty and toasts nothing
+- autothank: [CA-M4-7] the diff takes at most COMBAT_QUEUE candidates, newest first
+- autothank: [CA-M4-7] expired or unreadable auras drop quietly
+- autothank: [CA-M4-7] the diff waits while in combat or on the edge, and does nothing when clean
 
 ### test_dial_secure.lua (20)
 
@@ -2282,7 +2289,7 @@ Total.
 | test_check.lua | 9 |
 | test_send_guard.lua | 13 |
 | test_sendengine.lua | 48 |
-| test_autothank.lua | 25 |
+| test_autothank.lua | 32 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
@@ -2332,4 +2339,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1966** |
+| **Total** | **1973** |

@@ -190,13 +190,59 @@ local function addAuras(list, settings)
     end
 end
 
+-- In combat, or on the PLAYER_REGEN_DISABLED edge before lockdown reads true.
+local function fighting()
+    return NS.Compat.InCombat() or State.combatEdge == true
+end
+
+-- ── the after-combat diff (spec §9 Combat, F4c) ─────────────────────────────────────────────────
+-- A change in combat is read as dirty, never by id (the payload is secret while auras are
+-- restricted). After the fight the player's helpful auras are diffed against the known set. Nothing
+-- is filed at the edge: lockdown still reads false there, so SE.RunOrQueue would run at once and the
+-- edge's own RESTRICTION_CHANGED drains SE's queue; AT.Diff itself waits while fighting() holds.
+
+local function byNewest(a, b) return a > b end
+
+--- Catch a dirty known set up: every helpful aura the player holds that the set lacks, the newest
+--- C.THANK.COMBAT_QUEUE first, is offered when it passes AT.Accept; an expired aura or an unreadable
+--- caster drops quietly. Does nothing when the set is clean, while fighting, when auto-thank is off
+--- here, or while the read is still restricted (the set stays dirty).
+--- @return boolean diffed
+function AT.Diff()
+    if not State.thankDirty or fighting() or not wanted() then return false end
+    local current = NS.Compat.HelpfulAuraIds()
+    if not current then return false end
+    local fresh = {}
+    for _, id in ipairs(current) do
+        if not State.thankKnown[id] then fresh[#fresh + 1] = id end
+    end
+    table.sort(fresh, byNewest)
+    local known = {}
+    for _, id in ipairs(current) do known[id] = true end
+    State.thankKnown, State.thankDirty = known, false
+    local settings = thankSettings()
+    for i = 1, math.min(#fresh, NS.Constants.THANK.COMBAT_QUEUE) do
+        local aura = NS.Compat.AuraByInstance(fresh[i])
+        if aura then consider(aura, fresh[i], settings) end
+    end
+    return true
+end
+
+--- The end of combat, from R.OnCombatEdge(false) after State.combatEdge is cleared: the diff does not
+--- wait on RESTRICTION_CHANGED, which a login or /reload in combat may never send.
+function AT.OnCombatEnd()
+    AT.Diff()
+end
+
 --- The UNIT_AURA handler: `unit` is "player" (the frame's filter, never compared), `info` the
 --- client's updateInfo, which is secret while auras are restricted. In combat, or on the combat edge
---- before lockdown reads true, it only marks the set dirty. Nothing is indexed before the secret test.
+--- before lockdown reads true, it only marks the set dirty and files the diff on SE's combat-end
+--- queue. Nothing is indexed before the secret test.
 function AT.OnAura(unit, info) -- luacheck: ignore 212
     if not wanted() then return end
-    if NS.Compat.InCombat() or State.combatEdge == true then
+    if fighting() then
         State.thankDirty = true
+        NS.SendEngine.Queue("thank.diff", function() AT.Diff() end)
         return
     end
     if NS.Compat.IsSecret(info) or type(info) ~= "table" then
@@ -236,9 +282,16 @@ end
 
 -- Its own target (core/Bus.lua); on the tracked bus the stand-down and stand-up take it down and
 -- replay it, on the degraded bus this module does both itself.
+-- RESTRICTION_CHANGED (reason, canSendChat): with nothing restricted and lockdown false, a dirty set
+-- is diffed, which also covers a restriction that lifts outside combat.
+local function onRestrictionChanged(_, reason)
+    if reason == nil and not NS.Compat.InCombat() then AT.Diff() end
+end
+
 local HANDLERS = {
     { NS.MSG.SITUATION_CHANGED, function() AT.Rewire() end },
     { NS.MSG.PROFILE_CHANGED, function() AT.Rewire() end },
+    { NS.MSG.RESTRICTION_CHANGED, onRestrictionChanged },
 }
 local receiver
 local function listen()

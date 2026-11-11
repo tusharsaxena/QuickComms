@@ -166,11 +166,13 @@ end
 --- A PLAYER_REGEN edge: `fighting` is true on DISABLED and false on ENABLED. The end of combat
 --- also drains SendEngine's combat-end queue (spec §9.1) directly: after a login or /reload in
 --- combat no signature was seeded, so this edge may move nothing and RESTRICTION_CHANGED (which
---- drains too) may never be sent. A second drain finds the queue empty and does nothing.
+--- drains too) may never be sent. A second drain finds the queue empty and does nothing. For the
+--- same reason the end of combat calls auto-thank's after-combat diff itself (spec §9 Combat).
 function R.OnCombatEdge(fighting)
     State.combatEdge = fighting and true or false
     local changed = R.Refresh(fighting and "PLAYER_REGEN_DISABLED" or "PLAYER_REGEN_ENABLED")
     if not fighting and NS.SendEngine then NS.SendEngine.Drain("PLAYER_REGEN_ENABLED") end
+    if not fighting and NS.AutoThank and NS.AutoThank.OnCombatEnd then NS.AutoThank.OnCombatEnd() end
     return changed
 end
 

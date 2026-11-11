@@ -357,3 +357,119 @@ test("autothank: [CA-M4-6] registering the frame snapshots the player's helpful 
     assertTrue(NS.State.thankKnown[a.auraInstanceID], "a buff held when it switched on is known")
     assertEqual(#got, 0)
 end)
+
+-- ── the after-combat diff (CA-M4-7, spec §9 Combat, F4c) ────────────────────────────────────────
+
+-- The two combat edges as the client delivers them (tests/test_sendengine.lua): PLAYER_REGEN_DISABLED
+-- fires while lockdown still reads false, and lockdown ends before PLAYER_REGEN_ENABLED fires.
+local function edgeOn(m)
+    m.__setCombat(false)
+    m.__fire("PLAYER_REGEN_DISABLED")
+end
+local function fightOver(m)
+    m.__setCombat(false)
+    m.__fire("PLAYER_REGEN_ENABLED")
+end
+
+test("autothank: [CA-M4-7] a buff in the edge window is not diffed at the edge, and is thanked after the fight", function()
+    local NS, m, got = detecting()
+    edgeOn(m)
+    assertFalse(m.InCombatLockdown(), "lockdown still reads false at the edge")
+    local a = buff(m)
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { a } })
+    assertEqual(#got, 0, "nothing toasted at the edge")
+    assertTrue(NS.State.thankDirty)
+    -- the edge's own drain (RESTRICTION_CHANGED while lockdown is false) runs nothing for it
+    NS.SendEngine.Drain("test")
+    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, nil, true)
+    assertEqual(#got, 0, "red under SE.RunOrQueue or a diff that ignores the edge")
+    assertTrue(NS.State.thankDirty, "still dirty")
+    m.__setCombat(true)
+    fightOver(m)
+    assertEqual(#got, 1, "thanked once the fight is over")
+    assertTrue(got[1].aura == a)
+    assertFalse(NS.State.thankDirty)
+end)
+
+test("autothank: [CA-M4-7] a secret payload in combat gives the new aura once at the end of combat", function()
+    local NS, m, got = detecting()
+    edgeOn(m)
+    m.__setCombat(true)
+    local a = buff(m)
+    NS.AutoThank.OnAura("player", m.secretAuraUpdate{ addedAuras = { a } })
+    assertEqual(#got, 0)
+    fightOver(m)
+    assertEqual(#got, 1)
+    NS.AutoThank.Diff()
+    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, nil, true)
+    assertEqual(#got, 1, "once")
+end)
+
+test("autothank: [CA-M4-7] a /reload in combat with no RESTRICTION_CHANGED still diffs at PLAYER_REGEN_ENABLED", function()
+    local NS, m, got = detecting()
+    NS.State.combatEdge = nil              -- a login or /reload in combat: no edge seen
+    m.__setCombat(true)
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { buff(m) } })
+    NS.Restrictions.Refresh = function() return false end   -- the edge moves nothing
+    NS.SendEngine.Drain = function() return 0 end            -- and nothing drains
+    fightOver(m)
+    -- red under: no R.OnCombatEdge(false) hook
+    assertEqual(#got, 1)
+end)
+
+test("autothank: [CA-M4-7] a still restricted read stays dirty and toasts nothing", function()
+    local NS, m, got = detecting()
+    local a = buff(m)
+    NS.State.thankDirty = true
+    m.auraInstanceIDs = { T.secret(a.auraInstanceID) }
+    NS.AutoThank.Diff()
+    assertEqual(#got, 0)
+    assertTrue(NS.State.thankDirty)
+    m.auraInstanceIDs = nil
+    NS.AutoThank.Diff()
+    assertEqual(#got, 1, "the lifted read catches it up")
+    assertFalse(NS.State.thankDirty)
+end)
+
+test("autothank: [CA-M4-7] the diff takes at most COMBAT_QUEUE candidates, newest first", function()
+    local NS, m, got = detecting()
+    local ids = {}
+    for i = 1, 12 do ids[i] = buff(m, { spellId = 5000 + i }).auraInstanceID end
+    NS.State.thankDirty = true
+    NS.AutoThank.Diff()
+    assertEqual(#got, NS.Constants.THANK.COMBAT_QUEUE)
+    assertEqual(got[1].aura.auraInstanceID, ids[12], "newest first")
+    assertEqual(got[10].aura.auraInstanceID, ids[3])
+    assertTrue(NS.State.thankKnown[ids[1]], "the rest are known, never thanked later")
+end)
+
+test("autothank: [CA-M4-7] expired or unreadable auras drop quietly", function()
+    local NS, m, got = detecting()
+    local gone = buff(m)
+    local nameless = m.addAura{ spellId = 21562 }          -- no caster GUID and no sourceUnit
+    local good = buff(m, { spellId = 1126 })
+    m.auraInstanceIDs = { gone.auraInstanceID, nameless.auraInstanceID, good.auraInstanceID }
+    m.auras[gone.auraInstanceID] = nil                    -- expired between the list and the read
+    NS.State.thankDirty = true
+    NS.AutoThank.Diff()
+    assertEqual(#got, 1)
+    assertTrue(got[1].aura == good)
+    assertFalse(NS.State.thankDirty)
+end)
+
+test("autothank: [CA-M4-7] the diff waits while in combat or on the edge, and does nothing when clean", function()
+    local NS, m, got = detecting()
+    buff(m)
+    NS.State.thankDirty = true
+    NS.State.combatEdge = true
+    NS.AutoThank.Diff()
+    assertEqual(#got, 0, "on the edge")
+    NS.State.combatEdge = false
+    m.inCombat = true
+    NS.AutoThank.Diff()
+    assertEqual(#got, 0, "in combat")
+    m.inCombat = false
+    NS.State.thankDirty = false
+    NS.AutoThank.Diff()
+    assertEqual(#got, 0, "a clean set is not diffed")
+end)
