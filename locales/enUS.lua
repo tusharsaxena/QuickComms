@@ -597,6 +597,8 @@ L["Invite me"] = "Invite me"
 L["Invite please"] = "Invite please"
 L["Thanks"] = "Thanks"
 L["Thanks for the help!"] = "Thanks for the help!"
+-- Auto-thank's default whisper line (defaults/Profile.lua): {buff} and {name} are filled at toast time
+L["Thanks for the {buff}, {name}!"] = "Thanks for the {buff}, {name}!"
 L["Hold our bases"] = "Hold our bases"
 L["Hold what we have, defend our bases"] = "Hold what we have, defend our bases"
 L["Zerg next"] = "Zerg next"

@@ -427,3 +427,28 @@ test("game ids: [QFE-F3] every WoW Forever id has its FOREVER_MAPS row, of its k
     assertEqual(#F.DUNGEONS, 30, "the dungeons Forever's group finder lists (D1, D2, D3-R)")
     assertEqual(#F.RAIDS, 12, "the six raids of ruling R1, Zul'Gurub (D1) and the group finder's five (D3-R)")
 end)
+
+-- The raid buffs a stranger can cast on the player (spec §9, D3's allowlist): only the single-target
+-- buffs, since a party- or raid-wide one reaches only the caster's own group, which D3 drops.
+test("game ids: [CA-M4-3] THANK_RAID_BUFFS on each client: the single-target raid buffs a stranger can cast", function()
+    local NS = T.newAddon()
+    local R, F = NS.GameIds.BY_CLIENT.retail.THANK_RAID_BUFFS, NS.GameIds.BY_CLIENT.forever.THANK_RAID_BUFFS
+    local function count(s) local n = 0 for _ in pairs(s) do n = n + 1 end return n end
+    -- Retail: Arcane Intellect, Power Word: Fortitude, Mark of the Wild (UNVERIFIED until THANK-7)
+    assertTrue(R[1459] and R[21562] and R[1126], "Retail's three")
+    assertEqual(count(R), 3)
+    -- Forever (FRB): every player rank of the same three, derived from Forever's SpellName and
+    -- SkillLineAbility tables (build 1.60.1.70862) through tools/client_tables.py, matched by spell
+    -- name; each UNVERIFIED until THANK-7. Forever's 21562 is Prayer of Fortitude, a group buff.
+    local forever = { 1459, 1460, 1461, 10156, 10157,                -- Arcane Intellect
+        1243, 1244, 1245, 2791, 10937, 10938,                          -- Power Word: Fortitude
+        1126, 5232, 6756, 5234, 8907, 9884, 9885 }                     -- Mark of the Wild
+    for _, id in ipairs(forever) do assertTrue(F[id], id .. " is a Forever raid buff") end
+    assertEqual(count(F), #forever)
+    -- red under: a group buff on the list (Prayer of Fortitude, Arcane Brilliance, Gift of the Wild)
+    assertTrue(not F[21562] and not F[23028] and not F[21849], "no group buff")
+    NS.GameIds.UseClient("forever")
+    assertTrue(NS.GameIds.THANK_RAID_BUFFS[10157], "the client's own list, under the name every reader uses")
+    NS.GameIds.UseClient("retail")
+    assertTrue(NS.GameIds.THANK_RAID_BUFFS[21562])
+end)

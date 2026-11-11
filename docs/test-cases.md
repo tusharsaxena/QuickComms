@@ -163,7 +163,7 @@ Total.
 - database: [CA-M3-4] step 20 part 2 skips a damaged group and a dangling or damaged list entry
 - database: [CA-M3-5] the runner from 19 runs step 20 on every stored profile once
 
-### test_profile.lua (10)
+### test_profile.lua (12)
 
 - profile: behavior defaults match spec §5.1
 - profile: collections exist; default nextId is 1, past every seeded id after boot
@@ -175,6 +175,8 @@ Total.
 - prepare: a callout held by no group is dropped
 - prepare: is idempotent after a split
 - profile: step 18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
+- profile: [CA-M4-3] the thank defaults: on in the open world alone (R-B), an emote, no mute
+- profile: [CA-M4-3] the auto-thank constants (spec §9)
 
 ### test_schema.lua (24)
 
@@ -534,13 +536,14 @@ Total.
 - builtins: [CA-M3-2] set sizes: Solo 7, In Group 11, Dungeon 8, Raid 9; none over a dial's slices
 - builtins: [CA-M3-2] a fresh profile seeds both Heal me callouts; no Auto dial gains a page
 
-### test_gameids.lua (5)
+### test_gameids.lua (6)
 
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 - game ids: [instances] INSTANCES are dungeons and raids, cover the season's, and reach past it
 - game ids: [arena] ARENAS are arena maps, one per arena
 - game ids: [QFE-F3] every WoW Forever id has its FOREVER_MAPS row, of its kind
+- game ids: [CA-M4-3] THANK_RAID_BUFFS on each client: the single-target raid buffs a stranger can cast
 
 ### test_client_data.lua (9)
 
@@ -2217,7 +2220,7 @@ Total.
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 26 |
 | test_database.lua | 32 |
-| test_profile.lua | 10 |
+| test_profile.lua | 12 |
 | test_schema.lua | 24 |
 | test_slash.lua | 22 |
 | test_disabled.lua | 26 |
@@ -2233,7 +2236,7 @@ Total.
 | test_bake.lua | 25 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 40 |
-| test_gameids.lua | 5 |
+| test_gameids.lua | 6 |
 | test_client_data.lua | 9 |
 | test_library.lua | 83 |
 | test_members.lua | 28 |
@@ -2298,4 +2301,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1936** |
+| **Total** | **1939** |
