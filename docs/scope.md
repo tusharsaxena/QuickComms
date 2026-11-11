@@ -52,8 +52,11 @@ for phase 5).
 - Send anything the player did not press a button or a key for. There is no automatic callout and
   no addon-side send path besides the secure buttons (design decision D12); `/qc check` prints what
   a callout would send and never sends it.
-- Read combat-only data (unit health, auras, cooldowns): those are secret values in Midnight, and the
-  situation engine reads only non-secret inputs.
+- Read combat-only data (unit health, other units' auras, cooldowns): those are secret values in
+  Midnight, and the situation engine reads only non-secret inputs. The one read of auras is auto-thank's
+  (#19, F2): your own helpful auras, through a unit-filter frame for the player, acted on only out of
+  combat; in combat it reads nothing and diffs after the fight. A toast never sends anything: the Thank
+  button is a secure button you press.
 - In v1.0.0: callout variants, confirmations, per-callout cooldowns, a key per callout,
   gamepad support, countdown callouts, an arc layout for pads, analytics, faction-aware wording,
   per-dungeon built-in sets, and any locale beyond enUS (design spec §1), and the hold, flick and

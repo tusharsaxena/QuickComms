@@ -34,6 +34,12 @@ Nine are declared, the design's seven, the Icons tab's `glowStart` and the `{coo
 | `glowStart` | `modules/Glow.lua` | one icon glow's start (the Icons tab, B9): an effect started or restarted on a button's or a wedge's icon; an unchanged rebuild starts none. The pixel and auto cast styles then run LibCustomGlow-1.0's own `OnUpdate` on every glowing icon while it shows, which this addon does not bracket; smoke step ICONS-2 watches the frame rate with a full pad glowing |
 | `coordsRebake` | `modules/SendEngine.lua` | a `{coordinates}` button's press-time re-bake in its `PreClick` hook, and each one at the combat edge (QF-03): one position read, one bake, at most one re-arm; only buttons whose text uses the token, and never in combat |
 
+Auto-thank (#19) declares no bucket. Its one event, `UNIT_AURA`, is registered for one unit, the
+player, on its own frame (the client filters the unit), and only while auto-thank is on for the current
+content kind: by default the open world alone, so in an instance it costs nothing. Out of combat each
+event walks the payload's added auras and drops the removed ids; in combat it sets a flag and queues one
+diff for the end of the fight. The toast does its own work only while one is on screen.
+
 Keys are lowerCamelCase, named for the path they time (naming-cheatsheet); until audit QC-12 they
 were dotted (`situation.refresh`, `bake.surface`, …), and no capture under `docs/perf-analysis/` names
 the old form. The `situationRefresh` scenario below shares its bucket's name because it times that

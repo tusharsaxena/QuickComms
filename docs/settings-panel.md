@@ -10,6 +10,7 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `What it sends` |
 | Pad | One pad (the Comms Pad page until the dial polish, 2026-10-21): `General`, `Groups`, `Layout`, `Window`, `Header`, `Section titles`, `Buttons`, `Icons` |
 | Dial | One dial (the Comms Dial page until the dial polish, 2026-10-21): `General`, `Groups`, `Layout`, `Slices`, `Hub`, `Paging`, `Labels`, `Icons`, `Ring map` |
+| Auto-thank | Auto-thank (#19): `General`, `Where`, `Filter` |
 
 Item 020 (2026-10-24, the settings layout) moved, regrouped and relabeled rows across these pages; no
 setting's stored path, default, range or behavior changed (`tests/test_schema.lua`'s layout guard
@@ -873,6 +874,30 @@ placement), Icons and Animation tabs back to their defaults (tooltip: "Put the s
 groups-as, layout, slices, hub, paging, labels, tooltip placement, icons and animation back to their defaults, and turn it on. Its
 name, groups, position and key are kept.", QUI-L28) and turns the dial on, in one act (`Library.Batch`); the name, groups
 and position are kept, and the key, WoW's own binding, is never touched.
+
+## Auto-thank
+
+`settings/AutoThank.lua`, its own sidebar page (D21) after Dial and before Profiles, registered through
+`Ed.RegisterPage` with `pageKey = "autothank"`, so on a load without LibKa0s its `RegisterOptionsPage`
+is the stub's and no page is drawn (nor any `thank.*` row added). Three tabs, the rows' groups:
+
+- **General:** Enable auto-thank (`thank.enabled`); Thank button sends (`thank.send`: Emote, Whisper,
+  Both); Whisper text (`thank.text`, its tooltip naming the tokens: *{name} is the caster, {buff} the
+  buff.*); Mute (`thank.mute`: No one, Strangers, Friends and guild). The toast's position
+  (`thank.position`) is a row drawn by nothing: the toast is dragged.
+- **Where:** one check box per content kind this client offers, in `NS.Resolver.TOKENS.content`'s order
+  and labeled as the pad's situation chip (World, Dungeon, M+, Raid, ...). The kinds are
+  `Settings.GroupsWhen.ContentValues()`, the When editor's own list, lifted out of `settings/Groups_When.lua`
+  for this, so WoW Forever's page shows World, Dungeon, Raid and Battleground. Every kind has a row on
+  both clients; a hidden one is `skipRender`, answered when the page draws.
+- **Filter:** Raid buffs only (`thank.raidBuffsOnly`), whose tooltip says auto-thank guesses at a buff
+  and that the list holds only raid buffs a stranger can give you. Hidden, and with it the tab
+  (`untabbedSkipRender`), on a client whose `THANK_RAID_BUFFS` is empty (FRB); both clients list theirs.
+
+Every write re-runs `AutoThank.Rewire` (each row's `onChange`; there is no setting-change message), so
+switching auto-thank off, or unticking the kind you are in, takes the frame's `UNIT_AURA` down at once.
+Defaults (*Put auto-thank's settings back to their defaults. The toast's position is kept.*) is the
+library's `RestoreDefaults` over the page's rows; `thank.position` is reset-exempt.
 
 ## Still to come
 

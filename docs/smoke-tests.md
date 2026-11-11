@@ -42,9 +42,10 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | PLOOK-1..11 | [The pad's look per skin](#the-pads-look-per-skin) | The pad in each skin: edges, buttons and shine (the owner's findings of 2026-11-01) |
 | FSKIN-1..13 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost, a stored pick of the deleted Friz |
 | ROLE-1..3 | [Role and character](#role-and-character) | The Role row on General → Behavior and its Automatic phrase, the group's assigned role winning over the spec, the Character and Specialization rows of the When editor (Retail; FOREVER-18 to FOREVER-21 re-run them on Forever) |
-| FOREVER-1..25 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, Forever's place ids against the client's own names and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone; `/qc probe ids`, the no-travel sweep of the client's map, dungeon finder and battleground names |
+| FOREVER-1..26 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, Forever's place ids against the client's own names and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone; `/qc probe ids`, the no-travel sweep of the client's map, dungeon finder and battleground names; the combined-actions core re-run |
 | EMOTE-1..10 | [Emotes](#emotes) | Retail, then Forever: a custom emote callout (`/e`) and its lock, a game emote callout, the emote picker's order and voice marks, preview, throttle and an unknown token, a game emote during an encounter, the Emotes set in the open world and an existing profile gaining it once, the shipped callouts that emote with their line and the two Heal me callouts, and an existing profile gaining them (step 20) |
 | ACTION-1..8 | [Combined actions](#combined-actions) | Retail, then Forever: one press that sends a line, an emote, a ping and a marker (#16), in combat, with no target, the 255-byte macro cap, Say and an emote outdoors, a boss encounter, a locked Line beside a marker, a legacy game-emote callout |
+| THANK-1..12 | [Auto-thank](#auto-thank) | Retail, then Forever: a stranger's buff toasted and thanked (#19), whether the caster reads, the whisper and the emote at a cross-realm caster, a buff mid-fight, a burst throttled, raid buffs only, where it stays quiet, combat with a toast up, a right-click, the spam guard, the mute modes |
 | PING-1..5 | [Pings](#pings) | Retail, then Forever: a callout's ping on the target (#17), solo and grouped, in combat, Forever's server delivery, an encounter lockdown, pings off and on cooldown |
 | MARK-1..7 | [Raid markers](#raid-markers) | Retail, then Forever: a callout's raid target marker on the target (#18), solo, in a party and in a raid with and without assist, a second press, no target and an unmarkable one, Forever's `/tm`, marking in combat and during an encounter |
 | SKIN-1..31 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker; no line under any window title |
@@ -2449,6 +2450,10 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
   with its `id`, `name`, `categoryID`, `mapID`, `maxNumPlayers` and `isPvp`); Darkspear Islands is among
   the group finder's activities and gets no set of its own (D3-R), and Battle for Gilneas is not listed
   by the group finder. Result: passed (owner, 2026-11-10)
+- **FOREVER-26. The combined-actions core on Forever.** On WoW Forever, run ACTION-1 (one press sends a
+  line, an emote, a ping and a marker), PING-2 (a ping in a party, in combat), MARK-2 (a mark in a party
+  as a non-leader) and MARK-7 (marking in combat and during a boss encounter) → each as its check
+  describes; record any that differs from Retail. Result: owed
 
 ## Emotes
 
@@ -2654,6 +2659,54 @@ to 8 skull). On the build where callouts combine actions (CA-M2-1 and later), as
   blocked-action error shows (`SetRaidTarget`'s restrictions; the secret `GetRaidTargetIndex` compare in
   `/tm`'s `!` branch). A failure narrows #18's AC. Result: owed
 
+## Auto-thank
+
+**Client: Retail, then WoW Forever**, every check here (QuickComms#19, the combined-actions design §9 and
+§13). **Code:** `modules/AutoThank.lua` (the filter, the unit-filter frame, the after-combat diff),
+`modules/AutoThank_Toast.lua` (the toast, its pump, Hold and Release, the fade), `core/ToastSetup.lua`,
+`modules/SendEngine.lua` (`SE.NewThankButton`, `pressThank`), `core/Compat.lua` (`AuraCaster`,
+`AuraByInstance`, `HelpfulAuraIds`, `WhisperName`, `WhisperCommand`) and `settings/AutoThank.lua` (the
+Auto-thank page). **Set-up:** a fresh profile (auto-thank on, the open world alone, Emote), and a second
+character or a stranger who can cast a long buff on you.
+
+- **THANK-1. A stranger's buff, thanked (#19).** In the open world, out of combat, not grouped, a stranger
+  casts Arcane Intellect on you → one toast: the buff's icon and *<name> buffed you with Arcane
+  Intellect*. Click **Thank** → you `/thank` them (the client's own emote line in chat), and the toast
+  goes. Again, and leave it → it fades over its last two seconds and goes after about ten; hovering it
+  holds it. Result: owed
+- **THANK-2. Whether the caster reads for a stranger (R1).** With friendly nameplates off and the stranger
+  not your target, then targeted: run `/dump C_UnitAuras.GetAuraCasterGUID("player", <id>)` first and the
+  aura's `sourceUnit` second (`/dump C_UnitAuras.GetAuraDataByAuraInstanceID("player", <id>).sourceUnit`),
+  and record each answer both ways; then record `GetPlayerInfoByGUID(<guid>)`'s name and realm (the 6th and
+  7th returns) for that stranger. A caster that reads in neither way shows no toast. Result: owed
+- **THANK-3. `/thank Name` out of range or out of sight (UNVERIFIED).** Let the stranger walk out of range,
+  or behind a wall, before you click Thank → record whether the emote names them or falls back to the
+  untargeted form. Result: owed
+- **THANK-4. The whisper and the emote reach a cross-realm caster.** Set Thank button sends to Whisper →
+  a click whispers *Thanks for the Arcane Intellect, <name>!*, the whisper reaches the caster and no drop
+  note prints (the echo is matched). On Retail use a cross-realm caster whose realm name has a space; on
+  Forever a "First Surname" caster. Then Emote: `/thank Name-Realm` lands on the cross-realm caster on
+  Retail, and `/thank First-Surname` on Forever. Then Both: one click sends the emote, then the whisper.
+  Result: owed
+- **THANK-5. A buff mid-fight.** Get buffed by a stranger while in combat → no toast in combat; one after
+  it. Repeat after a `/reload` in combat (the toast still comes after the fight). Result: owed
+- **THANK-6. A burst is throttled.** Five strangers buff you in a burst → at most three toasts on screen,
+  about a second and a half apart, and the rest after, never five at once. Result: owed
+- **THANK-7. Raid buffs only.** Tick **Filter → Raid buffs only** → Arcane Intellect, Power Word: Fortitude
+  and Mark of the Wild from a stranger toast and no other buff does, on Retail and on Forever (whose list
+  holds every rank of the three; UNVERIFIED ids). Record any of the three that does not toast. Result: owed
+- **THANK-8. Where it stays quiet.** In a dungeon (off by default) → no toast. In the open world: a buff
+  you cast on yourself, a group member's buff and a pet's buff → no toast. Result: owed
+- **THANK-9. Combat starts with a toast up.** With a toast on screen, pull a mob → the toast goes at once
+  with no "interface action blocked" or taint error, and comes back after the fight. Result: owed
+- **THANK-10. A right-click dismisses.** Right-click a toast → it goes and nothing is sent. Result: owed
+- **THANK-11. Thank does not trip the spam guard.** Click Thank, then press a pad button at once → the pad
+  press is sent and not "guarded". Result: owed
+- **THANK-12. The mute modes.** Set **Mute → Strangers**: a stranger's buff shows no toast, a friend's and a
+  guildmate's do. Set **Friends and guild**: a friend's buff and a guildmate's buff show no toast, a
+  stranger's does. This confirms `C_FriendList.IsFriend(guid)` and `IsGuildMember(guid)` answer for a
+  GUID. Result: owed
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -2736,3 +2789,5 @@ Owed from combined actions M1 (QuickComms#17 and #18, CA-M1-1 to CA-M1-12, `docs
 Owed from combined actions M2 (QuickComms#16, CA-M2-1 to CA-M2-11, the same design §2 to §4 and §7): ACTION-1 to ACTION-8, new, each owed; EMOTE-3 and EMOTE-4 (the callout editor's four action slots and Channel None changed their expected result, so each lost its pass mark). PING-1 to PING-5 and MARK-1 to MARK-7 are runnable from this build on.
 
 Owed from combined actions M3 (QuickComms#20, CA-M3-1 to CA-M3-5, the same design §8 and §10): EMOTE-9 and EMOTE-10, new, each owed.
+
+Owed from combined actions M4 (QuickComms#19, CA-M4-1 to CA-M4-14, the same design §9 and §13): THANK-1 to THANK-12 and FOREVER-26, new, each owed.

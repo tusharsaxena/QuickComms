@@ -261,6 +261,24 @@ smoke checks PING-1 to PING-5 and MARK-1 to MARK-7 are owed.
   MMO-Champion). **Client:** Retail. **Cost:** a fourth mark in a burst does not land. **Do:** nothing in
   code; it is a known limitation.
 
+### Auras and auto-thank (#19)
+
+Read in Blizzard's source, Retail 12.1.5 and Forever build 1.60.1.70888 (the combined-actions design §9). Not
+yet measured in game: the smoke checks THANK-1 to THANK-12 are owed.
+
+- **The `UNIT_AURA` payload is secret while auras are restricted.** `SecretWhenAurasRestricted = true` on the
+  event as a whole (UnitAuraDocumentation.lua). **Measured:** source only. **Client:** Retail and Forever.
+  **Cost:** the unit, `isFullUpdate` and every `auraInstanceID` in it can be secret; only the GetAura*
+  functions' `unit` argument is `NeverSecret`. **Do:** register `UNIT_AURA` on a unit-filter frame for
+  `"player"`, so no unit is compared; mark a secret payload dirty and catch up with a diff once it reads
+  plain (`AT.Diff`).
+- **`GetAuraCasterGUID` and `GetAuraDataByAuraInstanceID` are secret while the unit's auras are
+  restricted.** **Measured:** source only. **Client:** Retail and Forever. **Cost:** in combat the caster and
+  the aura cannot be read. **Do:** read nothing in combat; the after-combat diff reads each new aura then,
+  through `Compat.AuraCaster` and `Compat.AuraByInstance`, and drops one it cannot read.
+- **Whether the caster reads for a stranger who is not your target, with friendly nameplates off**, and
+  what `GetPlayerInfoByGUID` names them, is THANK-2.
+
 ## Interface line — track both clients' builds
 
 `QuickComms.toc` declares two build numbers, Retail's first and WoW Forever's second (toc-file-§3):

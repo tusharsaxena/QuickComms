@@ -124,22 +124,22 @@ listed task if the owner rules otherwise:
 | CA-M3-4 | Step 20 part 2: the two new rows | done | a68c987 |
 | CA-M3-5 | Register step 20; schema version 20 and its pins | done | a396673 |
 | CA-M3-6 | M3 docs and smoke checks | done | 3cec8ab |
-| CA-M3-7 | M3 checkpoint | done | (this commit) |
-| CA-M4-1 | Mock: aura, GUID, friend and guild surfaces | todo | |
-| CA-M4-2 | Compat: `AuraCaster`, `AuraByInstance`, `HelpfulAuraIds`, `WhisperName` | todo | |
-| CA-M4-3 | Constants, `thank` defaults, raid-buff ids, `enUS_AutoThank.lua` | todo | |
-| CA-M4-4 | `AT.Accept`, `AT.Fill`, `AT.Macro` (pure) | todo | |
-| CA-M4-5 | The unit-filter frame, `AT.Rewire`, stand-down and stand-up | todo | |
-| CA-M4-6 | `AT.OnAura`: detection and the known-aura set | todo | |
-| CA-M4-7 | Combat: the after-combat diff | todo | |
-| CA-M4-8 | `core/ToastSetup.lua`: the Toast seam and stub | todo | |
-| CA-M4-9 | `AutoThank_Toast.lua`: host, builder, GAP pump, stack, `maxQueue`, stand-down | todo | |
-| CA-M4-10 | The toast's combat Hold and Release receiver | todo | |
-| CA-M4-11 | The toast fade (D26) | todo | |
-| CA-M4-12 | `SE.NewThankButton`, `pressThank`, the whisper echo | todo | |
-| CA-M4-13 | Schema rows `thank.*` | todo | |
-| CA-M4-14 | The Auto-thank settings page | todo | |
-| CA-M4-15 | M4 docs and smoke checks | todo | |
+| CA-M3-7 | M3 checkpoint | done | 224f445 |
+| CA-M4-1 | Mock: aura, GUID, friend and guild surfaces | done | ba4cc18 |
+| CA-M4-2 | Compat: `AuraCaster`, `AuraByInstance`, `HelpfulAuraIds`, `WhisperName` | done | c08b1b7 |
+| CA-M4-3 | Constants, `thank` defaults, raid-buff ids, `enUS_AutoThank.lua` | done | 9f32ce1 |
+| CA-M4-4 | `AT.Accept`, `AT.Fill`, `AT.Macro` (pure) | done | dacc666 |
+| CA-M4-5 | The unit-filter frame, `AT.Rewire`, stand-down and stand-up | done | b0bb8cf |
+| CA-M4-6 | `AT.OnAura`: detection and the known-aura set | done | b109c0b |
+| CA-M4-7 | Combat: the after-combat diff | done | f0c894e |
+| CA-M4-8 | `core/ToastSetup.lua`: the Toast seam and stub | done | ccb0002 |
+| CA-M4-9 | `AutoThank_Toast.lua`: host, builder, GAP pump, stack, `maxQueue`, stand-down | done | 066ee58 |
+| CA-M4-10 | The toast's combat Hold and Release receiver | done | 8b32662 |
+| CA-M4-11 | The toast fade (D26) | done | 7c37a80 |
+| CA-M4-12 | `SE.NewThankButton`, `pressThank`, the whisper echo | done | adfc0cb |
+| CA-M4-13 | Schema rows `thank.*` | done | 4c97843 |
+| CA-M4-14 | The Auto-thank settings page | done | 536f82e |
+| CA-M4-15 | M4 docs and smoke checks | done | (this commit) |
 | CA-M4-16 | M4 checkpoint | todo | |
 | CA-M5-1 | Whole-branch review | todo | |
 | CA-M5-2 | Review fixes | todo | |

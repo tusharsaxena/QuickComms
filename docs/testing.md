@@ -92,7 +92,13 @@ case sets either `nil` to drop the command), `CanBeRaidTarget` (`m.raidTargetabl
 rights (`m.isLeader`, `m.isAssist`, `m.everyoneAssist`; `IsInRaid` reads the base's `__context.inRaid`),
 `UnitExists` over the base's `__unitExists` (a `T.secret` answer is handed back as is, so a reader's secret
 arm is reachable), and `m.sentLines(i)`, the lines of `m.sentMacros[i]` (the newest by default) split on
-the newline.
+the newline. For auto-thank (CA-M4-1) it adds `C_UnitAuras` over `m.auras` and `m.auraCasters`
+(`GetAuraDataByAuraInstanceID`, `GetAuraCasterGUID`, `GetUnitAuraInstanceIDs`), `m.addAura` and the
+`UNIT_AURA` payload builders `m.auraUpdate` and `m.secretAuraUpdate`, `UnitGUID` over `m.unitGUIDs`,
+`GetPlayerInfoByGUID` over `m.players`, `C_PartyInfo.IsGUIDInGroup`, `C_FriendList.IsFriend` and
+`IsGuildMember` over `m.groupGUIDs`, `m.friendGUIDs` and `m.guildGUIDs`, `SLASH_WHISPER1`, and every
+frame's `SetAlpha`, `GetAlpha` and `IsMouseOver`. `test_autothank` is its suite; the Toast seam's stub is
+pinned in `test_surface_parity`.
 
 `tests/page_helpers.lua` (not a suite) drives an editor page through the kit's AceGUI recorder: show a page, redraw it, click a tab, find a widget by its label, fire its callback, accept the last popup, and spy on the reorder lists.
 

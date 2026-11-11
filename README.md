@@ -117,6 +117,22 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
 - Text that starts with a slash command is refused. A callout's text is only ever chat; its ping and
   marker are the game's own `/ping` and `/tm`.
 
+## Auto-thank
+
+When a stranger buffs you in the open world, a small toast names them and the buff, with a **Thank**
+button. Click it to `/thank` them, whisper them a thank-you ("Thanks for the {buff}, {name}!" unless you
+change it), or both; leave it and it fades away. Nothing is sent unless you click.
+
+- It is on by default in the open world only. The **Auto-thank** settings page turns it off, picks where
+  it runs (dungeons, raids, battlegrounds and so on), what Thank sends, and whose buffs to ignore
+  (strangers, or your friends and guild).
+- A buff counts when another player outside your group casts it on you and it lasts a minute or more.
+  **Raid buffs only** narrows that to Arcane Intellect, Power Word: Fortitude and Mark of the Wild.
+- No toast shows in combat. Buffs you get during a fight are toasted after it, and a toast that is up
+  when a fight starts comes back afterwards.
+- At most three toasts show at once, and the same player's same buff is not toasted again for ten
+  minutes. Drag a toast to move them; right-click one to dismiss it.
+
 ## FAQ
 
 | Question | Answer |

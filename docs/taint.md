@@ -188,6 +188,25 @@ The editor pages touch no frame of a pad: every write reaches a pad through `LIB
 `Surfaces.Request`, so a write made in combat (a CLI `set`, a popup accepted after the pull) waits for
 combat end behind the stale hint.
 
+## The thank toast and its Thank button (#19)
+
+Auto-thank's toast is LibKa0s-Toast-1.0's frame (`core/ToastSetup.lua`), insecure, at the library's
+HIGH strata. Its Thank button is a SendEngine send button (`SE.NewThankButton`, `modules/SendEngine.lua`,
+still the only secure writer), made once per pool frame on its first draw out of combat and armed with
+`AT.Macro`'s one or two lines (`/thank Name`, the whisper, or both) by `SE.Arm`. It registers left clicks
+alone (`qcLeftOnly`), so the toast's right-click dismiss never runs its macro; its press (`pressThank`)
+stamps no spam guard and reads its own locks (chat lockdown for the whisper, the emote's lock state).
+
+Once the toast frame carries that secure child, a `Hide`, `SetPoint` or `StartMoving` on it in combat
+moves a protected frame, and the library does all three on its own (its timer, a reflow, a drag). So no
+toast is on screen in combat: every host `Show` and every step of the pump waits for the end of combat
+(the host keeps a payload offered in combat in its own list), and at the `PLAYER_REGEN_DISABLED` edge,
+while lockdown still reads false, the host's `RESTRICTION_CHANGED` receiver calls `toast:Hold()`, which
+puts every toast on screen back in the library's queue. `Hold(true)` and `Pause()` are never used. After
+the fight `toast:Release()` runs from that receiver or from `R.OnCombatEdge(false)`'s hook
+(`AT.OnCombatEnd`), since a login or /reload in combat may never send the message. The fade (D26) is an
+`OnUpdate` alpha on the insecure frame, and it returns at once in combat.
+
 ## Glows, title hit frames and the click preview
 
 The Icons tab's border frame and LibCustomGlow-1.0's effect frames are plain (unprotected) children

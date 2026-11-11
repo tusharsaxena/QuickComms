@@ -53,6 +53,27 @@ What the addon cannot do, or does only under a condition, and why. The hub,
 - Whether WoW Forever's servers deliver a ping (PING-3), and whether a mark lands in combat or during an
   encounter on either client (MARK-7, `SetRaidTarget`'s restrictions), is not yet measured.
 
+## Auto-thank (#19)
+
+- The buff filter is a guess: a helpful aura of a minute or more (`C.THANK.MIN_DURATION`; one with no
+  expiry never counts) cast on you by another player who is not in your group. The game has no "this was
+  a gift" flag, so a long buff from a stranger that you did not want still toasts.
+- Raid buffs only lists three buffs a stranger can give you: Arcane Intellect, Power Word: Fortitude and
+  Mark of the Wild (on WoW Forever every rank of the three, from its own spell tables). The ids are not
+  yet checked in game (THANK-7). A client whose list were empty would hide the toggle (FRB); neither is
+  today.
+- In combat nothing is read: a buff gained in a fight is found by a diff of your helpful auras after it,
+  so a buff gained and lost inside one fight is never seen. The 60-second minimum makes that rare.
+- No toast shows in combat, and one on screen when combat starts goes away and comes back after it,
+  with its full time: its Thank button is a secure frame, which the game will not let the toast move or
+  hide in combat.
+- The pads sit at DIALOG, over the toast's HIGH, so a pad placed over the toast's spot covers it. The
+  default spot (TOP 0,-180) is clear of the default pad; the toast can be dragged.
+- Whether a stranger's caster reads at all when they are not your target and friendly nameplates are
+  off is not yet measured (THANK-2); a buff whose caster cannot be read shows no toast.
+- The whisper is the one whisper this addon sends: issue #7's rule that a callout never whispers still
+  holds for callouts (F3).
+
 ## The Comms Pad
 
 - The mouse wheel over a pad belongs to the pad (spec §10.2): with groups as tabs it switches the tab,
