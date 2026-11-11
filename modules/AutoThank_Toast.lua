@@ -122,7 +122,8 @@ end
 -- pause does (the button sits inside the frame, so IsMouseOver covers it), pushing the due time by
 -- what it held; leaving with under a second left gives one second, the library's MIN_RESUME. A drag
 -- on any toast holds every toast on screen (the library's onDragStart pauses each), so TH.dragging,
--- set from each pool frame's OnDragStart and cleared by its OnDragStop, holds every fade the same way.
+-- set from each pool frame's OnDragStart and cleared by its OnDragStop (or by the combat edge's Hold
+-- and the stand-down, which end a drag without that script), holds every fade the same way.
 -- OnUpdate runs only while the frame is shown, and does nothing in combat.
 
 local MIN_LEFT = 1
@@ -261,10 +262,12 @@ AT.ReleaseToast = function() TH.Release() end
 
 -- RESTRICTION_CHANGED (reason, canSendChat): fighting holds the toast; with the fight over and
 -- lockdown false it is released, then a dirty known set is diffed, which also covers a restriction
--- that lifts outside combat.
+-- that lifts outside combat. The Hold takes every toast down, which ends a drag in the library
+-- without the frame's OnDragStop, so the host's drag flag goes with it.
 local function onRestrictionChanged()
     if NS.Restrictions.InCombat() then
         TH.toast:Hold()
+        TH.dragging = nil
     elseif not NS.Compat.InCombat() then
         TH.Release()
         if NS.State.thankDirty then AT.Diff() end

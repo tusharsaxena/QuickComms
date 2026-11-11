@@ -882,6 +882,26 @@ test("autothank: [CA-M4-R1] the stand-down forgets a drag in progress", function
     assertNil(TH.dragging)
 end)
 
+test("autothank: [CA-M5-2] a drag the combat edge cuts short holds no later toast's fade", function()
+    local NS, m, TH = hosting()
+    local C = NS.Constants.THANK
+    local f = TH.toast:FrameFor(offer(NS, m, 1))
+    f:__fire("OnDragStart")
+    -- the library ends the drag itself when the edge's Hold takes the toast down; the frame's
+    -- OnDragStop script never runs
+    edgeOn(m)
+    assertEqual(TH.toast:Stats().visible, 0, "held at the edge")
+    -- red under: a host drag flag cleared only by the frame's OnDragStop
+    assertNil(TH.dragging, "the drag ended with the toast")
+    m.__setCombat(true)
+    fightOver(m)
+    local g = TH.toast:FrameFor(TH.toast:Visible()[1])
+    assertTrue(g ~= nil, "released after the fight")
+    m.__now = m.__now + C.DURATION - C.FADE / 2
+    g:__fire("OnUpdate", C.DURATION - C.FADE / 2)
+    assertTrue(g:GetAlpha() < 1, "the released toast fades")
+end)
+
 -- ── the Thank button and its press (CA-M4-12, D4, spec §9 The Thank button) ─────────────────────
 
 -- hosting(), with the client's THANK emote known, `send` set, and one stranger's toast up: its key,
