@@ -459,7 +459,7 @@ Total.
 - emotes: [QFE-E2] a user name is kept, and leaving None keeps the emote beside the Line (CA-M2-7)
 - emotes: [QFE-E2] the popup's preview names the emote, and an unknown token's reason
 
-### test_bake.lua (25)
+### test_bake.lua (26)
 
 - bake: a plain callout bakes to prefix + text
 - bake: [review 1] a leading slash is refused, even after whitespace
@@ -476,6 +476,7 @@ Total.
 - bake: [CA-M1-7] BakeActions bakes a Line-only callout to today's Bake line
 - bake: [CA-M1-7] a Line that does not bake keeps today's reason, and the macro is nil
 - bake: [CA-M1-R1] HasLine is the Library's rule: whitespace or control-only text is no Line
+- bake: [CA-M5-2] HasLine answers as B.CleanText does on every kind of text, without cleaning it
 - bake: [CA-M1-7] the emote line is the client's command, on the TEXT_EMOTE chat type and the gameEmote lock
 - bake: [CA-M1-7] a ping bakes /ping [@target,exists] with its numeric keyword, no chat type and no lock
 - bake: [CA-M1-7] a marker bakes /tm [@target,exists] !N, which never toggles a mark off
@@ -2319,7 +2320,7 @@ Total.
 | test_tokens.lua | 11 |
 | test_channels.lua | 18 |
 | test_emotes.lua | 19 |
-| test_bake.lua | 25 |
+| test_bake.lua | 26 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 40 |
 | test_gameids.lua | 6 |
@@ -2388,4 +2389,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2022** |
+| **Total** | **2023** |

@@ -123,12 +123,13 @@ end
 -- The ping's numeric keyword: the same in every locale (D12, pingNameToTypeTable).
 local PING_NUM = { attack = "1", warning = "2", onmyway = "3", assist = "4" }
 
+-- The Line's entry is B.Bake's own info table, which already holds concrete, lock, length, unknown,
+-- missing, selfPrint and text: a pad rebuild bakes every slot, so no second table copies it.
 local function lineEntry(callout, s, opts)
     local line, reason, info = B.Bake(callout, s, opts)
-    return { kind = "line", line = line, reason = reason, concrete = info.concrete,
-        chatType = info.concrete and NS.Channels.ChatType(info.concrete) or nil, lock = info.lock,
-        length = info.length, unknown = info.unknown, missing = info.missing, selfPrint = info.selfPrint,
-        text = info.text }
+    info.kind, info.line, info.reason = "line", line, reason
+    info.chatType = info.concrete and NS.Channels.ChatType(info.concrete) or nil
+    return info
 end
 
 local function emoteEntry(callout, s)
@@ -157,8 +158,9 @@ end
 --- control characters alone are no Line; a leading "/" still is: its bake refuses it and says why).
 function B.HasLine(f)
     if type(f) ~= "table" or NS.Channels.IsGameEmote(f.channel) or type(f.text) ~= "string" then return false end
-    local clean, why = B.CleanText(f.text)
-    return clean ~= nil or why == "startsWithSlash"
+    -- B.CleanText refuses a text only as "empty" (nothing but whitespace and control characters) or
+    -- "startsWithSlash" (still a Line), so this is its answer without building the cleaned string.
+    return f.text:find("[^%s%c]") ~= nil
 end
 
 -- Hold the Line to what the macro has left (D13): the other actions bake first, and the Line gets
@@ -201,14 +203,16 @@ function B.BakeActions(callout, s, opts)
             callout.marker)
     end
     holdLine(list)
-    local lines = {}
+    local baked = info.baked
     for _, a in ipairs(list) do
         if a.line then
-            info.baked[#info.baked + 1] = a
-            lines[#lines + 1] = a.line
-            info.total = info.total + a.length + (#lines > 1 and 1 or 0)
+            baked[#baked + 1] = a
+            info.total = info.total + a.length + (#baked > 1 and 1 or 0)
         end
     end
-    if #lines == 0 then return nil, list[1] and list[1].reason or "noAction", info end
+    if #baked == 0 then return nil, list[1] and list[1].reason or "noAction", info end
+    if #baked == 1 then return baked[1].line, nil, info end
+    local lines = {}
+    for i, a in ipairs(baked) do lines[i] = a.line end
     return table.concat(lines, "\n"), nil, info
 end

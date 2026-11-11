@@ -126,8 +126,11 @@ end
 
 --- True when any of the slot's baked actions is under the encounter lockdown (the lockdown chip).
 function S.SlotLockdown(slot)
-    for _, lock in ipairs(slot.locks or {}) do
-        if lock == "lockdown" then return true end
+    local locks = slot.locks
+    if type(locks) == "table" then
+        for _, lock in ipairs(locks) do
+            if lock == "lockdown" then return true end
+        end
     end
     return slot.lock == "lockdown"
 end

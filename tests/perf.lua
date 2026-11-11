@@ -51,11 +51,18 @@
 -- spirals (#13, the owner's ruling), measured 50502.3 against 42437.6 with the same tree on Fade. A
 -- turning place re-anchors each copy, and the mock's SetPoint and ClearAllPoints each make a table the
 -- client does not. modules/Anim_Pose.lua and the tracks' buffers still make none per tick.
+--
+-- Raised 2026-11-11: padRebuild12 70656 -> 87040 bytes/iter at the combined actions (#16-#18, review
+-- F-001). Bisected over the branch: 68145.5 at 45c3b01, 92349.6 at 737931b (CA-M1-8), where each slot
+-- began to bake through B.BakeActions and carry its per-action lists (actions, skipped, chatTypes,
+-- locks), and the press meta with them. The cuts that change nothing (the Line's entry is B.Bake's own
+-- info, B.HasLine cleans no string, one baked action makes no join table, S.SlotLockdown makes no empty
+-- table) took it to 86205.6. The rest is the per-action design (spec §3), one set of lists per slot.
 
 local BYTE_CEILING = {
     bracketCaptureOff = 0,
     dialPointerCaptureOff = 1024, dialPointerNoHarness = 1024,
-    padRebuild12 = 70656, dialOpenClose = 53248, situationRefresh = 2048,
+    padRebuild12 = 87040, dialOpenClose = 53248, situationRefresh = 2048,
 }
 local NOTES_PER_ITER = {
     bracketCaptureOff = 0, dialPointerCaptureOff = 0, dialPointerNoHarness = 0,

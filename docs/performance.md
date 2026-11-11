@@ -60,7 +60,7 @@ notes per iteration, never time:
 | `bracketCaptureOff` | the gated bracket shape, capture off, notes nothing and allocates nothing | 0 bytes, 0 notes | 0.0 B |
 | `dialPointerCaptureOff` | the hottest bracketed path, the open dial's pointer `OnUpdate`, capture off | 1 KiB, 0 notes | 224.0 B |
 | `dialPointerNoHarness` | the same path on an instance with no Perf library; the run fails if capture off allocates more (zero overhead, performance-§9) | 1 KiB, 0 notes | 224.0 B |
-| `padRebuild12` | a 12-button pad built from its plan and applied, capture on | 69 KiB, 3 notes (raised from 68 KiB when the rows began to follow the Look's font size) | 65516.8 B |
+| `padRebuild12` | a 12-button pad built from its plan and applied, capture on | 85 KiB, 3 notes (raised from 69 KiB for the combined actions' per-action lists, 2026-11-11) | 86205.6 B (2026-11-11) |
 | `dialOpenClose` | the default dial opened, one pointer frame (which lights a slice and shows its wedge's tooltip), closed | 52 KiB, 1 note | 50502.3 B (most of it the capture and the mock's tables, `tests/perf.lua`) |
 | `situationRefresh` | a situation read whose signature did not move | 2 KiB, 1 note | 2016.0 B |
 
@@ -91,6 +91,15 @@ pair differed by 71%. The bytes were real: `5df98bd` (+128 B, the window's `win.
 v1.81.0 re-vendor (+176 B) and v1.82.0 (+32 B), all spent building a window skin no rebuild had changed.
 `R.WindowLook` now keeps the pad root's skin while its signature holds, as the header, section and
 button looks do, so `padRebuild12` is 65516.8 B, below where it started. No ceiling was raised.
+
+**The 2026-11-11 re-measure (combined actions, review F-001).** `padRebuild12` stood at 91773.6 B, over
+its 69 KiB ceiling, against 68156.2 B on `master`. Bisected over the branch, the rise came at `737931b`
+(CA-M1-8, 68145.5 to 92349.6 B), where each slot began to bake through `B.BakeActions` and carry its
+per-action lists (`actions`, `skipped`, `chatTypes`, `locks`) into the button's press meta. Four cuts
+that change no behavior took it to 86205.6 B: the Line's entry is `B.Bake`'s own `info`, not a copy;
+`B.HasLine` answers without cleaning the text (`tests/test_bake.lua` pins it to `B.CleanText`'s verdict);
+a single baked action makes no join table; and `S.SlotLockdown` makes no empty table. The rest is the
+design's own cost, one set of action lists per slot (spec §3), so the ceiling was raised to 85 KiB.
 
 ## In game
 

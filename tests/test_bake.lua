@@ -175,6 +175,18 @@ test("bake: [CA-M1-R1] HasLine is the Library's rule: whitespace or control-only
     assertEqual(#info.actions, 1) assertEqual(info.actions[1].kind, "ping")
 end)
 
+test("bake: [CA-M5-2] HasLine answers as B.CleanText does on every kind of text, without cleaning it", function()
+    local B = actions()
+    local texts = { "", " ", "\t \n", "\1\2\31", " \127 ", "\0", "a", " a ", "\1a\2", "/x", " /x", "é",
+        "|", "{rt8}", "\r\nhi\r\n" }
+    for _, t in ipairs(texts) do
+        local clean, why = B.CleanText(t)
+        local want = clean ~= nil or why == "startsWithSlash"
+        -- red under: a HasLine pattern that misses a control byte (\127) or takes one as text
+        assertEqual(B.HasLine({ text = t, channel = "party" }), want, ("%q"):format(t))
+    end
+end)
+
 test("bake: [CA-M1-7] the emote line is the client's command, on the TEXT_EMOTE chat type and the gameEmote lock", function()
     local B = actions()
     local macro, reason, info = B.BakeActions(none{ emote = "POINT" }, { group = "party", lockdown = { encounter = true } })
