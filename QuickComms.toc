@@ -146,6 +146,9 @@ modules\SendEngine_Guard.lua
 modules\SendEngine.lua
 # Conventional: auto-thank (#19): pure decisions read at call time; reads NS.L and NS.State at load
 modules\AutoThank.lua
+# LOAD-BEARING: takes NS.AutoThank (above) as a load-time upvalue and replaces its AT.Offer hook;
+# makes the thank toast through NS.NewToast (core\ToastSetup.lua) at load; appends to NS.STAND_DOWN
+modules\AutoThank_Toast.lua
 # Conventional: test mode, TEST_MODE_CHANGED's sender; appends to NS.STAND_DOWN / NS.STAND_UP
 modules\Preview.lua
 # Conventional: the Preview as selector window; modules\Preview.lua calls NS.PreviewWindow.Sync at run time only.

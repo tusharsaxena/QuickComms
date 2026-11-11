@@ -11,3 +11,6 @@ local L = NS.L
 -- Why the Thank button's whisper was not built (modules/AutoThank.lua AT.REASON)
 L["Nothing to whisper: the thank-you text is empty."] = "Nothing to whisper: the thank-you text is empty."
 L["The thank-you text cannot start with /."] = "The thank-you text cannot start with /."
+
+-- The thank toast's line: the caster's name, then the buff (modules/AutoThank_Toast.lua TH.Build)
+L["%s buffed you with %s"] = "%s buffed you with %s"

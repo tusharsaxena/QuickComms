@@ -473,3 +473,113 @@ test("autothank: [CA-M4-7] the diff waits while in combat or on the edge, and do
     NS.AutoThank.Diff()
     assertEqual(#got, 0, "a clean set is not diffed")
 end)
+
+-- ── the toast host and its throttle (CA-M4-9, spec §9 The toast) ────────────────────────────────
+
+-- An enabled addon whose toast's Show calls are recorded with the time each was made.
+local function hosting()
+    local NS, m = live()
+    m.__now = 1000
+    local TH = NS.AutoThankToast
+    local shows = {}
+    local show = TH.toast.Show
+    TH.toast.Show = function(self, payload, opts)
+        shows[#shows + 1] = { at = m.GetTime(), key = opts and opts.key, payload = payload }
+        return show(self, payload, opts)
+    end
+    return NS, m, TH, shows
+end
+
+local function stranger(m, n)
+    local guid = ("Player-2-%08X"):format(0x100 + n)
+    m.players[guid] = { name = "Caster" .. n, realm = "Argent Dawn" }
+    return guid
+end
+
+-- One candidate from caster `n`, as AT.OnAura hands it on.
+local function offer(NS, m, n, spellId)
+    local guid = stranger(m, n)
+    local a = m.addAura{ casterGUID = guid, spellId = spellId or 1459 }
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { a } })
+    return guid .. ":" .. (spellId or 1459)
+end
+
+-- Fire the host's GAP pump alone (the toasts' own countdowns sit in the same queue), `dt` later.
+local function pumpAfter(m, TH, dt)
+    m.__now = m.__now + dt
+    local h = TH.pumpTimer
+    if not h then return false end
+    for i, t in ipairs(m.__timers) do
+        if t == h or t.timer == h then
+            table.remove(m.__timers, i)
+            t.fn()
+            return true
+        end
+    end
+    return false
+end
+
+test("autothank: [CA-M4-9] five strangers give 3 toasts on screen and 2 queued, shown GAP apart", function()
+    local NS, m, TH, shows = hosting()
+    local GAP = NS.Constants.THANK.GAP
+    local keys = {}
+    for n = 1, 5 do keys[n] = offer(NS, m, n) end
+    assertEqual(#shows, 1, "the first shows at once")
+    assertEqual(shows[1].key, keys[1])
+    pumpAfter(m, TH, GAP / 2)
+    assertEqual(#shows, 1, "never two inside one GAP")
+    for _ = 2, 5 do assertTrue(pumpAfter(m, TH, GAP), "the pump is armed") end
+    assertEqual(#shows, 5)
+    for i = 2, 5 do assertTrue(shows[i].at - shows[i - 1].at >= GAP, "Show " .. i .. " is GAP after the last") end
+    local st = TH.toast:Stats()
+    assertEqual(st.visible, NS.Constants.THANK.STACK, "3 on screen")
+    assertEqual(st.waiting, 2, "2 queued behind them")
+    assertNil(TH.pumpTimer, "nothing left to pump")
+end)
+
+test("autothank: [CA-M4-9] a toast names the caster and the buff, and starts the caster's cooldown", function()
+    local NS, m, TH = hosting()
+    local key = offer(NS, m, 1)
+    local f = TH.toast:FrameFor(key)
+    assertTrue(f ~= nil, "on screen under its key")
+    assertEqual(f.qcText:GetText(), NS.L["%s buffed you with %s"]:format("Caster1", "Arcane Intellect"))
+    offer(NS, m, 1)                                       -- the same caster recasts it
+    assertEqual(TH.toast:Stats().visible, 1, "inside the cooldown, no second toast")
+end)
+
+test("autothank: [CA-M4-9] maxQueue drops the oldest waiting toast", function()
+    local NS, m, TH, shows = hosting()
+    local keys = {}
+    for n = 1, 9 do keys[n] = offer(NS, m, n) end
+    while pumpAfter(m, TH, NS.Constants.THANK.GAP) do end
+    assertEqual(#shows, 9, "every one reached the toast")
+    local st = TH.toast:Stats()
+    assertEqual(st.visible, 3)
+    assertEqual(st.waiting, NS.Constants.THANK.MAX_QUEUE)
+    assertEqual(st.keys[1], keys[5], "the oldest waiting (the 4th) was dropped")
+end)
+
+test("autothank: [CA-M4-9] no Show in lockdown: the host holds the payload and the pump waits", function()
+    local _, m, TH, shows = hosting()
+    m.inCombat = true
+    TH.Offer({ key = "k1", caster = { guid = "Player-2-1", name = "A" }, aura = { spellId = 1, name = "x" } })
+    assertEqual(#shows, 0, "red under: a host Show not gated on lockdown")
+    assertEqual(#TH.pending, 1, "held in the host's own list")
+    TH.Pump()
+    assertEqual(#shows, 0, "the pump is gated too")
+    m.inCombat = false
+    TH.Pump()
+    assertEqual(#shows, 1, "out of combat it shows")
+end)
+
+test("autothank: [CA-M4-9] the stand-down clears the toast, the host's list and its pump", function()
+    local NS, m, TH, shows = hosting()
+    for n = 1, 4 do offer(NS, m, n) end
+    assertTrue(TH.pumpTimer ~= nil)
+    NS.addon:OnSlashCommand("disable")
+    assertEqual(TH.toast:Stats().visible, 0, "nothing on screen")
+    assertEqual(#TH.pending, 0, "nothing held")
+    assertNil(TH.pumpTimer, "no pump armed")
+    TH.Offer({ key = "k", caster = { guid = "Player-2-1", name = "A" }, aura = { spellId = 1, name = "x" } })
+    assertEqual(#shows, 1, "stood down, nothing more is shown")
+end)
