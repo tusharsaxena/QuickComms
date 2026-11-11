@@ -476,33 +476,62 @@ local function mockBaked(name)
     return P.MOCK[name]
 end
 
---- What a click on previewed `slot` prints (out of combat, with the plan): its line re-baked with
---- MOCK for the values missing here, or "(nothing sent: <reason>)" in the words the Groups page and
---- the Callouts preview use (PadRender.REASON_TEXT).
+-- The Line re-baked with MOCK for the values missing here. Never the plan-time position: the live
+-- snapshot (Current, the edit preview of a group with no content, known by identity as
+-- Surfaces.BakeContext knows it) keeps the literal for the click; a synthetic preset, which is not
+-- where you are, its mock.
+local function lineEcho(callout, snap, baked)
+    local ctx = {}
+    for k, v in pairs(NS.Surfaces.BakeContext(snap)) do ctx[k] = v end
+    ctx.coordinates = nil
+    local here = snap ~= nil and snap == NS.Situation.Current()
+    local function mock(name)
+        if name == "coordinates" then return here and COORDS or P.MOCK.coordinates end
+        return mockBaked(name)
+    end
+    local line = NS.Bake.Bake(callout, snap, { soloFallback = NS.Setting("behavior.soloFallback"),
+        ctx = ctx, mock = mock })
+    return line or baked
+end
+
+local function nothingSent(reason)
+    local why = NS.PadRender.REASON_TEXT[reason] or L["Not available here."]
+    return L["(nothing sent: %s)"]:format(why)
+end
+
+-- A ping's name, as the echo says it.
+P.PING_NAME = { attack = L["Attack"], warning = L["Warning"], onmyway = L["On my way"], assist = L["Assist"] }
+
+-- What one action would do: the Line re-baked, a game emote (QFE-E2) its command, a ping its name, a
+-- marker its {rtN} (FillEcho draws the icon), or a skipped action's reason.
+local function actionEcho(a, callout, snap)
+    if not a.line then return nothingSent(a.reason) end
+    if a.kind == "line" then return lineEcho(callout, snap, a.line) end
+    if a.kind == "emote" then return L["would emote %s"]:format(a.line) end
+    if a.kind == "ping" then return L["would ping %s on your target"]:format(P.PING_NAME[a.value] or tostring(a.value)) end
+    return L["would mark your target %s"]:format("{rt" .. tostring(a.value) .. "}")
+end
+
+local KIND_ORDER = { line = 1, emote = 2, ping = 3, marker = 4 }
+
+--- What a click on previewed `slot` prints (out of combat, with the plan), as a list with one entry
+--- per action, baked or skipped, in the fixed order line, emote, ping, marker (combined actions §4
+--- step 9): the Line re-baked with MOCK for the values missing here, "would emote /point", "would
+--- ping Attack on your target", "would mark your target {rt8}", or "(nothing sent: <reason>)" in the
+--- words the Groups page and the Callouts preview use (PadRender.REASON_TEXT). The press prints each
+--- entry with its own NS.Print, so no entry holds a newline.
 --- @param callout table|nil the slot's callout (Library.Callout)
 --- @param snap table the previewed snapshot the plan baked against
+--- @return string[]
 function P.SlotEcho(slot, callout, snap)
-    -- A game emote (QFE-E2) names what it would do: "would emote /point". Its line is the client's
-    -- command, so there is nothing to re-bake.
-    if slot.line and slot.concrete == "gameEmote" then return L["would emote %s"]:format(slot.line) end
-    if slot.line then
-        -- Never the plan-time position: the live snapshot (Current, the edit preview of a group with no
-        -- content, known by identity as Surfaces.BakeContext knows it) keeps the literal for the click; a synthetic preset,
-        -- which is not where you are, its mock.
-        local ctx = {}
-        for k, v in pairs(NS.Surfaces.BakeContext(snap)) do ctx[k] = v end
-        ctx.coordinates = nil
-        local here = snap ~= nil and snap == NS.Situation.Current()
-        local function mock(name)
-            if name == "coordinates" then return here and COORDS or P.MOCK.coordinates end
-            return mockBaked(name)
-        end
-        local line = NS.Bake.Bake(callout, snap, { soloFallback = NS.Setting("behavior.soloFallback"),
-            ctx = ctx, mock = mock })
-        return line or slot.line
-    end
-    local why = NS.PadRender.REASON_TEXT[slot.reason] or L["Not available here."]
-    return L["(nothing sent: %s)"]:format(why)
+    local list = {}
+    for _, a in ipairs(slot.actions or {}) do list[#list + 1] = a end
+    for _, a in ipairs(slot.skipped or {}) do list[#list + 1] = a end
+    table.sort(list, function(x, y) return (KIND_ORDER[x.kind] or 9) < (KIND_ORDER[y.kind] or 9) end)
+    local out = {}
+    for i, a in ipairs(list) do out[i] = actionEcho(a, callout, snap) end
+    if not out[1] then out[1] = nothingSent(slot.reason) end
+    return out
 end
 
 --- What a click on a test-mode placeholder prints: its label, and that it is a placeholder.

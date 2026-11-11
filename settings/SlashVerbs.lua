@@ -15,10 +15,25 @@ local function braced(list)
     return table.concat(out, ", ")
 end
 
+-- A ping or a marker action (combined actions §7): its line and bytes, or why it does not bake.
+local function targetActionLines(id, a)
+    if not a.line then return { L["%s -> not sent here (%s)"]:format(id, tostring(a.reason)) } end
+    return { ("%s -> %s"):format(id, a.line), L["  action: %s, %d of 255 bytes"]:format(a.kind, a.length) }
+end
+
+-- The callout's ping or marker action, when it has one and neither a Line nor an emote (M1: one
+-- action per callout; CA-M2-10 prints one row per action).
+local function targetAction(callout, snap)
+    local _, _, info = NS.Bake.BakeActions(callout, snap)
+    local a = info.actions[1]
+    if a and (a.kind == "ping" or a.kind == "marker") then return a end
+    return nil
+end
+
 --- The lines `/qc check <id>` prints: the baked line under the current situation, the channel,
---- any lock, and the tokens the line leaves out. Pure formatting, never sends (spec P8, D12). No
---- ctx is passed, so the baked tokens ({me}, {spec}, {role}, {key}, {dungeon}, {spell:ID}) are
---- listed as filled at send time rather than guessed here.
+--- any lock, and the tokens the line leaves out (a ping or a marker: its line and bytes). Pure
+--- formatting, never sends (spec P8, D12). No ctx is passed, so the baked tokens ({me}, {spec},
+--- {role}, {key}, {dungeon}, {spell:ID}) are listed as filled at send time rather than guessed here.
 --- @param id string
 --- @return string[]
 function V.CheckLines(id)
@@ -26,6 +41,8 @@ function V.CheckLines(id)
     local callout = NS.Library.Callout(id)
     if not callout then return { L["No callout with id %s."]:format(id) } end
     local snap = NS.Situation.Current()
+    local target = targetAction(callout, snap)
+    if target then return targetActionLines(id, target) end
     local line, reason, info = NS.Bake.Bake(callout, snap, { soloFallback = NS.Setting("behavior.soloFallback") })
     if not line then
         if reason == "solo" and info.selfPrint then

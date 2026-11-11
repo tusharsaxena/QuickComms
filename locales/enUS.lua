@@ -482,6 +482,12 @@ L["Game emote"] = "Game emote"
 L["This callout has no game emote."] = "This callout has no game emote."
 L["This game emote is not on this client."] = "This game emote is not on this client."
 L["would emote %s"] = "would emote %s"
+L["would ping %s on your target"] = "would ping %s on your target"
+L["would mark your target %s"] = "would mark your target %s"
+-- The ping names a preview echoes (modules/Preview.lua; "Attack" is above, read first by the battlegrounds)
+L["Warning"] = "Warning"
+L["On my way"] = "On my way"
+L["Assist"] = "Assist"
 
 -- Pings and raid target markers (combined actions §3, §5, §6): why a callout bakes nothing.
 L["This callout has no action."] = "This callout has no action."

@@ -190,6 +190,14 @@ local function disarmFree(pool)
     for _, btn in ipairs(pool.free) do NS.SendEngine.Disarm(btn) end
 end
 
+-- The echo a disarmed button prints: always a list (Preview.SlotEcho's), a test placeholder's string
+-- or a bare line wrapped as one entry.
+local function echoList(slot)
+    local e = slot.echo or slot.line
+    if type(e) == "string" then return { e } end
+    return e
+end
+
 -- Armed when the slot baked; otherwise disarmed, keeping only what a click may still do (a solo
 -- self-print). A refused or placeholder button carries no chat type, so its click reports nothing.
 -- lockText reads the slot's live lock (RefreshLocks keeps it current in combat), so a press on a
@@ -212,7 +220,7 @@ local function arm(btn, slot)
     local meta = { calloutId = slot.calloutId, surfaceId = slot.surfaceId, name = slot.name,
         chatType = slot.chatType, chatTypes = slot.chatTypes, actions = slot.actions, locks = slot.locks,
         skipped = slot.skipped, selfText = (not preview) and slot.selfText or nil,
-        echo = (preview or slot.reason == "testMode") and (slot.echo or slot.line) or nil,
+        echo = (preview or slot.reason == "testMode") and echoList(slot) or nil,
         lockText = (not preview) and function() return slot.lock and (R.LOCK_TEXT[slot.lock] or tostring(slot.lock)) end or nil }
     if slot.line and slot.actions and #slot.actions > 0 and not preview then
         meta.rebake = slot.rebake

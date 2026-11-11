@@ -884,7 +884,7 @@ Total.
 - page dials: [polish] the page is titled Dial
 - page dials: [shine] the Slices tab has a Shine heading
 
-### test_check.lua (6)
+### test_check.lua (7)
 
 - check: a seeded callout prints its line and channel
 - check: a refused callout prints the reason
@@ -892,6 +892,7 @@ Total.
 - check: never calls SendChatMessage
 - check: [final minor 4] unknown and send-time tokens are listed
 - check: [final minor 4] solo with soloFallback=self says it would print locally
+- check: [CA-M1-12] a ping-only or marker-only callout prints its line and bytes
 
 ### test_send_guard.lua (11)
 
@@ -976,7 +977,7 @@ Total.
 - dial secure: [QF-01] a live dial (no preview, or false) closes on a pick, in and out of combat
 - dial secure: [QF-01] a reload from preview to live clears the flag
 
-### test_preview.lua (36)
+### test_preview.lua (39)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -1014,6 +1015,9 @@ Total.
 - preview: [click] a live armed button is unchanged: it sends its line and prints nothing
 - preview: [QF-01] a slice pick on a previewed, test or edit-preview dial echoes and leaves the dial open
 - preview: [QF-01] after /qc preview off a pick on the live dial sends and closes it
+- preview: [CA-M1-12] a previewed ping-only callout prints would ping Attack on your target
+- preview: [CA-M1-12] a previewed marker-only callout prints the marker as its icon
+- preview: [CA-M1-12] a skipped action shows its reason, and every entry is its own print
 
 ### test_edit_preview.lua (17)
 
@@ -1176,7 +1180,7 @@ Total.
 - surfaces: [CA-M1-8] a ping-only and a marker-only callout arm; one whose only action was skipped does not
 - surfaces: [CA-M1-8] RefreshLocks relocks each action and lights the chip when any is lockdown
 
-### test_pad_render.lua (25)
+### test_pad_render.lua (26)
 
 - render: Dress builds a button's regions once, each its own object
 - render: [audit QC-07] the button's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -1203,6 +1207,7 @@ Total.
 - pad render: [shine] a rebuild that moved neither the look nor a button's size paints no shine
 - pad render: [shine] the pad's look leaves the dial alone
 - render: [QF-04] a General slot's tooltip names General in channel 1's color
+- render: [CA-M1-12] a ping-only button's tooltip shows its line and no channel; a skipped one its reason
 
 ### test_pad_looks.lua (21)
 
@@ -2160,11 +2165,11 @@ Total.
 | test_page_groups_nesting.lua | 19 |
 | test_page_pads.lua | 28 |
 | test_page_dials.lua | 28 |
-| test_check.lua | 6 |
+| test_check.lua | 7 |
 | test_send_guard.lua | 11 |
 | test_sendengine.lua | 43 |
 | test_dial_secure.lua | 20 |
-| test_preview.lua | 36 |
+| test_preview.lua | 39 |
 | test_edit_preview.lua | 17 |
 | test_preview_window.lua | 25 |
 | test_coordinates.lua | 8 |
@@ -2172,7 +2177,7 @@ Total.
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 31 |
 | test_surfaces.lua | 33 |
-| test_pad_render.lua | 25 |
+| test_pad_render.lua | 26 |
 | test_pad_looks.lua | 21 |
 | test_pad_header.lua | 9 |
 | test_pad.lua | 47 |
@@ -2212,4 +2217,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1850** |
+| **Total** | **1855** |

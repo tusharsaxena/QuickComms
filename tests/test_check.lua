@@ -59,3 +59,22 @@ test("check: [final minor 4] solo with soloFallback=self says it would print loc
     local lines = NS.SlashVerbs.CheckLines(T.seeded(NS, "bi.mplus.lust"))
     assertTrue(lines[1]:find("would print locally", 1, true) ~= nil, lines[1])
 end)
+
+-- ── a ping or a marker action (CA-M1-12) ───────────────────────────────────────────────────────
+
+test("check: [CA-M1-12] a ping-only or marker-only callout prints its line and bytes", function()
+    local NS, env = boot()
+    local ping = NS.Library.CreateCallout({ name = "Ping", text = "", channel = "gameEmote", ping = "attack" })
+    local lines = NS.SlashVerbs.CheckLines(ping)
+    -- red under: CheckLines baking only the Line (a ping-only callout reads "not sent here (noEmote)")
+    assertEqual(lines[1], ping .. " -> /ping [@target,exists] 1")
+    assertEqual(lines[2], "  action: ping, 24 of 255 bytes")
+    local mark = NS.Library.CreateCallout({ name = "Skull", text = "", channel = "gameEmote", marker = 8 })
+    lines = NS.SlashVerbs.CheckLines(mark)
+    assertEqual(lines[1], mark .. " -> /tm [@target,exists] !8")
+    assertEqual(lines[2], "  action: marker, 23 of 255 bytes")
+    env.SLASH_TARGET_MARKER1 = nil
+    lines = NS.SlashVerbs.CheckLines(mark)
+    assertEqual(#lines, 1)
+    assertEqual(lines[1], mark .. " -> not sent here (noMarker)")
+end)

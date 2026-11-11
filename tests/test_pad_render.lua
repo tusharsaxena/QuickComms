@@ -497,3 +497,19 @@ test("render: [QF-04] a General slot's tooltip names General in channel 1's colo
     lines = NS.PadRender.TooltipLines({ name = "Thanks", line = "/1 Thanks", concrete = "general" })
     assertEqual(lines[3], "Channel: |cffffbfbfGeneral|r")
 end)
+
+-- ── a ping or a marker action (CA-M1-12) ───────────────────────────────────────────────────────
+
+test("render: [CA-M1-12] a ping-only button's tooltip shows its line and no channel; a skipped one its reason", function()
+    local NS, m = T.enableAddon()
+    local cid = NS.Library.CreateCallout({ name = "Ping", text = "", channel = "gameEmote", ping = "attack" })
+    local slot = NS.Surfaces.Slot(cid, NS.Library.Callout(cid), {})
+    local lines = NS.PadRender.TooltipLines(slot)
+    assertEqual(lines[1], "Ping")
+    assertEqual(lines[2], "/ping [@target,exists] 1")
+    assertNil(lines[3], "a ping goes to no channel")
+    m.SLASH_PING1 = nil
+    slot = NS.Surfaces.Slot(cid, NS.Library.Callout(cid), {})
+    lines = NS.PadRender.TooltipLines(slot)
+    assertEqual(lines[2], "Pings are not on this client.")
+end)

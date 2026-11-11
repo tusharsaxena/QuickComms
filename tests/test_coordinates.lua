@@ -113,7 +113,7 @@ test("coordinates: a Current preview's echo fills the position at the click", fu
     local b = button(NS, rare)
     assertTrue(b:GetAttribute("macrotext") == nil, "disarmed")
     -- red under: SlotEcho keeping ctx.coordinates from BakeContext (the plan-time position is baked in)
-    assertEqual(b.qcMeta.echo, "/s %t @ {coordinates}")
+    assertEqual(b.qcMeta.echo[1], "/s %t @ {coordinates}")
     m.playerPos = { 0.5, 0.25 }
     m.prints = {}
     m.__click(b)
@@ -128,7 +128,7 @@ test("coordinates: an edit preview's echo fills the position at the click", func
     local NS, m, rare, _, gid = live()
     assertTrue(NS.Preview.SetEditPreview(gid))
     local b = button(NS, rare)
-    assertEqual(b.qcMeta.echo, "/s %t @ {coordinates}")
+    assertEqual(b.qcMeta.echo[1], "/s %t @ {coordinates}")
     m.playerPos = { 0.125, 0.875 }
     m.prints = {}
     m.__click(b)

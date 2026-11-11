@@ -438,6 +438,16 @@ local function hasActions(meta)
     return type(meta.actions) == "table" and #meta.actions > 0
 end
 
+-- A disarmed button's echo: one print per entry (Preview.SlotEcho's list), never a newline inside one.
+local function printNotes(notes)
+    for _, note in ipairs(notes or {}) do NS.Print(note) end
+end
+
+local function printEcho(echo)
+    if type(echo) ~= "table" then echo = { echo } end
+    for _, e in ipairs(echo) do NS.Print(NS.Preview.FillEcho(e)) end
+end
+
 -- The press (combined actions §4). One G.Decide, one lastSendAt stamp and one qcOnPress per press,
 -- however many actions it has (D7). Each chat action awaits its echo; a press with no chat action
 -- has nothing to echo, so it reports "sent" at once (D16: the flash is not a confirmation).
@@ -453,7 +463,7 @@ local function press(b)
     -- and no echo awaited, so a press in combat stays safe. It comes before the self line, so a
     -- previewed press prints what every action would do and never acts.
     if meta.echo then
-        NS.Print(NS.Preview.FillEcho(meta.echo))
+        printEcho(meta.echo)
         return
     end
     -- The solo self line (the Line's "self" fallback): printed, and the press goes on only for the
@@ -464,7 +474,7 @@ local function press(b)
     end
     if not (b.qcArmed and hasActions(meta)) then return end
     -- Why a ping or a mark cannot land (D15): read in PreClick, before the macro ran, printed once.
-    for _, note in ipairs(notes or {}) do NS.Print(note) end
+    printNotes(notes)
     -- A padlocked button stays armed (spec §8.4), but the game is expected to refuse it: no echo is
     -- awaited and no guard stamped, so a refusal is never blamed on the spam guard.
     local lockText = meta.lockText and meta.lockText()
