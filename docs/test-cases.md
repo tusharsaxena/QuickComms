@@ -997,7 +997,7 @@ Total.
 - dial secure: [QF-01] a live dial (no preview, or false) closes on a pick, in and out of combat
 - dial secure: [QF-01] a reload from preview to live clears the flag
 
-### test_preview.lua (39)
+### test_preview.lua (41)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -1038,6 +1038,8 @@ Total.
 - preview: [CA-M1-12] a previewed ping-only callout prints would ping Attack on your target
 - preview: [CA-M1-12] a previewed marker-only callout prints the marker as its icon
 - preview: [CA-M1-12] a skipped action shows its reason, and every entry is its own print
+- preview: [CA-M2-6] a previewed combined callout prints each action, baked or skipped, in order
+- preview: [CA-M2-6] a Line beside a marker: with no target the Line's %t prints its mock, the marker its icon
 
 ### test_edit_preview.lua (17)
 
@@ -2192,7 +2194,7 @@ Total.
 | test_send_guard.lua | 13 |
 | test_sendengine.lua | 48 |
 | test_dial_secure.lua | 20 |
-| test_preview.lua | 39 |
+| test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
 | test_preview_window.lua | 25 |
 | test_coordinates.lua | 10 |
@@ -2240,4 +2242,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1878** |
+| **Total** | **1880** |
