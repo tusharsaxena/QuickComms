@@ -54,12 +54,14 @@ for phase 5).
   a callout would send and never sends it.
 - Read combat-only data (unit health, auras, cooldowns): those are secret values in Midnight, and the
   situation engine reads only non-secret inputs.
-- In v1.0.0: callout variants, confirmations, per-callout cooldowns, marks, a key per callout,
+- In v1.0.0: callout variants, confirmations, per-callout cooldowns, a key per callout,
   gamepad support, countdown callouts, an arc layout for pads, analytics, faction-aware wording,
   per-dungeon built-in sets, and any locale beyond enUS (design spec §1), and the hold, flick and
   release dial (C7). Groups nest one level only (2026-10-18 amendment): no group inside a group
   inside a group. Each is recorded here and in the design spec rather than left as a silent
   omission; those with a GitHub issue so far are callout variants (#1), confirmations (#2),
-  per-callout cooldowns (#3), marks (#4) and a key per callout (#5). The C7 upgrade has no issue
+  per-callout cooldowns (#3) and a key per callout (#5). Marks (#4) are no longer on this list: a
+  callout can ping its target (#17) or put a raid target marker on it (#18), through the client's own
+  `/ping` and `/tm` in the secure macro. The C7 upgrade has no issue
   yet: its record is the design spec §11.2 (*Upgrade (C7)*) and
   `docs/brainstorm/go-no-go/round-4-build-checks.md`.

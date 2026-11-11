@@ -125,6 +125,7 @@ the tracked source against both clients' API sets.
 | The role (the Role condition, `{role}`, `/qc why`) | the player's pick, then the group's assigned role, then the spec's | the pick, the assigned role, then the talent tree with the most points spent, then the spec's (C1) | `Role.Resolve` over `db.char.role`, `core/Compat.lua` `PlayerRole`; the Role row on General → Behavior |
 | `/qc probe`, `/qc probe ids`, `/qc probe clear` | yes, records under `global.probes.retail` | yes, records under `global.probes.forever`, with the talent groups; `probe ids` is the in-game check of Forever's derived ids, read with no travel (QuickComms#21), its group finder line comparing the shipped ids with the activities Forever's own group finder lists (D5) | `settings/SlashVerbs.lua`, `Compat.ProbeInstance` / `TalentGroups` / `EmoteTokens` / `ProbeMapNames` / `ProbeDungeonFinder` / `ProbeBattlegrounds` / `ProbeGroupFinder` |
 | Emote callouts (`emote`, a custom `/e`; `gameEmote`, the client's own emote) and the Emotes set | yes | yes, the same (the emote lists are byte-identical, C5) | `modules/Channels.lua`, `modules/Emotes.lua`, `defaults/BuiltIns_Emotes.lua` |
+| A callout's Ping (#17) and Raid marker (#18) actions, on the target | yes: `/ping [@target,exists] <n>` (Blizzard_PingUI's secure `/ping`) and `/tm [@target,exists] !<n>` | yes, the same: Forever ships Blizzard_PingUI and the same `/ping` and `/tm` handlers (build 1.60.1.70888); whether its servers deliver a ping is unverified (PING-3), and `/tm`'s name there is MARK-6. Each command is the client's localized one, and a client with no `C_Ping` drops the Ping action alone | `modules/Bake.lua` (`B.BakeActions`), `Compat.PingCommand` / `MarkerCommand`, `core/Compat.lua` |
 
 ## Settings Schema
 
@@ -134,7 +135,12 @@ Master controls rows (`enabled`, `visibility`, `scale`, `alpha` and `locked`, de
 `always`, 1, 1 and `false`; the session rows `state.debugConsole`, `state.testMode` and
 `state.previewAs`; the minimap row), then the Behavior rows (`behavior.*`, spliced in by
 `settings/SchemaRows.lua`, with the seven `skin.*` rows the Skin tab draws), then the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`,
-`settings/SchemaMembers.lua`), each addressed through `Library.Member`. Every module reads a setting
+`settings/SchemaMembers.lua`), each addressed through `Library.Member`. A callout's actions are its
+Line (`callout.channel` and `callout.text`), `callout.emote` (the game emote it performs, after its line
+if it has one), `callout.ping` (none, attack, warning, onmyway or assist) and `callout.marker` (none,
+or 1 star to 8 skull); a write that would take away a callout's last action is refused (`noAction`,
+`Library.KeepsAction`), and until callouts combine actions (CA-M2-1) so is one that adds a second
+(`oneAction`). Every module reads a setting
 through `NS.Setting(path)`, which answers the row's default before the database exists; the shared
 reactions are `Settings.REACTIONS`, and `enabled` is `writeThrough` so `/qc enable|disable` still
 lands on a load where the composers are hollow (options-ui-§1 route (a)).
@@ -216,7 +222,12 @@ rebuild asked for in combat waits in a keyed combat-end queue; the click and `Pr
 insecure and cannot cancel a click, so the spam guard is soft. The Comms Dial is one secure header
 per dial whose restricted snippets alone act in combat, with one secure catcher per ring and a
 full-screen catcher on a key open. The settings panel, the callout popup and the icon browser are
-refused or locked in combat. The full notes, frame by frame: [`taint.md`](taint.md).
+refused or locked in combat. A ping and a raid marker are the client's own `/ping` and `/tm` lines in
+that macro, run by Blizzard's code on the untainted click: no addon code calls `C_Ping.SendMacroPing`
+or `SetRaidTarget`, and none reads `GetRaidTargetIndex` (`/tm !N` makes the read Blizzard's). The
+`PreClick` hook also reads the press-time notes (no target, no marking rights, pings off or cooling
+down) before the macro runs, in and out of combat; it reads plain Compat answers and writes no
+attribute. The full notes, frame by frame: [`taint.md`](taint.md).
 
 Every strata and frame level the addon sets is named once, in `core/Constants.lua`
 `NS.Constants.LAYERS`, whose header comment records the whole stack; `tests/test_layers.lua` pins it.
@@ -330,7 +341,9 @@ flavor ([Per-client features](#per-client-features)). The spam guard is soft and
 line it last held; General is sent only when the client confirms channel 1 is General, else Say; a
 lockdown that clears late can keep its padlock until the next event; the dial is Relaxed only and its
 key belongs to its place in the dial order; a few battleground and instance names are ours or
-ambiguous; and another Ka0s addon carrying a newer LibKa0s runs its newer modules inside this one.
+ambiguous; a ping or a marker needs a target, a raid mark needs leader or assist, macros mark at
+most three units in a short time, and a ping-only or marker-only press flashes with no confirmation;
+and another Ka0s addon carrying a newer LibKa0s runs its newer modules inside this one.
 Each, with why: [`known-limitations.md`](known-limitations.md).
 
 ## Documentation map

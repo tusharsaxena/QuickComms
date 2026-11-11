@@ -44,6 +44,8 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | ROLE-1..3 | [Role and character](#role-and-character) | The Role row on General → Behavior and its Automatic phrase, the group's assigned role winning over the spec, the Character and Specialization rows of the When editor (Retail; FOREVER-18 to FOREVER-21 re-run them on Forever) |
 | FOREVER-1..25 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, Forever's place ids against the client's own names and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone; `/qc probe ids`, the no-travel sweep of the client's map, dungeon finder and battleground names |
 | EMOTE-1..8 | [Emotes](#emotes) | Retail, then Forever: a custom emote callout (`/e`) and its lock, a game emote callout, the emote picker's order and voice marks, preview, throttle and an unknown token, a game emote during an encounter, the Emotes set in the open world and an existing profile gaining it once |
+| PING-1..5 | [Pings](#pings) | Retail, then Forever: a callout's ping on the target (#17), solo and grouped, in combat, Forever's server delivery, an encounter lockdown, pings off and on cooldown |
+| MARK-1..7 | [Raid markers](#raid-markers) | Retail, then Forever: a callout's raid target marker on the target (#18), solo, in a party and in a raid with and without assist, a second press, no target and an unmarkable one, Forever's `/tm`, marking in combat and during an encounter |
 | SKIN-1..31 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker; no line under any window title |
 
 ## Before you start
@@ -2513,6 +2515,76 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
   moved; an edited Solo callout keeps its text. Delete Emotes and `/reload` → it does not come back.
   Result: passed (owner, 2026-11-10)
 
+## Pings
+
+**Client: Retail, then WoW Forever**, every check here (QuickComms#17, the combined-actions design
+`docs/superpowers/specs/2026-11-10-combined-actions-design.md` §5). **Code:** `modules/Bake.lua`
+(`B.BakeActions`: `/ping [@target,exists] <n>`), `core/Compat.lua` (`PingCommand`, `PingState`,
+`TargetExists`), `modules/SendEngine.lua` (`SE.PressNotes`, read in `PreClick`; the synthetic `sent`, D16),
+`modules/Preview.lua` and `settings/SlashVerbs.lua`.
+
+**Set-up, for every check here.** A ping callout: take a Game emote callout on your pad (EMOTE-3), then
+`/qc set callout.ping <id> attack` and `/qc set callout.emote <id> none`, so its one action is the Attack
+ping (`/qc set callout.ping <id> warning|onmyway|assist` for the others). Run these checks on the build
+where callouts combine actions (CA-M2-1 and later): the M1 build's one-action rule refuses the first
+command. `/qc check <id>` → `<id> -> /ping [@target,exists] 1` and `action: ping, <n> of 255 bytes`.
+
+- **PING-1. Solo, with a target, each of the four types (#17).** Out of combat in the open world, solo,
+  target a nearby NPC and press the callout once for each of Attack, Warning, On my way and Assist, a few
+  seconds apart → each places its ping on the target, with no "interface action blocked" and no drop
+  note; the button flashes once per press and the guard dims once. Turn on **Preview as... → World** and
+  click it → one `[QC] would ping Attack on your target` line and no ping. Record whether a solo ping
+  shows at all (UNVERIFIED: solo pinging). Result: owed
+- **PING-2. In a party, in combat (#17 AC).** In a party, in combat with a target → the press places the
+  ping on the target and a party member sees it; no taint or blocked-action error. Result: owed
+- **PING-3. WoW Forever: the ping is placed and seen (R5).** On a live Forever client, in a party with a
+  target → is the ping placed, and does a party member see it? Record both (UNVERIFIED: server
+  delivery); a failure narrows #17's AC on Forever. Result: owed
+- **PING-4. During an encounter lockdown (D25).** On a raid or dungeon boss, with a target → record whether
+  the ping is placed. If the encounter blocks `/ping`, a `LOCKS.ping` row is the follow-up. Result: owed
+- **PING-5. Pings off, and on cooldown (D17).** Turn off the game's Enable pings option and press → chat
+  shows `[QC] <name>: pings are turned off.` and nothing is pinged; turn it back on. Press quickly
+  several times on a target → once the client's cooldown runs, `[QC] <name>: your ping is on cooldown.`
+  prints; a single press off cooldown prints no false cooldown note. With no target →
+  `[QC] <name>: no target to ping.` and nothing is pinged on a unit you did not pick (`exists`). Record
+  whether the client prints an error of its own on a refused ping (if it prints nothing,
+  `PING_SYSTEM_ERROR` is a follow-up). Result: owed
+
+## Raid markers
+
+**Client: Retail, then WoW Forever**, every check here (QuickComms#18, the combined-actions design §6).
+**Code:** `modules/Bake.lua` (`B.BakeActions`: `/tm [@target,exists] !<n>`), `core/Compat.lua`
+(`MarkerCommand`, `TargetExists`, `CanMark`, `MarkerRights`, `InRaid`, `EveryoneAssistant`),
+`modules/SendEngine.lua` (`SE.PressNotes`), `modules/Preview.lua` and `settings/SlashVerbs.lua`.
+
+**Set-up, for every check here.** A marker callout, as for the pings: a Game emote callout, then
+`/qc set callout.marker <id> 8` and `/qc set callout.emote <id> none`, so its one action is Skull (1 star
+to 8 skull). On the build where callouts combine actions (CA-M2-1 and later), as above. `/qc check <id>`
+→ `<id> -> /tm [@target,exists] !8` and `action: marker, <n> of 255 bytes`.
+
+- **MARK-1. Solo, marking a target (#18).** Out of combat in the open world, solo, target a nearby NPC and
+  press → the skull lands on it, with no "interface action blocked"; the button flashes once (D16: no
+  echo is awaited). Turn on **Preview as... → World** and click it → one `[QC] would mark your target`
+  line ending in the skull icon, and nothing is marked. Record whether a solo mark lands (UNVERIFIED: solo
+  rights). Result: owed
+- **MARK-2. In a party, as a non-leader.** In a party you do not lead, with a target → the mark lands and
+  no rights note prints. Result: owed
+- **MARK-3. In a raid, without assist and with it.** In a raid, without leader or assist (and Everyone is
+  assistant off) → `[QC] <name>: you need leader or assist to mark in a raid.` prints and no mark lands.
+  Given assist → no note, and the mark lands. With Everyone is assistant on and no assist → no note, and
+  the mark lands. Result: owed
+- **MARK-4. A second press keeps the mark (`!N`).** Press it twice on the same target → the skull stays
+  on; the second press does not clear it. Result: owed
+- **MARK-5. No target, and a target that cannot be marked.** With no target → `[QC] <name>: no target to
+  mark.` and nothing is marked. Target a unit that cannot carry a marker → `[QC] <name>: that target
+  cannot be marked.` Result: owed
+- **MARK-6. WoW Forever: `/tm` is the command (UNVERIFIED).** On Forever, `/qc check <id>` → the line
+  opens with the client's own marker command, and a press marks the target. Result: owed
+- **MARK-7. Marking in combat, and during a boss encounter (R4).** In a party, on both clients: press on a
+  target in combat, then during a boss encounter → record whether the mark lands and whether any taint or
+  blocked-action error shows (`SetRaidTarget`'s restrictions; the secret `GetRaidTargetIndex` compare in
+  `/tm`'s `!` branch). A failure narrows #18's AC. Result: owed
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -2589,3 +2661,5 @@ FOREVER-18 to FOREVER-21, new, each owed. From QFE-F5: FOREVER-22 and FOREVER-23
 Owed from the Forever ids run (QuickComms#21, FID-1 to FID-3, `docs/superpowers/specs/2026-11-10-forever-ids-design.md`): FOREVER-25, new, owed; FOREVER-13 (the derived lists, by name against the ids record), FOREVER-16 (now `/qc probe ids`, with no travel) and FOREVER-22 (the place probe where you happen to be, beside the ids record), rewritten, each owed. From FID-4 (the design's Revision 2026-11-10, group finder): FOREVER-13 (30 dungeons, 12 raids), FOREVER-16 and FOREVER-25 (the group finder line) have a changed expected result and stay owed.
 
 On 2026-11-10 the owner reported that every check owed from the WoW Forever port and emotes run (Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`) and the Forever ids run (QuickComms#21) passed. Passed, recorded on each `Result:` line as `passed (owner, 2026-11-10)`: ROLE-1 to ROLE-3, FOREVER-1 to FOREVER-25 and EMOTE-1 to EMOTE-8. FOREVER-16's line also records what the ids record showed.
+
+Owed from combined actions M1 (QuickComms#17 and #18, CA-M1-1 to CA-M1-12, `docs/superpowers/specs/2026-11-10-combined-actions-design.md` §5, §6 and §13): PING-1 to PING-5 and MARK-1 to MARK-7, new, each owed. Each runs on the build where callouts combine actions (CA-M2-1 and later), since the M1 build's one-action rule refuses the set-up's first command.

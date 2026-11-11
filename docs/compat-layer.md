@@ -64,6 +64,14 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `ChatColor(chatType)` | `ChatTypeInfo` | an unsafe key, or a secret or missing color component, is `nil` | `nil` | `Pad_Render` (a button's channel in its tooltip; a callout row's channel) |
 | `HasTemplate(name)` | `C_XMLUtil.GetTemplateInfo` | `type()` only: a table answer is `true`, anything else (or a raise) `false` | `nil` (unknown: the caller tries `CreateFrame` under `pcall`) | `settings/ModalWindow.lua` (whether to build the callout popup's window from `SettingsFrameTemplate`; the icon browser's window is LibKa0s-IconBrowser-1.0's since v1.86.0, which asks the client itself) |
 | `VertexScaleAnimation(fs)` | `Enum.FontStringScaleAnimationMode.Vertex`, `FontString:SetScaleAnimationMode` (12.0), `CreateAnimationGroup`, a Scale animation's setters | none: it reads no game state and passes a plain Enum constant | `nil` when any piece is missing: the string fades in place | `AnimGhost` |
+| `PingCommand()` | `C_Ping` (present), `SLASH_PING1` | a secret or non-string command is `nil` | `nil` (no `C_Ping`, or no command): the Ping action alone is dropped (`noPing`) | `Bake` (`B.BakeActions`: the localized `/ping`, "/aviso" on a Spanish client) |
+| `MarkerCommand()` | `SLASH_TARGET_MARKER1` | a secret or non-string command is `nil` | `nil`: the Raid marker action alone is dropped (`noMarker`) | `Bake` (`B.BakeActions`: the localized `/tm`) |
+| `PingState()` | `C_Ping.IsPingSystemEnabled`, the `enablePings` cvar (`C_CVar.GetCVarBool`, else `GetCVarBool`), `C_Ping.GetCooldownInfo` against `GetTime()*1000` (Blizzard_PingUI's clock base) | a secret flag is `nil` (unknown); a secret or unreadable cooldown is no known cooldown | `nil` (no `C_Ping`) | `SendEngine` (`SE.PressNotes`: "pings are turned off", "your ping is on cooldown") |
+| `TargetExists()` | `UnitExists("target")` | a secret answer is `nil` | `nil` | `SendEngine` (`SE.PressNotes`: "no target to ping", "no target to mark") |
+| `CanMark(unit)` | `CanBeRaidTarget` | a secret answer is `nil` | `nil` | `SendEngine` (`SE.PressNotes`: "that target cannot be marked") |
+| `InRaid()` | `IsInRaid` | a secret answer is `false` | `false` | `MarkerRights` |
+| `EveryoneAssistant()` | `IsEveryoneAssistant` | a secret answer is `false` | `false` | `MarkerRights` |
+| `MarkerRights()` | `Leadership()` (both returns), `InRaid()`, `EveryoneAssistant()` | as its readers | `"ok"`: a party or solo, where every member may mark; `"noRights"` only in a raid with no leader, assist or everyone-assistant | `SendEngine` (`SE.PressNotes`: "you need leader or assist to mark in a raid") |
 
 The restriction shims are copied from DropWatcher's `core/Compat.lua`. LibKa0s#49 deferred them;
 see `ARCHITECTURE.md` -> `## Documented deviations`. `tests/test_compat.lua` drives the plain

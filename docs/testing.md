@@ -85,6 +85,14 @@ snippets run in the header's own environment with protected calls allowed in com
 cursor, and `__pressKey(key)`, which routes a key through a snippet's binding, then an override
 binding. For the icon browser (the library's since LibKa0s v1.86.0) it adds the macro icon lists (`GetMacroIcons`, `GetMacroItemIcons`)
 and the AceGUI Icon and Label widgets' image texture with `SetVertexColor`, which records the tint it was given.
+For pings and raid target markers (CA-M1-1) it adds `C_Ping` (`IsPingSystemEnabled`, answering
+`m.pingEnabled`, and `GetCooldownInfo`, whose `endTimeMs` is `m.pingCooldownEndMs` on `GetTime()*1000`'s
+base) with the `enablePings` cvar on, `SLASH_PING1` and `SLASH_TARGET_MARKER1` (`"/ping"` and `"/tm"`; a
+case sets either `nil` to drop the command), `CanBeRaidTarget` (`m.raidTargetable`), the player's marking
+rights (`m.isLeader`, `m.isAssist`, `m.everyoneAssist`; `IsInRaid` reads the base's `__context.inRaid`),
+`UnitExists` over the base's `__unitExists` (a `T.secret` answer is handed back as is, so a reader's secret
+arm is reachable), and `m.sentLines(i)`, the lines of `m.sentMacros[i]` (the newest by default) split on
+the newline.
 
 `tests/page_helpers.lua` (not a suite) drives an editor page through the kit's AceGUI recorder: show a page, redraw it, click a tab, find a widget by its label, fire its callback, accept the last popup, and spy on the reorder lists.
 

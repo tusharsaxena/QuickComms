@@ -96,6 +96,10 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
   callout editor; voice emotes play their sound. The built-in Emotes group, shown in the open world
   whatever your group, carries twenty of them: the voice calls first (`/incoming`, `/oom`,
   `/healme`...), then the social ones (`/wave`, `/thank`, `/dance`...).
+- A callout can also ping your target (Attack, Warning, On my way or Assist) or put a raid marker on it,
+  from star to skull. Both go through the game's own `/ping` and `/tm` commands on the same secure
+  button, so they work in combat too. With no target nothing is pinged or marked and the press tells you
+  why; in a raid, marking needs leader or assist.
 - After a press every button dims for about a second. On a boss the game quietly drops lines sent
   faster than that, so if one never arrives you get a note in chat.
 - Text that starts with a slash command is refused. A callout only ever sends chat.

@@ -29,6 +29,20 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   held stand-down finishes. Those presses are not tracked: no guard, no echo timer, no note.
 - Rebuilding between pulls inside a key assumes `SetAttribute` works out of combat in a key (C4,
   unverified).
+- A ping and a raid target marker land on your target only (`[@target,exists]`): with no target nothing
+  is pinged or marked, and the press prints *no target to ping* or *no target to mark*. A target that
+  cannot carry a marker prints *that target cannot be marked*. Pings turned off (the ping system or the
+  game's Enable pings option) or on cooldown print their own note; a secret answer prints none.
+- Marking rights are the server's: in a party every member may mark, in a raid only the leader and
+  assistants (or everyone, when the raid makes everyone an assistant). A press without rights prints
+  *you need leader or assist to mark in a raid*; it is read at the press, never a padlock, because
+  rights move with the roster. Solo marking is believed to work (smoke check MARK-1).
+- Since 12.0 macros cannot mark more than three units within a very short time; a fourth mark in a
+  burst does not land. Nothing in the addon counts them.
+- A ping-only or marker-only press has no chat line to echo, so it reports *sent* at once and the button
+  flashes (D16): the flash is not a confirmation that the ping or the mark landed.
+- Whether WoW Forever's servers deliver a ping (PING-3), and whether a mark lands in combat or during an
+  encounter on either client (MARK-7, `SetRaidTarget`'s restrictions), is not yet measured.
 
 ## The Comms Pad
 

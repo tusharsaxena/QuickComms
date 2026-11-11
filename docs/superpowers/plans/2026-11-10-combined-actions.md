@@ -91,19 +91,19 @@ listed task if the owner rules otherwise:
 | CA-M0-3 | Split settings-only strings into `locales/enUS_Settings.lua` | done | 1ac626d |
 | CA-M0-4 | M0 docs | done | a84354d |
 | CA-M0-5 | M0 checkpoint | done | (this commit) |
-| CA-M1-1 | Mock: ping, marker and target surfaces | todo | |
-| CA-M1-2 | Compat: ping, marker, target and rights readers | todo | |
-| CA-M1-3 | Library: `ValidPing`, `ValidMarker`, `HasAction`, the M1 one-action rule | todo | |
-| CA-M1-4 | Library: every callout field list carries `ping` and `marker` | todo | |
-| CA-M1-5 | Schema: `callout.ping`, `callout.marker`, the reworded `callout.emote` | todo | |
-| CA-M1-6 | BuiltIns: `BI.Callout` `extra`, the integrity row | todo | |
-| CA-M1-7 | Bake: `B.BakeActions` with one action per kind | todo | |
-| CA-M1-8 | Surfaces and Pad: the slot's action lists and the arm gate | todo | |
-| CA-M1-9 | Send path: press order, the action gate, one tick, D16 | todo | |
-| CA-M1-10 | Send path: press-time reasons read in PreClick | todo | |
-| CA-M1-11 | Popup: the draft carries `emote`, `ping` and `marker` | todo | |
-| CA-M1-12 | Preview, tooltip and `/qc check` for a ping-only or marker-only callout | todo | |
-| CA-M1-13 | M1 docs and smoke checks | todo | |
+| CA-M1-1 | Mock: ping, marker and target surfaces | done | 3964c38 |
+| CA-M1-2 | Compat: ping, marker, target and rights readers | done | a6dcdd6 |
+| CA-M1-3 | Library: `ValidPing`, `ValidMarker`, `HasAction`, the M1 one-action rule | done | 1598baa |
+| CA-M1-4 | Library: every callout field list carries `ping` and `marker` | done | ef99343 |
+| CA-M1-5 | Schema: `callout.ping`, `callout.marker`, the reworded `callout.emote` | done | 5bf2b35 |
+| CA-M1-6 | BuiltIns: `BI.Callout` `extra`, the integrity row | done | 5d280ee |
+| CA-M1-7 | Bake: `B.BakeActions` with one action per kind | done | 45c3b01 |
+| CA-M1-8 | Surfaces and Pad: the slot's action lists and the arm gate | done | 737931b |
+| CA-M1-9 | Send path: press order, the action gate, one tick, D16 | done | 518be2e |
+| CA-M1-10 | Send path: press-time reasons read in PreClick | done | a43fa3e |
+| CA-M1-11 | Popup: the draft carries `emote`, `ping` and `marker` | done | 19f5d0d |
+| CA-M1-12 | Preview, tooltip and `/qc check` for a ping-only or marker-only callout | done | 6992297 |
+| CA-M1-13 | M1 docs and smoke checks | done | (this commit) |
 | CA-M1-14 | M1 checkpoint | todo | |
 | CA-M2-1 | Lift the one-action rule | todo | |
 | CA-M2-2 | Bake: the multi-line macro, `MAX_MACRO`, the Line budget, partial bakes | todo | |
