@@ -139,8 +139,8 @@ listed task if the owner rules otherwise:
 | CA-M4-12 | `SE.NewThankButton`, `pressThank`, the whisper echo | done | adfc0cb |
 | CA-M4-13 | Schema rows `thank.*` | done | 4c97843 |
 | CA-M4-14 | The Auto-thank settings page | done | 536f82e |
-| CA-M4-15 | M4 docs and smoke checks | done | (this commit) |
-| CA-M4-16 | M4 checkpoint | todo | |
+| CA-M4-15 | M4 docs and smoke checks | done | 684722e |
+| CA-M4-16 | M4 checkpoint | done | (this commit) |
 | CA-M5-1 | Whole-branch review | todo | |
 | CA-M5-2 | Review fixes | todo | |
 | CA-M5-3 | Complexity and file-cap pass | todo | |
@@ -157,6 +157,7 @@ listed task if the owner rules otherwise:
 | M1 | 2026-11-11 | 1860/0/1 skip; 1860/0/1 skip; 0/0 (174 files) | 9891167 | yes (review fix commits CA-M1-R1 a75b0c9, R2 364bc97, R3 00b2182, R4 2f24385, R5 9891167; owner asks D10 and D16; on the M1 build a ping-only or marker-only callout cannot be set up, only a legacy callout with no action takes one through `/qc set`, so #17/#18 and PING-1..5, MARK-1..7 are reachable from CA-M2-1 on) |
 | M2 | 2026-11-11 | 1909/0/1 skip; 1909/0/1 skip; 0/0 (174 files) | c7da096 | yes (review fix commits CA-M2-R1 e494d99, R2 7a15467, R3 c7da096; owner asks F4a and F4b, built in M3 to the spec's reading: step 20's "unedited" ignores name, icon and icon color (CA-M3-3), and the arena and battleground sets gain no emotes under the pvpMatch padlock (CA-M3-1); #16's AC passes headless on both kit profiles, ACTION-1..8 pending sign-off) |
 | M3 | 2026-11-11 | 1925/0/1 skip; 1925/0/1 skip; 0/0 (174 files) | 99f6b3b | yes (review fix commits CA-M3-R1 93df4b2, R2 99f6b3b; owner asks F2, F3, F4c and FRB, with F2, F3 and FRB asked before M4 starts; if no answer arrives M4 builds R-B and D4 as given: F2 rewrites `docs/scope.md` to allow reading your own helpful auras (CA-M4-15), F3 the auto-thank whisper as the one exception to #7 (CA-M4-12), F4c the after-combat diff with the toast's own Hold and Release (CA-M4-7, CA-M4-10), FRB Forever's `THANK_RAID_BUFFS` through `tools/client_tables.py` or the raid-buffs-only toggle hidden or disabled on Forever (CA-M4-3, CA-M4-14); #20's AC passes headless on both kit profiles, EMOTE-9 and EMOTE-10 pending sign-off) |
+| M4 | 2026-11-11 | 2018/0/1 skip; 2018/0/1 skip; 0/0 (180 files) | 578c71c | yes (review fix commits CA-M4-R1 5b301cf, R2 c312a0a, R3 578c71c; no answer arrived on F2, F3, F4c or FRB, so M4 built the spec's reading: F2 rewrote `docs/scope.md` to allow reading your own helpful auras (CA-M4-15), F3 the auto-thank whisper is the one exception to #7 (CA-M4-12), F4c the after-combat diff queued from `AT.OnAura` in combat with the toast's own Hold and Release on its `RESTRICTION_CHANGED` receiver and the `R.OnCombatEdge(false)` hook (CA-M4-7, CA-M4-10; R2 keeps a login or /reload in combat from bursting held buffs), FRB Forever's `THANK_RAID_BUFFS` derived through `tools/client_tables.py` (CA-M4-3, each id UNVERIFIED until THANK-7), with the raid-buffs-only toggle hidden on any client whose list is empty, so both clients draw it today (CA-M4-14); #19's AC passes headless on both kit profiles, THANK and FOREVER-26 smoke checks pending sign-off) |
 
 ---
 
