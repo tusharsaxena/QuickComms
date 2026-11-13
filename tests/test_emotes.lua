@@ -331,17 +331,26 @@ test("emotes: [QFE-E2] channel None hides the Text box beside the emote picker; 
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     local w = P.during(function() Pop.Open(gid) end)
     assertTrue(P.find(w, "EditBox", "Text") ~= nil)
-    assertTrue(P.find(w, "EditBox", "Emote (optional)") ~= nil, "the emote picker beside a Line (CA-M2-7)")
+    assertTrue(P.find(w, "Dropdown", "Emote (optional)") ~= nil, "the emote picker beside a Line (CA-M2-7)")
     w = P.during(function() P.find(w, "Dropdown", "Channel"):__fire("OnValueChanged", "gameEmote") end)
     -- red under: the body is not drawn again for None
     assertNil(P.find(w, "EditBox", "Text"), "no text box")
-    assertTrue(P.find(w, "EditBox", "Emote (optional)") ~= nil, "the emote picker")
-    -- The kit's AceGUI EditBox has no inner .editbox, so the autocomplete is attached only in the client
-    -- (smoke EMOTE-4); here the picker is the box, its search and its pick.
-    if P.find(w, "EditBox", "Emote (optional)").editbox then assertTrue(Pop.emoteSuggest ~= nil) end
-    local rows = Pop.EmoteSuggestions("o")
-    assertEqual(rows[1].token, "INCOMING", "speech first")
-    assertEqual(rows[1].text, "/incoming (voice)")
+    assertTrue(P.find(w, "Dropdown", "Emote (optional)") ~= nil, "the emote picker")
+    -- The menu: None, a rule, then the browse tree; a leaf row is the command, a voice emote marked,
+    -- and its click is the pick. The kit's Dropdown has no button, so the menu opening is smoke EMOTE-4.
+    local rows = Pop.EmoteMenuRows()
+    assertEqual(rows[1].label, "None")
+    assertTrue(rows[2].divider)
+    local leaves = {}
+    local function walk(list)
+        for _, r in ipairs(list) do
+            if r.submenu then walk(r.submenu) elseif r.value and r.value ~= "none" then leaves[r.value] = r end
+        end
+    end
+    walk(rows)
+    assertEqual(leaves.INCOMING.label, "/incoming (voice)")
+    leaves.WAVE.onClick(leaves.WAVE.value, leaves.WAVE)
+    assertEqual(Pop.Draft().emote, "WAVE", "a leaf row's click picks its emote")
     assertTrue(Pop.PickEmote("POINT"))
     assertEqual(Pop.Draft().emote, "POINT")
     assertEqual(Pop.Draft().name, "/point", "the name defaults to the command")
@@ -394,4 +403,54 @@ test("emotes: [QFE-E2] the popup's preview names the emote, and an unknown token
     lines = C.PreviewLines({ name = "X", text = "", channel = "gameEmote", emote = "FROMRETAIL" })
     assertEqual(lines[1], "Sends nothing here: This game emote is not on this client.")
     assertEqual(lines[2], "Emote token: FROMRETAIL")
+end)
+
+-- ── the browse tree (the popup's emote dropdown, owner 2026-11-13) ───────────────────────────
+
+test("emotes: the browse tree holds every emote once, at most 10 rows a level and 15 emotes a leaf", function()
+    local NS = live()
+    local E = NS.Emotes
+    local list, letters = {}, "abcdefghijklmnopqrstuvwxyz"
+    -- 520 emotes, uneven by letter (an S run as long as a client's), so the tree needs a third level.
+    for i = 1, 520 do
+        local c = i <= 90 and "s" or letters:sub(i % 26 + 1, i % 26 + 1)
+        list[i] = { token = "T" .. i, command = ("/%s%04d"):format(c, i) }
+    end
+    local seen, depth = {}, 0
+    local function walk(nodes, d)
+        depth = math.max(depth, d)
+        assertTrue(#nodes <= E.TREE_BRANCH, "a level of " .. #nodes .. " rows")
+        for _, n in ipairs(nodes) do
+            assertTrue(type(n.label) == "string" and n.label ~= "")
+            if n.emotes then
+                assertTrue(#n.emotes <= E.TREE_LEAF, "a leaf of " .. #n.emotes .. " emotes")
+                for _, e in ipairs(n.emotes) do
+                    assertNil(seen[e.token], "listed twice: " .. e.token)
+                    seen[e.token] = true
+                end
+            else
+                walk(n.children, d + 1)
+            end
+        end
+    end
+    local tree = E.Tree(list)
+    walk(tree, 1)
+    local n = 0
+    for _ in pairs(seen) do n = n + 1 end
+    assertEqual(n, 520, "every emote, once")
+    assertEqual(depth, 2, "two levels of rows over the emotes: letters, then ranges")
+    -- a letter is never split across two top rows, and the rows run A to Z
+    assertEqual(tree[1].label:sub(1, 1), "A")
+    assertEqual(tree[#tree].label:sub(-1), "Z")
+end)
+
+test("emotes: a short list is one level of letters; a run that fits a leaf holds its emotes", function()
+    local NS = live()
+    local tree = NS.Emotes.Tree({ { token = "WAVE", command = "/wave" }, { token = "BOW", command = "/bow" },
+        { token = "POINT", command = "/point" } })
+    -- red under: a range level added where the run already fits
+    assertEqual(#tree, 3, "a row a letter while there are at most 10")
+    assertEqual(tree[1].label, "B")
+    assertEqual(tree[1].emotes[1].token, "BOW")
+    assertEqual(#NS.Emotes.Tree({}), 0, "no emotes, no rows")
 end)

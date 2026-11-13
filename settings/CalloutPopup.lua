@@ -16,11 +16,11 @@ local addonName, NS = ...
 -- THE ACTIONS (combined actions §7, CA-M2-7): a callout sends a Line, an emote, a ping and a marker
 -- on one press, each optional. The Line is Channel and Text; Channel None (the gameEmote kind,
 -- renamed by D10) is no Line, and the Text box is not drawn, so Save writes `text = ""` (a hidden
--- box keeps nothing). The emote picker (QFE-E2) is always drawn: an EditBox under a LibKa0s
--- autocomplete (WidgetsAutocomplete) that searches the client's emotes in Emotes.List's order (speech
--- first, marked as voice, then the animated ones, then the rest). A pick, or Enter on a typed command
--- or token, sets the draft's `emote`; Enter on an empty box clears it; a name that is empty or still
--- the last pick's command takes the new command. Ping and Raid marker are the member rows' own
+-- box keeps nothing). The emote picker (QFE-E2) is always drawn: a dropdown whose button opens the
+-- library's cascading menu (W.ContextMenu) on None and the client's emotes A to Z (Emotes.Tree: letter
+-- runs, then ranges, at most 10 rows a level and 15 emotes a leaf; owner, 2026-11-13), a voice emote
+-- marked. A pick sets the draft's `emote`, None clears it; a name that is empty or still the last
+-- pick's command takes the new command. Ping and Raid marker are the member rows' own
 -- dropdowns, None first.
 --
 -- THE DRAFT is a plain copy of the callout's fields (its emote, ping and marker among them) and its icon's glyph color (blank for Add:
@@ -65,8 +65,6 @@ local DRAFT = { "name", "text", "channel", "emote", "ping", "marker", "icon", "i
 Pop.DRAFT = DRAFT
 -- The draft fields whose none is nil in the draft and false in the profile.
 local NONE_NIL = { icon = true, iconColor = true, emote = true, ping = true, marker = true }
--- The emote picker's suggestion list: rows shown at once, and rows the search answers.
-local EMOTE_ROWS, EMOTE_MATCHES = 10, 60
 local WIDTH, HEIGHT = 560, 640   -- HEIGHT until the first fit
 -- The page's body starts this far under the panel's top: the library's header (HEADER_HEIGHT, 54)
 -- plus its 8 (Options.lua, CreatePanel). The laid-out body sits CHROME_GAP under that, as a page's
@@ -476,16 +474,7 @@ function Pop.PickEmote(token)
     return true
 end
 
---- The picker's suggestion rows for `text`: Emotes.Search's, each "/command", a voice emote's marked.
-function Pop.EmoteSuggestions(text)
-    local out = {}
-    for i, e in ipairs(NS.Emotes.Search(text, EMOTE_MATCHES)) do
-        out[i] = { text = e.voice and L["%s (voice)"]:format(e.command) or e.command, token = e.token }
-    end
-    return out
-end
-
---- Clear the draft's emote (Enter on the emptied picker).
+--- Clear the draft's emote (the menu's None).
 function Pop.ClearEmote()
     if not draft then return end
     flush()
@@ -493,32 +482,77 @@ function Pop.ClearEmote()
     refresh()
 end
 
--- The emote picker (THE ACTIONS): a path-less EditBox row bound to the draft's emote, showing its
--- command (or the stored token this client lacks), with the library's autocomplete under its box,
--- released with the widget so a frame AceGUI hands on carries no list.
+-- What the emote dropdown shows: the draft's emote as its command, a stored token this client lacks
+-- as that, or None.
+local function emoteShown()
+    if not (draft and draft.emote) then return L["None"] end
+    local cmd = NS.Emotes.Command(draft.emote)
+    if cmd then return NS.Emotes.IsVoice(draft.emote) and L["%s (voice)"]:format(cmd) or cmd end
+    return L["%s (not on this client)"]:format(tostring(draft.emote))
+end
+
+-- One browse-tree node's menu rows (Emotes.Tree): a level of levels, or its emotes, each a radio row
+-- ticked for the draft's emote, a voice emote marked, a pick setting the draft.
+local function treeRows(nodes)
+    local rows = {}
+    for _, n in ipairs(nodes) do
+        if n.emotes then
+            local leaf = {}
+            for i, e in ipairs(n.emotes) do
+                leaf[i] = { label = e.voice and L["%s (voice)"]:format(e.command) or e.command, value = e.token,
+                    radio = true, selected = draft ~= nil and draft.emote == e.token,
+                    onClick = function() Pop.PickEmote(e.token) end }
+            end
+            rows[#rows + 1] = { label = n.label, submenu = leaf }
+        else
+            rows[#rows + 1] = { label = n.label, submenu = treeRows(n.children) }
+        end
+    end
+    return rows
+end
+
+--- The emote dropdown's menu (owner, 2026-11-13): None, a rule, then the client's emotes A to Z as a
+--- cascade (Emotes.Tree: letter runs, ranges where a run is long, at most 10 rows a level and 15
+--- emotes a leaf).
+--- @return table[] rows for W.ContextMenu
+function Pop.EmoteMenuRows()
+    local rows = { { label = L["None"], value = "none", radio = true, selected = draft ~= nil and draft.emote == nil,
+        onClick = function() Pop.ClearEmote() end } }
+    local tree = treeRows(NS.Emotes.Tree())
+    if #tree > 0 then rows[#rows + 1] = { divider = true } end
+    for _, r in ipairs(tree) do rows[#rows + 1] = r end
+    return rows
+end
+
+--- Open the emote menu under `anchor` (a second call closes it, as a dropdown's second click does).
+function Pop.OpenEmoteMenu(anchor)
+    local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
+    if not (W and W.ContextMenu and anchor) then return nil end
+    return W.ContextMenu(anchor, Pop.EmoteMenuRows(), { owner = addonName, panel = true })
+end
+
+-- The emote picker (THE ACTIONS): the stock Dropdown a member row draws, bound to the draft's emote,
+-- whose one entry is what is picked; its button opens the library's cascading menu (Pop.EmoteMenuRows)
+-- in place of the flat list. The button's own scripts come back on release, so the frame AceGUI hands
+-- on is as it made it.
 function Pop.EmotePicker(h, lineWidget)
     local row = {
-        type = "string", dialogControl = "EditBox", label = L["Emote (optional)"], group = L["General"],
-        desc = L["Type to search the game's emotes, then pick one. Voice emotes play their sound."],
-        get = function()
-            if not draft then return "" end
-            return NS.Emotes.Command(draft.emote) or draft.emote or ""
-        end,
-        set = function(v)
-            if v == nil or tostring(v):match("^%s*$") then return Pop.ClearEmote() end
-            local token = NS.Emotes.Find(v)
-            if not (token and Pop.PickEmote(token)) then refresh() end
-        end,
+        type = "string", label = L["Emote (optional)"], group = L["General"],
+        desc = L["Pick one of the game's emotes, A to Z. Voice emotes play their sound."],
+        values = function() return { { value = "shown", text = emoteShown() } } end,
+        get = function() return "shown" end,
+        set = function() end,
     }
     local w = h.RenderField(ctx, row, lineWidget)
-    local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
-    local box = w and w.editbox
-    if box and W and W.Autocomplete then
-        local handle = W.Autocomplete(box, { provider = Pop.EmoteSuggestions, maxRows = EMOTE_ROWS,
-            owner = addonName, panel = true,
-            onPick = function(item) if item and item.token then Pop.PickEmote(item.token) end end })
-        Pop.emoteSuggest = handle
-        if handle then onRelease(w, function() handle:Release() end) end
+    if w then
+        local anchor = w.dropdown or w.frame
+        for _, b in ipairs({ w.button, w.button_cover }) do
+            if b and b.GetScript and b.SetScript then
+                local before = b:GetScript("OnClick")
+                b:SetScript("OnClick", function() Pop.OpenEmoteMenu(anchor) end)
+                onRelease(w, function() b:SetScript("OnClick", before) end)
+            end
+        end
     end
     Pop.emoteBox = w
     return w
@@ -587,7 +621,11 @@ local function close()
     gid, cid, draft, baseline = nil, nil, nil, nil
     if Settings.IconBrowser then Settings.IconBrowser.Cancel("popup") end
     errorRow = nil
-    Pop.tokenGlyph, Pop.emoteBox, Pop.emoteSuggest = nil, nil, nil
+    Pop.tokenGlyph, Pop.emoteBox = nil, nil
+    -- The emote menu is the library's one shared menu, parented to UIParent: Escape and Cancel close it
+    -- here, or it would float on with no popup under it (W.CloseMenu).
+    local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
+    if W and W.CloseMenu then W.CloseMenu() end
     boxes, shown = {}, {}
     if ctx then
         H().ClearScroll(ctx)

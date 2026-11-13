@@ -70,7 +70,7 @@ local ALLOW = {
     { file = "modules/Dial_Slices.lua", find = "BLACK =",
       why = "the shine overlay's shading: the player's shine art, never skinned (DECISIONS QuickComms D6)" },
     { file = "settings/Groups.lua", find = "|cff%s%s|r",
-      why = "a callout's channel in WoW's chat-type color: a game-meaning color (rung 4)" },
+      why = "a callout's channel, and its emote, in WoW's chat-type color: a game-meaning color (rung 4)" },
     { file = "settings/Editors.lua", find = "if w.image then w.image:SetVertexColor(1, 1, 1, 1) end",
       why = "a pooled Label's image put back to AceGUI's stock white on release: no color is drawn" },
 }

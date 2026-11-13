@@ -437,7 +437,7 @@ Total.
 - channels: [QFE-E1] the channel row offers Emote; the seam accepts it
 - channels: [QFE-E1] a Groups row names Emote in the emote color; a tooltip names its channel
 
-### test_emotes.lua (19)
+### test_emotes.lua (21)
 
 - emotes: [QFE-E2] the map is EMOTEn_TOKEN to its first free EMOTEn_CMDj over the client's indices, first index wins
 - emotes: [QFE-REV] a command the chat parser runs before an emote is skipped for the token's next one
@@ -458,6 +458,8 @@ Total.
 - emotes: [QFE-E2] Save with None and no other action stays open: noAction (CA-M2-7)
 - emotes: [QFE-E2] a user name is kept, and leaving None keeps the emote beside the Line (CA-M2-7)
 - emotes: [QFE-E2] the popup's preview names the emote, and an unknown token's reason
+- emotes: the browse tree holds every emote once, at most 10 rows a level and 15 emotes a leaf
+- emotes: a short list is one level of letters; a run that fits a leaf holds its emotes
 
 ### test_bake.lua (26)
 
@@ -762,7 +764,7 @@ Total.
 - popup: [CA-M2-7] four slots: Name | Channel, Text, the emote, Ping | Marker, then the icon
 - popup: [CA-M2-7] picking a ping and a marker writes the draft; Save keeps them beside the Line
 - popup: [CA-M2-7] channel None hides Text, keeps the emote and the slots, and Save writes no text
-- popup: [CA-M2-7] emptying the emote box clears the draft's emote, and Save takes it off
+- popup: [CA-M2-7] the emote menu's None clears the draft's emote, and Save takes it off
 - popup: [CA-M2-7] Add opens with no emote, ping or marker
 - popup: [CA-M2-7] D10: the Channel list and the Groups rows call gameEmote None (no chat line)
 - popup: [CA-M2-7] the window is measured again when the channel swaps the Text line in or out
@@ -822,7 +824,7 @@ Total.
 - when: [arena] Add the arena you are in reads the live snapshot, and refuses outside an arena
 - when: [CA-M4-14] ContentValues is public, and the content row offers exactly its values
 
-### test_page_groups.lua (52)
+### test_page_groups.lua (53)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -873,7 +875,8 @@ Total.
 - groups page: [rows] a callout row cuts its text at 40 characters, escapes |, and shows the fallback icon
 - groups page: [rows] a callout row's text cut counts UTF-8 characters, not bytes
 - groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it
-- groups page: [CA-M2-9] a callout row names its other actions: +/point, +ping, +{rtN}
+- groups page: [CA-M2-9] a callout row names its other actions: + /point + ping + Mark {rtN}
+- groups page: a callout row colors each action and draws its marker as the raid target icon
 - groups page: [CA-M2-9] the edit glyph's tooltip says it edits the callout's actions
 - groups page: [CA-M2-9] What it sends reads each callout's one-line summary
 
@@ -1041,7 +1044,7 @@ Total.
 - send: [CA-M2-4] every action a locked chat action: print each, then no tick and no echo
 - send: [CA-M2-4] a locked Line beside a ping ticks and reports sent at once
 
-### test_autothank.lua (66)
+### test_autothank.lua (68)
 
 - autothank: [CA-M4-4] Accept takes a stranger's helpful buff (isFromPlayerOrPlayerPet is any player's)
 - autothank: [CA-M4-4] Accept rejects a harmful aura, an NPC's, no caster, and anything not plainly true
@@ -1053,6 +1056,7 @@ Total.
 - autothank: [CA-M4-4] Fill cuts at the budget on a UTF-8 boundary and never inside a doubled pipe
 - autothank: [CA-M4-4] Fill refuses a text that starts with / and an empty text
 - autothank: [CA-M4-4] Macro per mode: the THANK emote on the caster, a whisper, or both on two lines
+- autothank: [CA-THX-2] the emote names the caster's bare name; the whisper keeps Name-Realm
 - autothank: [CA-M4-4] Macro holds the whole macro to 255 bytes, the whisper's text cut to fit
 - autothank: [CA-M4-4] Macro refuses a / text and an empty one; both keeps the emote
 - autothank: [CA-M4-4] Macro reads the client's own /w through Compat: none refuses the whisper
@@ -1100,6 +1104,7 @@ Total.
 - autothank: [CA-M5-2] the toast's dragged spot is written through the schema seam, which refuses a bad point
 - autothank: [CA-M5-2] a drag the combat edge cuts short holds no later toast's fade
 - autothank: [CA-M4-12] the Thank click runs the macro of each mode
+- autothank: [CA-THX-2] the debug log traces the caster, the armed macro and the click
 - autothank: [CA-M4-12] a right-click never runs the macro
 - autothank: [CA-M4-12] a Thank click stamps no guard, so the next pad press is not guarded
 - autothank: [CA-M4-12] its result carries the toast key on the thank surface and touches no pad or dial
@@ -2319,7 +2324,7 @@ Total.
 | test_situation.lua | 20 |
 | test_tokens.lua | 11 |
 | test_channels.lua | 18 |
-| test_emotes.lua | 19 |
+| test_emotes.lua | 21 |
 | test_bake.lua | 26 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 40 |
@@ -2332,14 +2337,14 @@ Total.
 | test_icon_browser.lua | 14 |
 | test_window_icons.lua | 5 |
 | test_groups_when.lua | 22 |
-| test_page_groups.lua | 52 |
+| test_page_groups.lua | 53 |
 | test_page_groups_nesting.lua | 19 |
 | test_page_pads.lua | 28 |
 | test_page_dials.lua | 28 |
 | test_check.lua | 9 |
 | test_send_guard.lua | 13 |
 | test_sendengine.lua | 49 |
-| test_autothank.lua | 66 |
+| test_autothank.lua | 68 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
@@ -2389,4 +2394,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2023** |
+| **Total** | **2028** |

@@ -1085,7 +1085,7 @@ test("popup: [CA-M2-7] four slots: Name | Channel, Text, the emote, Ping | Marke
     local w = P.during(function() Pop.Open(gid, cid) end)
     local L = NS.L
     local body = lines(P.find(w, "SimpleGroup"))
-    local emote = P.find(w, "EditBox", L["Emote (optional)"])
+    local emote = P.find(w, "Dropdown", L["Emote (optional)"])
     local ping, marker = P.find(w, "Dropdown", L["Ping"]), P.find(w, "Dropdown", L["Raid marker"])
     -- red under: the emote picker drawn only for the None channel
     assertTrue(emote ~= nil, "the emote picker is always drawn")
@@ -1144,7 +1144,7 @@ test("popup: [CA-M2-7] channel None hides Text, keeps the emote and the slots, a
     w = P.during(function() P.find(w, "Dropdown", "Channel"):__fire("OnValueChanged", "gameEmote") end)
     -- red under: the Text box drawn whatever the channel
     assertNil(P.find(w, "EditBox", "Text"), "no Line, no Text box")
-    assertTrue(P.find(w, "EditBox", L["Emote (optional)"]) ~= nil)
+    assertTrue(P.find(w, "Dropdown", L["Emote (optional)"]) ~= nil)
     assertTrue(P.find(w, "Dropdown", L["Ping"]) ~= nil and P.find(w, "Dropdown", L["Raid marker"]) ~= nil)
     P.find(w, "Dropdown", L["Raid marker"]):__fire("OnValueChanged", 8)
     -- red under: Save keeping the hidden box's text
@@ -1155,15 +1155,19 @@ test("popup: [CA-M2-7] channel None hides Text, keeps the emote and the slots, a
     assertEqual(c.marker, 8)
 end)
 
-test("popup: [CA-M2-7] emptying the emote box clears the draft's emote, and Save takes it off", function()
+test("popup: [CA-M2-7] the emote menu's None clears the draft's emote, and Save takes it off", function()
     local NS, _, P, Pop = open()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     local cid = NS.Library.CreateCalloutIn(gid, { name = "Kick", text = "Kick", channel = "party", emote = "POINT" })
     local w = P.during(function() Pop.Open(gid, cid) end)
-    local box = P.find(w, "EditBox", NS.L["Emote (optional)"])
-    assertEqual(box.text, NS.Emotes.Command("POINT") or "POINT")
-    -- red under: an empty set that only refreshes (the emote stays)
-    box:__fire("OnEnterPressed", "")
+    local dd = P.find(w, "Dropdown", NS.L["Emote (optional)"])
+    local shown = NS.Emotes.Command("POINT") and "/point" or NS.L["%s (not on this client)"]:format("POINT")
+    assertEqual(dd.list[dd.value], shown, "the dropdown shows the picked emote")
+    local none = Pop.EmoteMenuRows()[1]
+    assertEqual(none.label, NS.L["None"])
+    assertFalse(none.selected, "None is not ticked while an emote is set")
+    -- red under: a None row that only refreshes (the emote stays)
+    none.onClick(none.value, none)
     assertNil(Pop.Draft().emote)
     assertTrue(Pop.Save())
     assertEqual(NS.db.profile.callouts[cid].emote, false)
@@ -1178,7 +1182,8 @@ test("popup: [CA-M2-7] Add opens with no emote, ping or marker", function()
     assertNil(d.emote)
     assertNil(d.ping)
     assertNil(d.marker)
-    assertEqual(P.find(w, "EditBox", NS.L["Emote (optional)"]).text, "")
+    local dd = P.find(w, "Dropdown", NS.L["Emote (optional)"])
+    assertEqual(dd.list[dd.value], NS.L["None"])
 end)
 
 test("popup: [CA-M2-7] D10: the Channel list and the Groups rows call gameEmote None (no chat line)", function()

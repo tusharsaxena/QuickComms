@@ -413,7 +413,8 @@ header   New callout / Edit callout, the gold rule under it
 body     [Name          ] [Channel       ]   the callout.* member rows' labels and help
          [Text  (i)                       ]   across both columns; (i) is the token glyph
                                               (not drawn when Channel is None)
-         [Emote (optional)                ]   the emote picker, across both columns, always shown
+         [Emote (optional)              v ]   the emote dropdown (a cascading menu), across both
+                                              columns, always shown
          [Ping          ] [Raid marker   ]   the callout.ping and callout.marker rows
          Icon                                 the chooser's label
          [icon] [Choose icon…] [x] Icon color the icon as drawn, the button, the color swatch
@@ -448,15 +449,20 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   callout then sends no chat line, only its other actions. **Emote (optional)** is one of the game's
   own emotes beside the Line. **Ping** (Attack, Warning, On my way, Assist) and **Raid marker** (star to
   skull) act on your target. Save needs at least one action (*This callout has no action.*).
-- **The emote picker.** The **Emote (optional)** box, under
-  the library's autocomplete (`W.Autocomplete`): typing searches the client's emotes by command or
-  token, the speech emotes first, each marked *(voice)* since it also plays a sound, then the animated
-  ones, then the rest (`modules/Emotes.lua`). A pick, or Enter on a typed command or token, sets the
-  draft's `emote`; a Name that is empty, or still the previous pick's command, takes the new command.
-  The line it sends is the client's own localized command for the token, never typed text, and a
-  command the chat parser runs as something else first (`/shout`, which is Yell) is never offered.
-  Emptying the box clears the draft's emote. A stored token this client lacks shows as the token and
-  drops only the emote, saying why; the other actions still bake.
+- **The emote picker.** The **Emote (optional)** dropdown (owner, 2026-11-13; it was a search box)
+  shows the picked emote's command, or *None*. Its button opens the library's cascading menu
+  (`W.ContextMenu`) in place of a flat list: *None*, a rule, then the client's emotes A to Z
+  (`Emotes.Tree`, `modules/Emotes.lua`). The top level is letters, adjacent letters packed into at
+  most 10 runs (`A`, `B–C`) and a letter never split; a run with more than 15 emotes opens a level of
+  at most 10 ranges named by their ends (`Ba–Bl`), cut again while a range is over 15, so no level of
+  levels has more than 10 rows and no level of emotes more than 15. A speech emote is marked
+  *(voice)*, since it also plays a sound; the picked one is ticked. A pick sets the draft's `emote`;
+  a Name that is empty, or still the previous pick's command, takes the new command; *None* clears
+  it. The line it sends is the client's own localized command for the token, never typed text, and a
+  command the chat parser runs as something else first (`/shout`, which is Yell) is never offered. A
+  stored token this client lacks shows as *TOKEN (not on this client)* and drops only the emote,
+  saying why; the other actions still bake. The menu is the library's one shared menu, so the popup
+  closes it (`W.CloseMenu`) whenever it closes.
 - **No Icon box.** The icon is chosen only with the chooser; the draft still carries it as a
   texture path or id, Save writes it to `callout.icon`, and that row still answers `/qc`.
 

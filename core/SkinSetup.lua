@@ -186,6 +186,9 @@ NS.SKIN_TOKENS = {
     -- HUD text's shadow color under a skin that states none: Ka0s Default's hud.shadow is false, and
     -- every font block here ships with a black shadow (R.ShadowOf, modules/Pad_Render.lua).
     ["qc.shadow"]    = { default = { 0, 0, 0, 1 }, follow = "hud.shadow" },
+    -- A callout row's mark (settings/Groups.lua calloutLabel), a color of its own beside the channel's
+    -- and the emote's chat colors and the ping's sem.info: a violet no library role holds.
+    ["qc.mark"]      = { default = { byte(0xD0), byte(0x8C), 1, 1 } },
 }
 
 -- The Ka0s Default tokens the DEGRADED facade answers, copied from the library and limited to the
@@ -217,6 +220,8 @@ NS.SKIN_FALLBACK = {
     ["log.tag"]        = { byte(0xc9), byte(0xa6), byte(0x6b), 1 },
     -- QC-04's settings pages: the When drawer's "Active now." (|cff40ff40).
     ["sem.goodAlt"]    = { 0.25, 1, 0.25, 1 },
+    -- A callout row's ping on the Groups page (settings/Groups.lua paintPart).
+    ["sem.info"]       = { 0.3, 0.8, 1, 1 },
     -- QC-03's HUD: a button's fallback fill, the guarded flash, and what a font or border block
     -- follows while its "Use the skin's ..." companion is on (the face, the border styles and size).
     ["btn.bg"]         = { 0.1, 0.1, 0.12, 0.9 },
