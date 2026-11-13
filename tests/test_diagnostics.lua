@@ -22,7 +22,7 @@ end)
 test("diagnostics: the report names the schema, the profile, the holds and the launcher", function()
     local NS = T.enableAddon()
     local text = report(NS)
-    assertTrue(text:find("schema stored=19 code=19", 1, true) ~= nil, "identity")
+    assertTrue(text:find("schema stored=20 code=20", 1, true) ~= nil, "identity")
     assertTrue(text:find("profile=Default", 1, true) ~= nil, text)
     assertTrue(text:find("feature events registered=true", 1, true) ~= nil, "registration")
     assertTrue(text:find("launcher: registered=true", 1, true) ~= nil, "integrations")
@@ -71,9 +71,9 @@ test("diagnostics: the surfaces and send sections name the pads, the armed butto
     NS.Situation.RefreshNow("test")
     local text = report(NS)
     assertTrue(text:find("p1 active=" .. T.seeded(NS, "bi.mplus") .. " stale=false", 1, true) ~= nil, text)
-    -- the pad's 7 buttons, and the default dial's 8 wedges (1 group wedge, then 7 callouts on one Auto
-    -- page) and its two rings' page arrows (2 each, never armed): 19 buttons, 14 armed
-    assertTrue(text:find("buttons=19 armed=14", 1, true) ~= nil, text)
+    -- the pad's 8 buttons, and the default dial's 9 wedges (1 group wedge, then 8 callouts on one Auto
+    -- page) and its two rings' page arrows (2 each, never armed): 21 buttons, 16 armed
+    assertTrue(text:find("buttons=21 armed=16", 1, true) ~= nil, text)
     assertTrue(text:find("p1:" .. T.seeded(NS, "bi.mplus.pull") .. " /p Pulling next pack", 1, true) ~= nil, text)
     assertTrue(text:find("pending -", 1, true) ~= nil, "no queued keys")
     assertTrue(text:find("window=1", 1, true) ~= nil, "the guard")
@@ -183,4 +183,24 @@ test("diagnostics: [shine] the pad's button line and the dial's slices line prin
     text = report(NS)
     assertTrue(text:find("p1 button shine=orb 40", 1, true) ~= nil, text)
     assertTrue(text:find("tooltip=top/8 shine=bevel 85", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: [CA-M2-5] a combined macro shows each newline as \\n, on one Send row", function()
+    local NS, m = T.enableAddon()
+    local SE = NS.SendEngine
+    local b = SE.NewButton(m.UIParent)
+    SE.Arm(b, "/p Kick |cffon|r me\n/point\n/tm [@target,exists] !8", { calloutId = "cK", surfaceId = "pK",
+        name = "Kick", chatTypes = { "PARTY", "TEXT_EMOTE" }, actions = { { kind = "line" } } })
+    -- red under: SE.Escaped doubling pipes alone (the raw newline splits the row)
+    assertEqual(SE.Escaped(b), "/p Kick ||cffon||r me \\n /point \\n /tm [@target,exists] !8")
+    report(NS)
+    local rows = 0
+    for _, line in ipairs(NS.DebugLog.buffer) do
+        assertTrue(not line:find("\n", 1, true), line)
+        if line:find("pK:cK", 1, true) then
+            rows = rows + 1
+            assertTrue(line:find("/p Kick ||cffon||r me \\n /point \\n /tm", 1, true) ~= nil, line)
+        end
+    end
+    assertEqual(rows, 1, "one Send row")
 end)

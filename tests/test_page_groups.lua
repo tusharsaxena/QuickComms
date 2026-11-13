@@ -701,7 +701,7 @@ test("groups page: [restore] Restore built-in groups brings back a deleted set a
     local pad = NS.db.profile.pads.p1.groups
     assertEqual(pad[#pad], raid, "at the end of the pad")
     local text = table.concat(m.prints, "\n")
-    assertTrue(text:find("1 groups and 8 callouts came back", 1, true) ~= nil, text)
+    assertTrue(text:find("1 groups and 9 callouts came back", 1, true) ~= nil, text)
     m.prints = {}
     P.flush()
     P.find(P.redraw("groups"), "Button", "Restore built-in groups"):__fire("OnClick")
@@ -1128,4 +1128,78 @@ test("groups page: [icons] the swatch writes on a drag tick (OnValueChanged) wit
     assertEqual(NS.db.profile.groups[gid].iconColor, "0000ff")
     swatch:__fire("OnValueConfirmed", 1, 0, 0, 1)   -- Cancel confirms the old color
     assertEqual(NS.db.profile.groups[gid].iconColor, "ff0000", "Cancel puts the old color back")
+end)
+
+-- ── every action on a callout row (CA-M2-9, combined actions §7) ─────────────────────────────
+
+test("groups page: [CA-M2-9] a callout row names its other actions: + /point + ping + Mark {rtN}", function()
+    local NS, env = open()
+    env.MAXEMOTEINDEX, env.EMOTE73_TOKEN, env.EMOTE73_CMD1 = 80, "POINT", "/point"
+    NS.Emotes.Reset()
+    local G = NS.addon.Settings.Groups
+    local cmd = NS.Emotes.Command("POINT")
+    assertEqual(cmd, "/point")
+    -- red under: CalloutSummary naming the Line's text alone
+    assertEqual(G.CalloutSummary({ channel = "party", text = "Kick", emote = "POINT", ping = "attack", marker = 8 }),
+        "Kick + " .. cmd .. " + ping + Mark {rt8}")
+    assertEqual(G.CalloutSummary({ channel = "party", text = "Kick" }), "Kick", "a Line alone has no suffix")
+    assertEqual(G.CalloutSummary({ channel = "gameEmote", text = "", emote = "POINT", marker = 3 }), cmd .. " + Mark {rt3}",
+        "with no Line the emote leads")
+    assertEqual(G.CalloutSummary({ channel = "gameEmote", text = "", ping = "warning" }), "+ ping")
+    -- the row's label cuts the text, never the suffixes
+    local long = ("y"):rep(60)
+    local label = G.CalloutLabel({ name = "Long", channel = "party", text = long, ping = "attack" }, "c1")
+    assertTrue(label:find("…", 1, true) ~= nil, "the text is cut")
+    assertTrue(label:find("ping", 1, true) ~= nil, "the suffix is kept: " .. label)
+end)
+
+test("groups page: a callout row colors each action and draws its marker as the raid target icon", function()
+    local NS, env = open()
+    env.MAXEMOTEINDEX, env.EMOTE73_TOKEN, env.EMOTE73_CMD1 = 80, "POINT", "/point"
+    NS.Emotes.Reset()
+    local G = NS.addon.Settings.Groups
+    local label = G.CalloutLabel({ name = "Kick", channel = "party", text = "Kick on me", emote = "POINT",
+        ping = "attack", marker = 8 }, "c1")
+    local function hex(r, g, b)
+        local function byte(v) return math.floor(v * 255 + 0.5) end
+        return ("%02x%02x%02x"):format(byte(r), byte(g), byte(b))
+    end
+    -- red under: the old one-gray suffix ("+/point +ping +{rt8}")
+    assertTrue(label:find("|cff" .. hex(NS.PadRender.ChannelColor("EMOTE")) .. "/point|r", 1, true) ~= nil,
+        "the emote in the emote chat color: " .. label)
+    assertTrue(label:find(NS.SkinMarkup("sem.info", "ping"), 1, true) ~= nil, "the ping in sem.info: " .. label)
+    assertTrue(label:find(NS.SkinMarkup("qc.mark", "Mark"), 1, true) ~= nil, "Mark in qc.mark: " .. label)
+    assertTrue(label:find("UI-RaidTargetingIcon_8:0|t", 1, true) ~= nil, "the skull drawn: " .. label)
+    assertTrue(label:find("{rt8}", 1, true) == nil, "no raw marker token: " .. label)
+    local plus = NS.SkinMarkup("gtip.subtle", "+")
+    local _, n = label:gsub(plus:gsub("%p", "%%%0"), "")
+    assertEqual(n, 3, "a plus, a space apart, before each of the three actions")
+end)
+
+test("groups page: [CA-M2-9] the edit glyph's tooltip says it edits the callout's actions", function()
+    local NS, _, P = open()
+    local gid = withCallouts(NS)
+    pick(NS, gid)
+    local Ed = NS.addon.Settings.Editors
+    local seen
+    local rows = Ed.ReorderRows
+    Ed.ReorderRows = function(ctx, page, entries, ...)
+        seen = seen or entries
+        return rows(ctx, page, entries, ...)
+    end
+    P.tab("groups", "callouts")
+    Ed.ReorderRows = rows
+    -- red under: the old "its name, text, channel and icon" tooltip
+    assertEqual(seen[1].editTooltip, "Edit its name, actions and icon.")
+end)
+
+test("groups page: [CA-M2-9] What it sends reads each callout's one-line summary", function()
+    local NS = open({ inGroup = true })
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local cid = NS.Library.CreateCalloutIn(gid, { name = "Kick", text = "Kick on me", channel = "party",
+        emote = "POINT", ping = "attack" })
+    local blocks = NS.addon.Settings.Groups.PreviewBlocks(gid)
+    local want = NS.addon.Settings.Callouts.PreviewLines(NS.Library.Callout(cid))[1]
+    assertTrue(want:find("ping Attack", 1, true) ~= nil, want)
+    assertEqual(blocks[1].rows[1].text(), want)
 end)

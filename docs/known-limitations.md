@@ -29,6 +29,50 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   held stand-down finishes. Those presses are not tracked: no guard, no echo timer, no note.
 - Rebuilding between pulls inside a key assumes `SetAttribute` works out of combat in a key (C4,
   unverified).
+- A ping and a raid target marker land on your target only (`[@target,exists]`): with no target nothing
+  is pinged or marked, and the press prints *no target to ping* or *no target to mark*. A target that
+  cannot carry a marker prints *that target cannot be marked*. Pings turned off (the ping system or the
+  game's Enable pings option) or on cooldown print their own note; a secret answer prints none.
+- Marking rights are the server's: in a party every member may mark, in a raid only the leader and
+  assistants (or everyone, when the raid makes everyone an assistant). A press without rights prints
+  *you need leader or assist to mark in a raid*; it is read at the press, never a padlock, because
+  rights move with the roster. Solo marking is believed to work (smoke check MARK-1).
+- Since 12.0 macros cannot mark more than three units within a very short time; a fourth mark in a
+  burst does not land. Nothing in the addon counts them.
+- The 255-byte cap covers the whole macro, not each line (`B.MAX_MACRO`, combined actions §3, D13). The
+  emote, ping and marker lines are baked first; the Line gets what is left, at most 255 bytes, less
+  one byte per newline. A Line over its share is refused alone (*Too long to send with its other
+  actions.*, its bytes shown against that share) and the other actions still send. The wiki's 255 for a secure button's whole macrotext is
+  not confirmed in game. Re-check trigger: smoke check ACTION-4; if it proves the cap larger, raising
+  `MAX_MACRO` is a one-line change.
+- A combined press reports one result: *sent* only when every chat action's echo came back, *dropped*
+  once, naming the action, when the first one did not. A ping or a marker beside a chat line is never
+  confirmed; only the chat actions are tracked.
+- A ping-only or marker-only press has no chat line to echo, so it reports *sent* at once and the button
+  flashes (D16): the flash is not a confirmation that the ping or the mark landed.
+- Whether WoW Forever's servers deliver a ping (PING-3), and whether a mark lands in combat or during an
+  encounter on either client (MARK-7, `SetRaidTarget`'s restrictions), is not yet measured.
+
+## Auto-thank (#19)
+
+- The buff filter is a guess: a helpful aura of a minute or more (`C.THANK.MIN_DURATION`; one with no
+  expiry never counts) cast on you by another player who is not in your group. The game has no "this was
+  a gift" flag, so a long buff from a stranger that you did not want still toasts.
+- Raid buffs only lists three buffs a stranger can give you: Arcane Intellect, Power Word: Fortitude and
+  Mark of the Wild (on WoW Forever every rank of the three, from its own spell tables). The ids are not
+  yet checked in game (THANK-7). A client whose list were empty would hide the toggle (FRB); neither is
+  today.
+- In combat nothing is read: a buff gained in a fight is found by a diff of your helpful auras after it,
+  so a buff gained and lost inside one fight is never seen. The 60-second minimum makes that rare.
+- No toast shows in combat, and one on screen when combat starts goes away and comes back after it,
+  with its full time: its Thank button is a secure frame, which the game will not let the toast move or
+  hide in combat.
+- The pads sit at DIALOG, over the toast's HIGH, so a pad placed over the toast's spot covers it. The
+  default spot (TOP 0,-180) is clear of the default pad; the toast can be dragged.
+- Whether a stranger's caster reads at all when they are not your target and friendly nameplates are
+  off is not yet measured (THANK-2); a buff whose caster cannot be read shows no toast.
+- The whisper is the one whisper this addon sends: issue #7's rule that a callout never whispers still
+  holds for callouts (F3).
 
 ## The Comms Pad
 
@@ -177,6 +221,17 @@ What the addon cannot do, or does only under a condition, and why. The hub,
 - Midnight's Slayer's Rise (map 2799) has no battleground set of its own; the generic set covers it.
 - The shipped raids are the current tier's three; a later tier joins `defaults/GameIds.lua` when it is
   current (the When editor adds the instance you are in meanwhile).
+- In Group's shipped emotes (Hello waves, Ready, GLHF cheers, the thanks) are padlocked in arenas and
+  battlegrounds: their snapshots carry `lockdown.pvpMatch`, and a game emote locks as Say does
+  (`LOCKS.gameEmote = LOCKS.say`), so In Group, active there beside the content's set, prints the
+  emote's lock note on every press of those callouts. The arena and battleground sets themselves ship
+  no emote for that reason (combined actions §8, F4b). In a key the Dungeon emotes are
+  not padlocked outside a boss; during an encounter they are, as any Say line is (smoke check EMOTE-9).
+- Schema step 20 gives an existing profile a shipped emote only on callouts left as shipped (the same
+  channel and text, no emote, ping or marker; a rename or a new icon does not count as an edit). A
+  callout whose text you changed, or whose text was seeded under another client language, keeps what
+  it had. The two Heal me callouts are added once to the Dungeon and Raid sets you kept; a copied set
+  gains nothing. A re-run of the step (a schema re-stamp) could add back a Heal me callout you deleted.
 
 ## The editors and their windows
 

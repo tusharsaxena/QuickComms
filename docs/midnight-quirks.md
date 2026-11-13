@@ -237,6 +237,48 @@ Each needs an in-game probe, recorded with the build, before any section of this
 
 ## QuickComms-specific quirks
 
+### Pings, raid target markers and `@target` (combined actions, #17 and #18)
+
+Read in Blizzard's source, Retail 12.1.5 and Forever build 1.60.1.70888 (the combined-actions design,
+`docs/superpowers/specs/2026-11-10-combined-actions-design.md` §5 and §6). Not yet measured in game: the
+smoke checks PING-1 to PING-5 and MARK-1 to MARK-7 are owed.
+
+- **`GetRaidTargetIndex` returns a secret.** `SecretReturns = true` on both clients
+  (RaidMarkersDocumentation.lua). **Measured:** source only. **Client:** Retail and Forever. **Cost:** an
+  addon comparing it in its own code compares a secret. **Do:** never read it; bake `/tm ... !N`, whose `!`
+  branch makes the compare Blizzard's, on the secure path. QuickComms reads it nowhere.
+- **`SetRaidTarget` has restrictions.** `HasRestrictions = true` on both clients. **Measured:** source
+  only; whether a mark lands in combat or during an encounter is MARK-7. **Client:** Retail and Forever.
+  **Cost:** a call from addon code may be refused. **Do:** mark only through `/tm` in the secure macro, on
+  an untainted click (`SECURE_ACTIONS.raidtarget` is not used: a button carries one `type`, and a combined
+  callout stays one macro).
+- **`[@target]` parses with no target.** A unit option with no condition always parses, so `/ping [@target]`
+  with no target falls through to the client's own choice. **Measured:** source only
+  (SlashCommandsOverrides.lua). **Client:** Retail and Forever. **Cost:** a ping or a mark lands on a unit
+  the player did not pick. **Do:** write `[@target,exists]`: with no target the parse fails and Blizzard's
+  guard returns, and the press prints why (`SE.PressNotes`).
+- **Macros mark at most three units in a very short time** (12.0). **Measured:** not measured (reported on
+  MMO-Champion). **Client:** Retail. **Cost:** a fourth mark in a burst does not land. **Do:** nothing in
+  code; it is a known limitation.
+
+### Auras and auto-thank (#19)
+
+Read in Blizzard's source, Retail 12.1.5 and Forever build 1.60.1.70888 (the combined-actions design §9). Not
+yet measured in game: the smoke checks THANK-1 to THANK-12 are owed.
+
+- **The `UNIT_AURA` payload is secret while auras are restricted.** `SecretWhenAurasRestricted = true` on the
+  event as a whole (UnitAuraDocumentation.lua). **Measured:** source only. **Client:** Retail and Forever.
+  **Cost:** the unit, `isFullUpdate` and every `auraInstanceID` in it can be secret; only the GetAura*
+  functions' `unit` argument is `NeverSecret`. **Do:** register `UNIT_AURA` on a unit-filter frame for
+  `"player"`, so no unit is compared; mark a secret payload dirty and catch up with a diff once it reads
+  plain (`AT.Diff`).
+- **`GetAuraCasterGUID` and `GetAuraDataByAuraInstanceID` are secret while the unit's auras are
+  restricted.** **Measured:** source only. **Client:** Retail and Forever. **Cost:** in combat the caster and
+  the aura cannot be read. **Do:** read nothing in combat; the after-combat diff reads each new aura then,
+  through `Compat.AuraCaster` and `Compat.AuraByInstance`, and drops one it cannot read.
+- **Whether the caster reads for a stranger who is not your target, with friendly nameplates off**, and
+  what `GetPlayerInfoByGUID` names them, is THANK-2.
+
 ## Interface line — track both clients' builds
 
 `QuickComms.toc` declares two build numbers, Retail's first and WoW Forever's second (toc-file-§3):

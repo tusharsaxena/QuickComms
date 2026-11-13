@@ -6,19 +6,24 @@ local addonName, NS = ...
 --     header   New callout / Edit callout, the gold rule under it
 --     body     Name and Channel side by side, then Text across both columns (the member rows'
 --              labels, read and written on the draft), with an info glyph beside the Text label
---              whose tooltip lists the tokens; then the icon under its "Icon" label (the icon as
+--              whose tooltip lists the tokens; then the emote picker across both columns, then
+--              Ping and Raid marker side by side (combined actions §7, CA-M2-7: a callout's
+--              four action slots); then the icon under its "Icon" label (the icon as
 --              drawn, Choose icon…, which opens the icon browser over the popup, and a glyph's color
 --              swatch: there is no Icon text box), What it sends (the baked line), then Save and Cancel, and under them the
 --              line that names a field Save refused
 --
--- THE GAME EMOTE (QFE-E2): with Game emote picked as the channel, the Text box gives way to the emote
--- picker, an EditBox under a LibKa0s autocomplete (WidgetsAutocomplete) that searches the client's
--- emotes in Emotes.List's order (speech first, marked as voice, then the animated ones, then the
--- rest). A pick, or Enter on a typed command or token, sets the draft's `emote`; a name that is empty
--- or still the last pick's command takes the new command. Save keeps the field the channel uses and
--- clears the other: a game emote never carries text, and a chat callout no token.
+-- THE ACTIONS (combined actions §7, CA-M2-7): a callout sends a Line, an emote, a ping and a marker
+-- on one press, each optional. The Line is Channel and Text; Channel None (the gameEmote kind,
+-- renamed by D10) is no Line, and the Text box is not drawn, so Save writes `text = ""` (a hidden
+-- box keeps nothing). The emote picker (QFE-E2) is always drawn: a dropdown whose button opens the
+-- library's cascading menu (W.ContextMenu) on None and the client's emotes A to Z (Emotes.Tree: letter
+-- runs, then ranges, at most 10 rows a level and 15 emotes a leaf; owner, 2026-11-13), a voice emote
+-- marked. A pick sets the draft's `emote`, None clears it; a name that is empty or still the last
+-- pick's command takes the new command. Ping and Raid marker are the member rows' own
+-- dropdowns, None first.
 --
--- THE DRAFT is a plain copy of the callout's four fields and its icon's glyph color (blank for Add:
+-- THE DRAFT is a plain copy of the callout's fields (its emote, ping and marker among them) and its icon's glyph color (blank for Add:
 -- an empty name and text, Smart group, no icon, no color), and every control writes it, never the
 -- profile. An icon that is no glyph drops the draft's color, as the stored callout would. The
 -- preview bakes the draft, and the token tooltip reads its channel when it shows, so both follow
@@ -54,10 +59,12 @@ local Pop = Settings.CalloutPopup
 
 -- The member rows the popup draws, in order, and every field the draft carries (the icon and its
 -- color are drawn by the icon chooser, not as rows: the callout.icon row stays, for /qc).
-local FIELDS = { "name", "channel", "text" }
-local DRAFT = { "name", "text", "channel", "emote", "icon", "iconColor" }
--- The emote picker's suggestion list: rows shown at once, and rows the search answers.
-local EMOTE_ROWS, EMOTE_MATCHES = 10, 60
+local FIELDS = { "name", "channel", "text", "ping", "marker" }
+Pop.FIELDS = FIELDS
+local DRAFT = { "name", "text", "channel", "emote", "ping", "marker", "icon", "iconColor" }
+Pop.DRAFT = DRAFT
+-- The draft fields whose none is nil in the draft and false in the profile.
+local NONE_NIL = { icon = true, iconColor = true, emote = true, ping = true, marker = true }
 local WIDTH, HEIGHT = 560, 640   -- HEIGHT until the first fit
 -- The page's body starts this far under the panel's top: the library's header (HEADER_HEIGHT, 54)
 -- plus its 8 (Options.lua, CreatePanel). The laid-out body sits CHROME_GAP under that, as a page's
@@ -103,16 +110,11 @@ local function H() return Settings.Helpers end
 
 local function copyFields(c)
     local out = {}
-    for _, f in ipairs(DRAFT) do out[f] = c[f] end
-    if out.icon == false then out.icon = nil end
-    if out.iconColor == false then out.iconColor = nil end
-    if out.emote == false then out.emote = nil end
+    for _, f in ipairs(DRAFT) do
+        out[f] = c[f]
+        if NONE_NIL[f] and out[f] == false then out[f] = nil end
+    end
     return out
-end
-
--- UTF-8 characters in `s`, as the EditBox counts its letters.
-local function chars(s)
-    return select(2, s:gsub("[^\128-\191]", ""))
 end
 
 -- Put every control and line the popup draws back to the draft (a draft write is no seam write, so
@@ -123,7 +125,7 @@ end
 
 local function put(field, value, row)
     if row and type(row.normalize) == "function" then value = row.normalize(value) end
-    if (field == "icon" or field == "iconColor" or field == "emote") and value == false then value = nil end
+    if NONE_NIL[field] and value == false then value = nil end
     draft[field] = value
     if field == "icon" and not NS.Library.IsGlyph(value) then draft.iconColor = nil end
 end
@@ -168,6 +170,8 @@ local function draftRows()
         copy.path, copy.validate, copy.onChange = nil, nil, nil
         copy.get = function()
             shown[field] = draft and draft[field]
+            -- A dropdown's none (nil in the draft) is its first choice: Ping's "none", Marker's 0.
+            if shown[field] == nil and copy.values then return copy.values[1].value end
             return shown[field]
         end
         copy.set = function(value) setField(field, value, row) end
@@ -176,32 +180,82 @@ local function draftRows()
     return out
 end
 
--- Check the draft with the member rows' validators. Answers the field that failed and why.
-local function check(d)
+-- THE CHECK (combined actions §7, CA-M2-8): the draft's name, then each action, then the action rule,
+-- then the channel and the icon, each its own small function. A failure answers the field, the label
+-- the player reads it under (nil for the rule, which names itself) and why.
+
+-- The Line, only when Channel is not None: text that is a string, and at most MAX_BYTES bytes as the
+-- bake counts it (Bake.DraftLength: the channel's prefix and each live token's nominal bytes too, so
+-- a saved Line can bake; the caps are bytes, the box's maxLetters counts letters). An empty Line is
+-- no Line, which the action rule judges, so a ping-only callout on a chat channel still saves.
+local function checkLine(d)
+    if isGameEmote(d) then return nil end
+    local text = Ed.Row("callout.text")
+    local ok, why = text.validate(d.text)
+    if ok and NS.Bake.DraftLength(d.text, d.channel) > NS.Bake.MAX_BYTES then
+        ok, why = false, L["Too long: with its channel and tokens, a line is at most %d bytes."]:format(NS.Bake.MAX_BYTES)
+    end
+    if not ok then return "text", text.label, why end
+    return nil
+end
+
+-- The emote, only when one is set: a token the picker could have picked.
+local function checkEmote(d)
+    if d.emote and not Ed.Row("callout.emote").validate(d.emote) then
+        return "emote", L["Emote (optional)"], L["Pick an emote from the list."]
+    end
+    return nil
+end
+
+-- A ping or a marker, only when set, by its member row's own check.
+local function checkChoice(field)
+    return function(d)
+        if d[field] == nil then return nil end
+        local row = Ed.Row("callout." .. field)
+        local ok, why = row.validate(d[field])
+        if not ok then return field, row.label, why end
+        return nil
+    end
+end
+local checkPing, checkMarker = checkChoice("ping"), checkChoice("marker")
+
+local function checkActions(d)
+    if not NS.Library.HasAction(d) then return "noAction", nil, NS.Library.ACTION_WHY.noAction end
+    return nil
+end
+
+local function checkName(d)
     local name = Ed.Row("callout.name")
     local ok, why = name.validate(d.name)
     if not ok then return "name", name.label, why end
-    if isGameEmote(d) then
-        if not d.emote then return "emote", L["Game emote"], L["Pick an emote from the list."] end
-        ok, why = Ed.Row("callout.emote").validate(d.emote)
-        if not ok then return "emote", L["Game emote"], why end
-    else
-        local text = Ed.Row("callout.text")
-        ok, why = text.validate(d.text)
-        if ok and chars(d.text) > text.maxLetters then
-            ok, why = false, L["Text is at most %d characters."]:format(text.maxLetters)
-        end
-        if not ok then return "text", text.label, why end
-    end
+    return nil
+end
+
+local function checkChannel(d)
     local channel = Ed.Row("callout.channel")
-    ok, why = channel.validate(d.channel)
+    local ok, why = channel.validate(d.channel)
     if not ok then return "channel", channel.label, why end
-    -- The icon has no box to name: the error names the chooser under its "Icon" label.
+    return nil
+end
+
+-- The icon has no box to name: the error names the chooser under its "Icon" label.
+local function checkIcon(d)
     if not NS.Library.ValidIcon(d.icon) then
         return "icon", L["Icon"], L["That is not a texture. Click Choose icon… and pick another."]
     end
     if not NS.Library.ValidIconColor(d.iconColor) then
         return "iconColor", Ed.Row("callout.iconColor").label, L["An icon color is six hex digits (rrggbb), or empty for none."]
+    end
+    return nil
+end
+
+local CHECKS = { checkName, checkLine, checkEmote, checkPing, checkMarker, checkActions, checkChannel, checkIcon }
+
+-- Check the draft. Answers the field that failed, its label and why, or nil.
+local function check(d)
+    for _, fn in ipairs(CHECKS) do
+        local field, label, why = fn(d)
+        if field then return field, label, why end
     end
     return nil
 end
@@ -359,13 +413,22 @@ local function renderFields(h, rows)
     if out.name and out.channel then split(first, out.channel) end
     ctx.scroll:AddChild(first)
     h.AddSpacer(ctx.scroll, h.ROW_VSPACER)
-    local second = line(h)
-    if isGameEmote(draft) then
-        out.emote = Pop.EmotePicker(h, second)
-    else
+    -- Channel None is no Line: no Text box.
+    if not isGameEmote(draft) then
+        local second = line(h)
         out.text = h.RenderField(ctx, rows.text, second)
+        ctx.scroll:AddChild(second)
+        h.AddSpacer(ctx.scroll, h.ROW_VSPACER)
     end
-    ctx.scroll:AddChild(second)
+    local third = line(h)
+    out.emote = Pop.EmotePicker(h, third)
+    ctx.scroll:AddChild(third)
+    h.AddSpacer(ctx.scroll, h.ROW_VSPACER)
+    local fourth = line(h)
+    out.ping = h.RenderField(ctx, rows.ping, fourth, h.BUTTON_PAIR_REL)
+    out.marker = h.RenderField(ctx, rows.marker, fourth, h.BUTTON_PAIR_REL)
+    if out.ping and out.marker then split(fourth, out.marker) end
+    ctx.scroll:AddChild(fourth)
     h.AddSpacer(ctx.scroll, h.ROW_VSPACER)
     for _, field in ipairs(FIELDS) do alignField(out[field]) end
     alignField(out.emote)
@@ -411,40 +474,85 @@ function Pop.PickEmote(token)
     return true
 end
 
---- The picker's suggestion rows for `text`: Emotes.Search's, each "/command", a voice emote's marked.
-function Pop.EmoteSuggestions(text)
-    local out = {}
-    for i, e in ipairs(NS.Emotes.Search(text, EMOTE_MATCHES)) do
-        out[i] = { text = e.voice and L["%s (voice)"]:format(e.command) or e.command, token = e.token }
-    end
-    return out
+--- Clear the draft's emote (the menu's None).
+function Pop.ClearEmote()
+    if not draft then return end
+    flush()
+    draft.emote = nil
+    refresh()
 end
 
--- The emote picker (THE GAME EMOTE): a path-less EditBox row bound to the draft's emote, showing its
--- command (or the stored token this client lacks), with the library's autocomplete under its box,
--- released with the widget so a frame AceGUI hands on carries no list.
+-- What the emote dropdown shows: the draft's emote as its command, a stored token this client lacks
+-- as that, or None.
+local function emoteShown()
+    if not (draft and draft.emote) then return L["None"] end
+    local cmd = NS.Emotes.Command(draft.emote)
+    if cmd then return NS.Emotes.IsVoice(draft.emote) and L["%s (voice)"]:format(cmd) or cmd end
+    return L["%s (not on this client)"]:format(tostring(draft.emote))
+end
+
+-- One browse-tree node's menu rows (Emotes.Tree): a level of levels, or its emotes, each a radio row
+-- ticked for the draft's emote, a voice emote marked, a pick setting the draft.
+local function treeRows(nodes)
+    local rows = {}
+    for _, n in ipairs(nodes) do
+        if n.emotes then
+            local leaf = {}
+            for i, e in ipairs(n.emotes) do
+                leaf[i] = { label = e.voice and L["%s (voice)"]:format(e.command) or e.command, value = e.token,
+                    radio = true, selected = draft ~= nil and draft.emote == e.token,
+                    onClick = function() Pop.PickEmote(e.token) end }
+            end
+            rows[#rows + 1] = { label = n.label, submenu = leaf }
+        else
+            rows[#rows + 1] = { label = n.label, submenu = treeRows(n.children) }
+        end
+    end
+    return rows
+end
+
+--- The emote dropdown's menu (owner, 2026-11-13): None, a rule, then the client's emotes A to Z as a
+--- cascade (Emotes.Tree: letter runs, ranges where a run is long, at most 10 rows a level and 15
+--- emotes a leaf).
+--- @return table[] rows for W.ContextMenu
+function Pop.EmoteMenuRows()
+    local rows = { { label = L["None"], value = "none", radio = true, selected = draft ~= nil and draft.emote == nil,
+        onClick = function() Pop.ClearEmote() end } }
+    local tree = treeRows(NS.Emotes.Tree())
+    if #tree > 0 then rows[#rows + 1] = { divider = true } end
+    for _, r in ipairs(tree) do rows[#rows + 1] = r end
+    return rows
+end
+
+--- Open the emote menu under `anchor` (a second call closes it, as a dropdown's second click does).
+function Pop.OpenEmoteMenu(anchor)
+    local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
+    if not (W and W.ContextMenu and anchor) then return nil end
+    return W.ContextMenu(anchor, Pop.EmoteMenuRows(), { owner = addonName, panel = true })
+end
+
+-- The emote picker (THE ACTIONS): the stock Dropdown a member row draws, bound to the draft's emote,
+-- whose one entry is what is picked; its button opens the library's cascading menu (Pop.EmoteMenuRows)
+-- in place of the flat list. The button's own scripts come back on release, so the frame AceGUI hands
+-- on is as it made it.
 function Pop.EmotePicker(h, lineWidget)
     local row = {
-        type = "string", dialogControl = "EditBox", label = L["Game emote"], group = L["General"],
-        desc = L["Type to search the game's emotes, then pick one. Voice emotes play their sound."],
-        get = function()
-            if not draft then return "" end
-            return NS.Emotes.Command(draft.emote) or draft.emote or ""
-        end,
-        set = function(v)
-            local token = NS.Emotes.Find(v)
-            if not (token and Pop.PickEmote(token)) then refresh() end
-        end,
+        type = "string", label = L["Emote (optional)"], group = L["General"],
+        desc = L["Pick one of the game's emotes, A to Z. Voice emotes play their sound."],
+        values = function() return { { value = "shown", text = emoteShown() } } end,
+        get = function() return "shown" end,
+        set = function() end,
     }
     local w = h.RenderField(ctx, row, lineWidget)
-    local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
-    local box = w and w.editbox
-    if box and W and W.Autocomplete then
-        local handle = W.Autocomplete(box, { provider = Pop.EmoteSuggestions, maxRows = EMOTE_ROWS,
-            owner = addonName, panel = true,
-            onPick = function(item) if item and item.token then Pop.PickEmote(item.token) end end })
-        Pop.emoteSuggest = handle
-        if handle then onRelease(w, function() handle:Release() end) end
+    if w then
+        local anchor = w.dropdown or w.frame
+        for _, b in ipairs({ w.button, w.button_cover }) do
+            if b and b.GetScript and b.SetScript then
+                local before = b:GetScript("OnClick")
+                b:SetScript("OnClick", function() Pop.OpenEmoteMenu(anchor) end)
+                onRelease(w, function() b:SetScript("OnClick", before) end)
+            end
+        end
     end
     Pop.emoteBox = w
     return w
@@ -513,7 +621,11 @@ local function close()
     gid, cid, draft, baseline = nil, nil, nil, nil
     if Settings.IconBrowser then Settings.IconBrowser.Cancel("popup") end
     errorRow = nil
-    Pop.tokenGlyph, Pop.emoteBox, Pop.emoteSuggest = nil, nil, nil
+    Pop.tokenGlyph, Pop.emoteBox = nil, nil
+    -- The emote menu is the library's one shared menu, parented to UIParent: Escape and Cancel close it
+    -- here, or it would float on with no popup under it (W.CloseMenu).
+    local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
+    if W and W.CloseMenu then W.CloseMenu() end
     boxes, shown = {}, {}
     if ctx then
         H().ClearScroll(ctx)
@@ -576,7 +688,8 @@ function Pop.Open(groupId, calloutId)
         draft = copyFields(baseline)
     else
         baseline = nil
-        draft = { name = "", text = "", channel = "smartGroup", icon = nil, iconColor = nil }
+        draft = { name = "", text = "", channel = "smartGroup", emote = nil, ping = nil, marker = nil,
+            icon = nil, iconColor = nil }
     end
     local title = calloutId and L["Edit callout"] or L["New callout"]
     ctx.panel.title:SetText(title)
@@ -591,8 +704,9 @@ end
 -- The value the seam row takes for a draft field: an icon as text (the row's normalize turns a
 -- texture id back into a number), and an icon or its color false for none.
 local function seamValue(field, value)
-    if field ~= "icon" and field ~= "iconColor" and field ~= "emote" then return value end
+    if not NONE_NIL[field] then return value end
     if value == nil then return false end
+    if field == "marker" then return value end
     return tostring(value)
 end
 
@@ -607,17 +721,23 @@ function Pop.Save()
         return false, "noCallout"
     end
     flush()
-    -- One action per callout (R7): a game emote keeps its token and no text, a chat callout no token.
-    if isGameEmote(draft) then draft.text = "" else draft.emote = nil end
+    -- Channel None is no Line: the Text box is not drawn, and a hidden box keeps nothing. Every
+    -- other action the draft carries is kept beside it (#16).
+    if isGameEmote(draft) then draft.text = "" end
     local field, label, why = check(draft)
     if field then
-        showError(L["%s: %s"]:format(label, tostring(why)))
+        showError(label and L["%s: %s"]:format(label, tostring(why)) or tostring(why))
         return false, field
     end
     local ok, reason
     if cid then
         local S, id, d, base = NS.SchemaRuntime, cid, draft, baseline
-        ok, reason = NS.Library.Batch(function()
+        -- The edit as a whole keeps the action rule (spec §2), so a Line swapped for an Emote is not
+        -- refused field by field on the way.
+        local final = {}
+        for k, v in pairs(p.callouts[id]) do final[k] = v end
+        for _, f in ipairs(DRAFT) do final[f] = d[f] end
+        ok, reason = NS.Library.WriteActions(id, final, function() return NS.Library.Batch(function()
             -- DRAFT's order: the icon lands before its color, which the color row checks against.
             for _, f in ipairs(DRAFT) do
                 if d[f] ~= base[f] then
@@ -626,13 +746,13 @@ function Pop.Save()
                 end
             end
             return true
-        end)
+        end) end)
     else
         ok, reason = NS.Library.CreateCalloutIn(gid, draft)
         ok = ok ~= nil
     end
     if not ok then
-        showError(tostring(reason or ""))
+        showError(NS.Library.ACTION_WHY[reason] or tostring(reason or ""))
         return false, reason
     end
     close()

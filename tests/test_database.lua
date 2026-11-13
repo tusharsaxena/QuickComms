@@ -623,6 +623,14 @@ test("database: [QFE-E3] step 19 adds the Emotes set to a stored profile once, a
     assertEqual(p.dials.d2.groups, "damaged")
     assertEqual(p.callouts.c1.text, "Cheers all!", "an edited callout is the player's")
     assertEqual(#p.groups.g1.callouts, 1, "Solo's own list is left as it is")
+    -- the replay from 18 runs step 20 too: the edited Solo callout gains no emote, and this profile
+    -- holds no Dungeon or Raid set, so no Heal me row is added anywhere
+    assertNil(p.callouts.c1.emote, "an edited Solo callout is the player's")
+    local heal = 0
+    for _, c in pairs(p.callouts) do
+        if c.origin == "bi.mplus.healme" or c.origin == "bi.raid.healme" then heal = heal + 1 end
+    end
+    assertEqual(heal, 0, "no Dungeon or Raid set: no Heal me row")
     assertTrue(p.seededSets["bi.emotes"], "given, so Prepare adds none later")
     assertNil(next(db.sv.profiles.Never.groups), "a profile never prepared is left to Prepare")
     -- a second run adds nothing; nor does one after the player deleted the set
@@ -638,4 +646,265 @@ test("database: [QFE-E3] step 19 adds the Emotes set to a stored profile once, a
     NS.Library.MigrateEmotesSet(nil)
     NS.Library.MigrateEmotesSet({})
     NS.Library.MigrateEmotesSet({ seeded = true, seededSets = {}, groups = "damaged" })
+end)
+
+-- ── step 6 carries ping and marker (CA-M1-4) ──────────────────────────────────────────────────
+
+test("database: [CA-M1-4] step 6's raw copy keeps a shipped callout's ping and marker", function()
+    local NS = T.bootAddon()
+    local db, BI = NS.addon.db, NS.BuiltIns
+    local first = BI.groups["bi.bg.ab"].callouts[1]
+    local c = BI.callouts[first]
+    c.ping, c.marker = "attack", 2
+    db.sv.profiles.Old = prePolishProfile(BI)
+    db.global.schemaVersion = 5
+    NS.addon:RunMigrations()
+    c.ping, c.marker = nil, nil
+    local p = db.sv.profiles.Old
+    local copy = p.callouts[p.groups.g3.callouts[1]]
+    assertEqual(copy.origin, first)
+    -- red under: addOwnCallouts' field list without ping and marker
+    assertEqual(copy.ping, "attack")
+    assertEqual(copy.marker, 2)
+end)
+
+-- ── step 20 part 1: emotes on unedited shipped callouts (CA-M3-3, combined actions §8) ────────
+
+-- A stored profile as builds before step 20 seeded it: Hello and Rare unedited, as shipped.
+local function preComboProfile()
+    return { seeded = true, nextId = 10,
+        groups = { g1 = { name = "In Group", origin = "bi.group", callouts = { "c1", "c2" }, when = {} } },
+        callouts = {
+            c1 = { name = "Hello", text = "Hello!", channel = "smartGroup", origin = "bi.group.hello" },
+            c2 = { name = "Rare spotted", text = "Rare spotted: {target} @ {coordinates}", channel = "general",
+                origin = "bi.world.rare" },
+        } }
+end
+
+test("database: [CA-M3-3] step 20 gives an unedited shipped callout its emote, once, and writes nothing else", function()
+    local NS = T.newAddon()
+    local p = preComboProfile()
+    -- red under: no Lib.MigrateComboCallouts in modules/Library_Migrate.lua
+    NS.Library.MigrateComboCallouts(p)
+    assertEqual(p.callouts.c1.emote, "WAVE")
+    assertEqual(p.callouts.c2.emote, "POINT")
+    assertEqual(p.callouts.c1.text, "Hello!")
+    assertEqual(p.callouts.c1.channel, "smartGroup")
+    assertNil(p.callouts.c1.ping) assertNil(p.callouts.c1.marker)
+    local keys = 0
+    for _ in pairs(p.callouts.c1) do keys = keys + 1 end
+    assertEqual(keys, 5, "name, text, channel, origin and the emote")
+    NS.Library.MigrateComboCallouts(p)
+    assertEqual(p.callouts.c1.emote, "WAVE", "a re-run is a no-op")
+end)
+
+test("database: [CA-M3-3] step 20 leaves an edited callout alone: text, channel, emote, ping or marker", function()
+    local NS = T.newAddon()
+    local edits = {
+        text = function(c) c.text = "Hi all!" end,
+        locale = function(c) c.text = "Hallo!" end,   -- seeded under another client language
+        channel = function(c) c.channel = "say" end,
+        emote = function(c) c.emote = "BOW" end,
+        ping = function(c) c.ping = "attack" end,
+        marker = function(c) c.marker = 8 end,
+    }
+    for what, edit in pairs(edits) do
+        local p = preComboProfile()
+        edit(p.callouts.c1)
+        local before = {}
+        for k, v in pairs(p.callouts.c1) do before[k] = v end
+        NS.Library.MigrateComboCallouts(p)
+        -- red under: an "unedited" test that skips this field
+        for k, v in pairs(before) do assertEqual(p.callouts.c1[k], v, what .. ": " .. k) end
+        if what ~= "emote" then assertNil(p.callouts.c1.emote, what) end
+        assertEqual(p.callouts.c2.emote, "POINT", what .. ": the unedited one still gains")
+    end
+end)
+
+test("database: [CA-M3-3] step 20: renamed or recolored still gains (F4a); no origin gains nothing", function()
+    local NS = T.newAddon()
+    local p = preComboProfile()
+    p.callouts.c1.name, p.callouts.c1.icon, p.callouts.c1.iconColor = "Hiya", 1234, "ff0000"
+    p.callouts.c3 = { name = "Hello", text = "Hello!", channel = "smartGroup" }   -- a copy: no origin
+    p.callouts.c4 = { name = "Hs", text = "Healthstone please!", channel = "smartGroup", origin = "bi.group.hs" }
+    p.callouts.c5 = "damaged"
+    NS.Library.MigrateComboCallouts(p)
+    -- red under: name, icon or icon color compared
+    assertEqual(p.callouts.c1.emote, "WAVE", "name, icon and icon color are not compared")
+    assertEqual(p.callouts.c1.name, "Hiya")
+    assertNil(p.callouts.c3.emote, "a copy carries no origin")
+    assertNil(p.callouts.c4.emote, "a shipped callout the list does not name")
+    assertEqual(p.callouts.c5, "damaged")
+end)
+
+test("database: [CA-M3-3] step 20 is safe on nil, empty, unseeded and damaged profiles", function()
+    local NS = T.newAddon()
+    local M = NS.Library.MigrateComboCallouts
+    M(nil) M({}) M("junk")
+    local unseeded = preComboProfile()
+    unseeded.seeded = nil
+    M(unseeded)
+    assertNil(unseeded.callouts.c1.emote, "an unprepared profile is left to Prepare")
+    for _, field in ipairs({ "groups", "callouts", "nextId" }) do
+        local p = preComboProfile()
+        p[field] = "damaged"
+        M(p)
+        assertEqual(p[field], "damaged", field)
+        if field ~= "callouts" then assertNil(p.callouts.c1.emote, field .. " damaged: nothing written") end
+    end
+end)
+
+-- ── step 20 part 2: the two Heal me rows (CA-M3-4, combined actions §8) ──────────────────────
+
+-- A stored profile as builds before step 20 seeded the Dungeon and Raid sets: Dungeon ending on
+-- Kick order, Raid's raid list ending on Healthstones before its lead list.
+local function preHealProfile()
+    return { seeded = true, nextId = 20,
+        groups = {
+            g1 = { name = "Dungeon", origin = "bi.mplus", callouts = { "c1", "c2" }, when = {} },
+            g2 = { name = "Raid", origin = "bi.raid", callouts = { "c3", "c4", "c5" }, when = {} },
+        },
+        callouts = {
+            c1 = { name = "Pulling", text = "Pulling next pack", channel = "smartGroup", origin = "bi.mplus.pull" },
+            c2 = { name = "Kick order", text = "Kick order: {rt1} {rt2} {rt3}", channel = "smartGroup",
+                origin = "bi.mplus.kicks" },
+            c3 = { name = "Healthstones", text = "Healthstones/cauldron down", channel = "raid", origin = "bi.raid.stones" },
+            c4 = { name = "Pull in 10", text = "Pull in 10", channel = "smartLead", origin = "bi.raid.pull10" },
+            c5 = { name = "Wipe", text = "Wipe it, run back", channel = "smartLead", origin = "bi.raid.wipe" },
+        } }
+end
+
+local function heldOrigin(p, gid, origin)
+    local n = 0
+    for _, cid in ipairs(p.groups[gid].callouts) do
+        local c = p.callouts[cid]
+        if type(c) == "table" and c.origin == origin then n = n + 1 end
+    end
+    return n
+end
+
+test("database: [CA-M3-4] step 20 inserts each Heal me row once, after its predecessor, from the frozen row", function()
+    local NS = T.newAddon()
+    local BI = NS.BuiltIns
+    -- a later change to BuiltIns must not change what step 20 writes
+    local shipped = BI.callouts["bi.mplus.healme"]
+    local fields = { "text", "channel", "emote", "icon", "iconColor" }
+    local saved = {}
+    for _, f in ipairs(fields) do saved[f] = shipped[f] end
+    shipped.text, shipped.channel, shipped.emote = "changed after load", "party", "WAVE"
+    shipped.icon, shipped.iconColor = "changed icon", "ff0000"
+    local p = preHealProfile()
+    NS.Library.MigrateComboCallouts(p)
+    for _, f in ipairs(fields) do shipped[f] = saved[f] end
+    -- red under: no part 2 in Lib.MigrateComboCallouts
+    local d = p.groups.g1.callouts
+    assertEqual(#d, 3, "Dungeon gains one")
+    local heal = p.callouts[d[3]]
+    assertEqual(heal.origin, "bi.mplus.healme")
+    assertEqual(heal.name, "Heal me")
+    assertEqual(heal.text, "Need heals!", "the frozen row, not BI at run time")
+    assertEqual(heal.channel, "smartGroup", "the frozen channel")
+    assertEqual(heal.emote, "HEALME", "the frozen emote")
+    assertEqual(heal.icon, NS.Icon("gi:heart-plus"), "the frozen glyph")
+    assertEqual(heal.iconColor, "40d040", "the frozen color")
+    assertNil(heal.glyph, "glyph is not a stored field")
+    assertNil(heal.ping) assertNil(heal.marker)
+    local r = p.groups.g2.callouts
+    assertEqual(#r, 4, "Raid gains one")
+    local rheal = p.callouts[r[2]]
+    assertEqual(rheal.origin, "bi.raid.healme", "after Healthstones, before the lead list")
+    assertEqual(rheal.text, "Need heals on me!")
+    assertEqual(rheal.channel, "raid")
+    assertEqual(rheal.emote, "HEALME")
+    assertTrue(tonumber(d[3]:sub(2)) >= 20 and tonumber(r[2]:sub(2)) >= 20, "fresh ids above the counter")
+    assertTrue(tonumber(d[3]:sub(2)) < tonumber(r[2]:sub(2)), "shipped order: Dungeon first")
+    assertTrue(p.nextId > tonumber(r[2]:sub(2)), "the counter moves past both")
+    -- idempotent
+    NS.Library.MigrateComboCallouts(p)
+    assertEqual(#p.groups.g1.callouts, 3)
+    assertEqual(#p.groups.g2.callouts, 4)
+end)
+
+test("database: [CA-M3-4] step 20 part 2: appended without a predecessor; a renamed or reordered set still gains", function()
+    local NS = T.newAddon()
+    local p = preHealProfile()
+    p.groups.g1.name = "My dungeon"
+    p.groups.g1.callouts = { "c2", "c1" }        -- reordered
+    p.groups.g2.callouts = { "c4", "c5" }        -- Healthstones removed from the list
+    p.callouts.c3 = nil                          -- and deleted
+    NS.Library.MigrateComboCallouts(p)
+    assertEqual(p.callouts[p.groups.g1.callouts[2]].origin, "bi.mplus.healme", "right after Kick order")
+    assertEqual(p.callouts[p.groups.g1.callouts[3]].origin, "bi.mplus.pull")
+    assertEqual(#p.groups.g2.callouts, 3)
+    assertEqual(p.callouts[p.groups.g2.callouts[3]].origin, "bi.raid.healme", "no predecessor: appended")
+    assertNil(p.callouts.c3, "a deleted callout is not brought back")
+    assertEqual(heldOrigin(p, "g2", "bi.raid.stones"), 0)
+end)
+
+test("database: [CA-M3-4] step 20 part 2: a deleted or duplicated set gains nothing; a held row is not added twice", function()
+    local NS = T.newAddon()
+    local p = preHealProfile()
+    p.groups.g2 = nil                                                -- Raid deleted
+    p.groups.g3 = { name = "Dungeon copy", callouts = { "c6" }, when = {} }  -- a copy: no origin
+    p.callouts.c6 = { name = "Kick order", text = "x", channel = "smartGroup" }
+    p.callouts.c7 = { name = "Heal me", text = "mine", channel = "party", origin = "bi.mplus.healme" }
+    p.groups.g1.callouts[#p.groups.g1.callouts + 1] = "c7"          -- the row is held already
+    NS.Library.MigrateComboCallouts(p)
+    assertEqual(#p.groups.g1.callouts, 3, "held already: nothing added")
+    assertEqual(p.callouts.c7.text, "mine")
+    assertEqual(#p.groups.g3.callouts, 1, "a copy gains nothing")
+    local raid = 0
+    for _, c in pairs(p.callouts) do if c.origin == "bi.raid.healme" then raid = raid + 1 end end
+    assertEqual(raid, 0, "a deleted set stays deleted")
+end)
+
+test("database: [CA-M3-4] step 20 part 2: a stale counter whose fresh id the list holds already adds it once", function()
+    local NS = T.newAddon()
+    local p = preHealProfile()
+    -- nextId 20 is stale: Dungeon's list holds a dangling "c20", and no callout c20 is stored, so the
+    -- id step 20 takes for Heal me is one the list holds already
+    p.groups.g1.callouts[#p.groups.g1.callouts + 1] = "c20"
+    NS.Library.MigrateComboCallouts(p)
+    -- red under: placeCalloutAfter without its held-already return
+    local n = 0
+    for _, cid in ipairs(p.groups.g1.callouts) do if cid == "c20" then n = n + 1 end end
+    assertEqual(n, 1, "the list does not gain a second c20")
+    assertEqual(#p.groups.g1.callouts, 3)
+    assertEqual(p.callouts.c20.origin, "bi.mplus.healme", "the held entry now names the new callout")
+end)
+
+test("database: [CA-M3-4] step 20 part 2 skips a damaged group and a dangling or damaged list entry", function()
+    local NS = T.newAddon()
+    local p = preHealProfile()
+    p.groups.g2.callouts = "damaged"
+    p.groups.g1.callouts = { "c9", "c1", "c2" }   -- c9 is not stored
+    p.callouts.c1 = "damaged"
+    NS.Library.MigrateComboCallouts(p)
+    assertEqual(p.groups.g2.callouts, "damaged", "a damaged group is skipped")
+    local d = p.groups.g1.callouts
+    assertEqual(#d, 4)
+    assertEqual(d[1] .. "," .. d[2] .. "," .. d[3], "c9,c1,c2")
+    assertEqual(p.callouts[d[4]].origin, "bi.mplus.healme", "after Kick order, past the dangling and damaged ids")
+end)
+
+-- ── step 20 registered (CA-M3-5) ─────────────────────────────────────────────────────────────
+
+test("database: [CA-M3-5] the runner from 19 runs step 20 on every stored profile once", function()
+    local NS = T.bootAddon()
+    local db = NS.addon.db
+    db.sv.profiles.Old = preComboProfile()
+    db.sv.profiles.Heal = preHealProfile()
+    db.global.schemaVersion = 19
+    NS.addon:RunMigrations()
+    -- red under: no step 20 in core/Database.lua NS.MIGRATIONS
+    assertEqual(db.global.schemaVersion, 20)
+    local old, heal = db.sv.profiles.Old, db.sv.profiles.Heal
+    assertEqual(old.callouts.c1.emote, "WAVE", "part 1 on a stored profile")
+    assertEqual(heal.callouts.c1.emote, "CHARGE", "Pulling next pack gains CHARGE")
+    assertEqual(#heal.groups.g1.callouts, 3, "part 2: Dungeon's Heal me")
+    assertEqual(#heal.groups.g2.callouts, 4, "part 2: Raid's Heal me")
+    db.global.schemaVersion = 19
+    NS.addon:RunMigrations()
+    assertEqual(#heal.groups.g1.callouts, 3, "a re-stamp adds nothing twice")
+    assertEqual(#heal.groups.g2.callouts, 4)
 end)

@@ -12,12 +12,12 @@ local BI, L = NS.BuiltIns, NS.L
 local C = BI.COLOR
 local ID = "bi.emotes"
 
--- Rows of { short, name, token, glyph, color }: each a game emote callout with no text.
+-- Rows of { short, name, token, glyph, color }: each a game emote callout with no text, its token
+-- as BI.Callout's `extra`.
 local function emoteCallouts(rows)
     local ids = {}
     for n, r in ipairs(rows) do
-        ids[n] = BI.Callout(ID, r[1], r[2], "", "gameEmote", r[4], r[5])
-        BI.callouts[ids[n]].emote = r[3]
+        ids[n] = BI.Callout(ID, r[1], r[2], "", "gameEmote", r[4], r[5], { emote = r[3] })
     end
     return ids
 end

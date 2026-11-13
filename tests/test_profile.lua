@@ -53,7 +53,7 @@ test("profile: schema version target is 15 (a dial still on the old animation de
     local NS = T.bootAddon()
     -- red under: no step 11 in core/Database.lua (LibKa0s v1.82.0, D-07: a stored OUTLINE moves to
     -- From skin once); step 10 is QC-03's reset onto the skin (O2)
-    assertEqual(NS.SCHEMA_VERSION, 19)
+    assertEqual(NS.SCHEMA_VERSION, 20)
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
 end)
 
@@ -143,9 +143,43 @@ test("profile: step 18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in ev
     NS.addon:RunMigrations()
     local mine, other = db.profile.skin.font, db.sv.profiles.other
     db.profile.skin.font, db.sv.profiles.other = saved, nil
-    assertEqual(db.global.schemaVersion, 19)
+    assertEqual(db.global.schemaVersion, 20)
     assertEqual(mine, "Ka0s Ubuntu", "the active profile's skin override")
     assertEqual(other.pads.p.title.font, "Ka0s Ubuntu", "a pad's font in a profile not active")
     assertEqual(other.dials.d.label.font, "Friz Quadrata TT", "Blizzard's own Friz stays")
     assertEqual(NS.RetireFonts(other), 0, "a second pass moves nothing")
+end)
+
+test("profile: [CA-M4-3] the thank defaults: on in the open world alone (R-B), an emote, no mute", function()
+    local NS = T.bootAddon()
+    local t = NS.db.profile.thank
+    assertEqual(t.enabled, true)
+    assertEqual(t.send, "emote")
+    assertEqual(t.text, NS.L["Thanks for the {buff}, {name}!"])
+    assertEqual(t.mute, "none")
+    assertEqual(t.raidBuffsOnly, false)
+    assertEqual(t.position, false)
+    local on = 0
+    for kind, v in pairs(t.content) do
+        if v then on = on + 1 end
+        assertTrue(kind == "openWorld" or v == false, kind .. " is off")
+    end
+    assertEqual(on, 1, "the open world alone")
+    for _, kind in ipairs({ "openWorld", "dungeon", "mythicPlus", "raid", "delve", "scenario", "battleground",
+        "arena", "housing" }) do
+        assertTrue(t.content[kind] ~= nil, kind .. " has a default")
+    end
+end)
+
+test("profile: [CA-M4-3] the auto-thank constants (spec §9)", function()
+    local NS = T.newAddon()
+    local C = NS.Constants.THANK
+    assertEqual(C.MIN_DURATION, 60)
+    assertEqual(C.COOLDOWN, 600)
+    assertEqual(C.GAP, 1.5)
+    assertEqual(C.STACK, 3)
+    assertEqual(C.MAX_QUEUE, 5)
+    assertEqual(C.COMBAT_QUEUE, 10)
+    assertEqual(C.DURATION, 10)
+    assertEqual(C.FADE, 2)
 end)

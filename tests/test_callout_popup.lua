@@ -836,6 +836,8 @@ test("popup: [icons] Add saves a glyph with its color; a malformed color stays o
     local w = P.during(function() Pop.Open(gid) end)
     assertNil(Pop.Draft().iconColor)
     P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Mark")
+    -- a callout sets at least one action (CA-M1-3): its Line
+    P.find(w, "EditBox", "Text"):__fire("OnEnterPressed", "Marked")
     Pop.Draft().icon, Pop.Draft().iconColor = NS.Icon("star"), "zz"
     local before = count(p.callouts)
     local ok, why = Pop.Save()
@@ -973,4 +975,349 @@ test("popup: [icons] an icon that is no texture stays open and names the icon ch
     -- red under: name the icon row's text box ("An icon is a texture id or a texture path.")
     assertTrue(labelWith(P, w, "Icon: That is not a texture. Click Choose icon… and pick another.") ~= nil)
     assertNil(NS.db.profile.callouts[cid].icon, "nothing written")
+end)
+
+-- ── the action fields (CA-M1-11, combined actions §7) ──────────────────────────────────────────
+
+test("popup: [CA-M1-11] the draft carries emote, ping and marker, after the emote and before the icon", function()
+    local _, _, _, Pop = open()
+    -- red under: DRAFT without ping and marker (a Save would never see them)
+    assertEqual(table.concat(Pop.DRAFT, ","), "name,text,channel,emote,ping,marker,icon,iconColor")
+end)
+
+test("popup: [CA-M1-11] a callout set to a ping by /qc set opens with it, and Save keeps it", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local cid = NS.Library.CreateCalloutIn(gid, { name = "Ping", text = "", channel = "gameEmote", ping = "attack" })
+    assertTrue((NS.SchemaRuntime.Set("callout.ping", "warning", cid)))
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    -- red under: copyFields leaving ping out of the draft
+    assertEqual(Pop.Draft().ping, "warning")
+    assertNil(Pop.Draft().marker, "a marker that is not set is nil in the draft")
+    -- the ping and marker rows are drawn from CA-M2-7 on, showing the draft
+    assertEqual(P.find(w, "Dropdown", NS.L["Ping"]).value, "warning")
+    assertEqual(P.find(w, "Dropdown", NS.L["Raid marker"]).value, 0, "no marker shows None")
+    P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Warn")
+    -- red under: check() asking a game-emote channel for an emote the ping stands in for
+    assertTrue(Pop.Save())
+    local c = NS.db.profile.callouts[cid]
+    assertEqual(c.name, "Warn")
+    assertEqual(c.ping, "warning")
+    assertTrue(not c.emote)
+end)
+
+test("popup: [CA-M1-11] a marker-only callout saves with its marker; an emote keeps its emote", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local cid = NS.Library.CreateCalloutIn(gid, { name = "Skull", text = "", channel = "gameEmote", marker = 8 })
+    P.during(function() Pop.Open(gid, cid) end)
+    assertEqual(Pop.Draft().marker, 8)
+    Pop.Draft().name = "Kill"
+    assertTrue(Pop.Save())
+    assertEqual(NS.db.profile.callouts[cid].marker, 8)
+    assertEqual(NS.db.profile.callouts[cid].name, "Kill")
+    local wave = NS.Library.CreateCalloutIn(gid, { name = "Wave", text = "", channel = "gameEmote", emote = "WAVE" })
+    P.during(function() Pop.Open(gid, wave) end)
+    Pop.Draft().name = "Hi"
+    assertTrue(Pop.Save())
+    assertEqual(NS.db.profile.callouts[wave].emote, "WAVE")
+    assertTrue(not NS.db.profile.callouts[wave].ping)
+end)
+
+test("popup: [CA-M1-R2] a ping-only chat callout (empty text on party) saves a rename and keeps its ping", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local cid = NS.Library.CreateCalloutIn(gid, { name = "Ping", text = "", channel = "party", ping = "attack" })
+    P.during(function() Pop.Open(gid, cid) end)
+    Pop.Draft().name = "Go"
+    -- red under: Save clearing the ping on any channel that is not gameEmote (noAction refuses it)
+    assertTrue(Pop.Save())
+    local c = NS.db.profile.callouts[cid]
+    assertEqual(c.name, "Go")
+    assertEqual(c.ping, "attack")
+    local blank = NS.Library.CreateCalloutIn(gid, { name = "Mark", text = "  ", channel = "party", marker = 8 })
+    P.during(function() Pop.Open(gid, blank) end)
+    Pop.Draft().name = "Skull"
+    assertTrue(Pop.Save(), "whitespace text is no Line, so the marker stays")
+    assertEqual(NS.db.profile.callouts[blank].marker, 8)
+end)
+
+test("popup: [CA-M2-7] a Line or an emote picked for a ping callout sits beside the ping", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local cid = NS.Library.CreateCalloutIn(gid, { name = "Ping", text = "", channel = "gameEmote", ping = "attack" })
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    P.find(w, "Dropdown", "Channel"):__fire("OnValueChanged", "party")
+    Pop.Draft().text = "On me"
+    -- red under: the R7 exclusion (a Line replacing the ping on Save)
+    assertTrue(Pop.Save())
+    local c = NS.db.profile.callouts[cid]
+    assertEqual(c.text, "On me")
+    assertEqual(c.ping, "attack")
+    local m8 = NS.Library.CreateCalloutIn(gid, { name = "Skull", text = "", channel = "gameEmote", marker = 8 })
+    P.during(function() Pop.Open(gid, m8) end)
+    Pop.Draft().emote = "POINT"
+    assertTrue(Pop.Save())
+    assertEqual(NS.db.profile.callouts[m8].emote, "POINT")
+    assertEqual(NS.db.profile.callouts[m8].marker, 8)
+end)
+
+-- ── the four action slots (CA-M2-7, combined actions §7) ─────────────────────────────────────
+
+-- The body's lines, in order, skipping the spacers between them (empty SimpleGroups).
+local function lines(body)
+    local out = {}
+    for _, kid in ipairs(body.children) do
+        if kid.type == "SimpleGroup" and kid.children and #kid.children > 0 then out[#out + 1] = kid end
+    end
+    return out
+end
+
+test("popup: [CA-M2-7] the member rows the popup binds: name, channel, text, ping, marker", function()
+    local _, _, _, Pop = open()
+    -- red under: FIELDS without ping and marker (no dropdown is bound to the draft)
+    assertEqual(table.concat(Pop.FIELDS, ","), "name,channel,text,ping,marker")
+end)
+
+test("popup: [CA-M2-7] four slots: Name | Channel, Text, the emote, Ping | Marker, then the icon", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    local L = NS.L
+    local body = lines(P.find(w, "SimpleGroup"))
+    local emote = P.find(w, "Dropdown", L["Emote (optional)"])
+    local ping, marker = P.find(w, "Dropdown", L["Ping"]), P.find(w, "Dropdown", L["Raid marker"])
+    -- red under: the emote picker drawn only for the None channel
+    assertTrue(emote ~= nil, "the emote picker is always drawn")
+    assertTrue(body[2].children[1] == P.find(w, "EditBox", "Text"), "line 2: Text")
+    assertTrue(body[3].children[1] == emote, "line 3: the emote picker")
+    assertEqual(#body[3].children, 1, "alone on its line")
+    assertTrue(emote.fullWidth, "across both columns")
+    -- red under: Ping and Marker drawn on lines of their own
+    assertEqual(#body[4].children, 3, "line 4: Ping, the gutter, Marker")
+    assertTrue(body[4].children[1] == ping and body[4].children[3] == marker)
+    assertEqual(body[4].children[2].width, GUTTER)
+    assertEqual(ping.relativeWidth, 0.492)
+    assertEqual(marker.relativeWidth, 0.492)
+    -- the ping and marker labels on the boxes' edge, as Channel's is
+    for _, dd in ipairs({ ping, marker, emote }) do
+        assertEqual(select(4, dd.label:GetPoint(1)), 2, dd.labelText .. "'s label sits 2 in")
+    end
+    assertEqual(select(4, ping.dropdown:GetPoint(1)), -17)
+    assertEqual(ping.value, "none", "no ping shows None")
+    assertEqual(marker.value, 0, "no marker shows None")
+end)
+
+test("popup: [CA-M2-7] picking a ping and a marker writes the draft; Save keeps them beside the Line", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    P.find(w, "Dropdown", NS.L["Ping"]):__fire("OnValueChanged", "attack")
+    P.find(w, "Dropdown", NS.L["Raid marker"]):__fire("OnValueChanged", 8)
+    assertEqual(Pop.Draft().ping, "attack")
+    assertEqual(Pop.Draft().marker, 8)
+    Pop.Draft().emote = "POINT"
+    assertTrue(Pop.Save())
+    local c = NS.db.profile.callouts[cid]
+    assertEqual(c.text, "Kick")
+    assertEqual(c.channel, "party")
+    assertEqual(c.emote, "POINT")
+    assertEqual(c.ping, "attack")
+    assertEqual(c.marker, 8)
+    -- None on each takes it off again
+    w = P.during(function() Pop.Open(gid, cid) end)
+    P.find(w, "Dropdown", NS.L["Ping"]):__fire("OnValueChanged", "none")
+    P.find(w, "Dropdown", NS.L["Raid marker"]):__fire("OnValueChanged", 0)
+    assertNil(Pop.Draft().ping)
+    assertNil(Pop.Draft().marker)
+    assertTrue(Pop.Save())
+    c = NS.db.profile.callouts[cid]
+    assertTrue(not c.ping and not c.marker)
+    assertEqual(c.emote, "POINT")
+end)
+
+test("popup: [CA-M2-7] channel None hides Text, keeps the emote and the slots, and Save writes no text", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    local L = NS.L
+    w = P.during(function() P.find(w, "Dropdown", "Channel"):__fire("OnValueChanged", "gameEmote") end)
+    -- red under: the Text box drawn whatever the channel
+    assertNil(P.find(w, "EditBox", "Text"), "no Line, no Text box")
+    assertTrue(P.find(w, "Dropdown", L["Emote (optional)"]) ~= nil)
+    assertTrue(P.find(w, "Dropdown", L["Ping"]) ~= nil and P.find(w, "Dropdown", L["Raid marker"]) ~= nil)
+    P.find(w, "Dropdown", L["Raid marker"]):__fire("OnValueChanged", 8)
+    -- red under: Save keeping the hidden box's text
+    assertTrue(Pop.Save())
+    local c = NS.db.profile.callouts[cid]
+    assertEqual(c.channel, "gameEmote")
+    assertEqual(c.text, "", "a hidden box keeps nothing")
+    assertEqual(c.marker, 8)
+end)
+
+test("popup: [CA-M2-7] the emote menu's None clears the draft's emote, and Save takes it off", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local cid = NS.Library.CreateCalloutIn(gid, { name = "Kick", text = "Kick", channel = "party", emote = "POINT" })
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    local dd = P.find(w, "Dropdown", NS.L["Emote (optional)"])
+    local shown = NS.Emotes.Command("POINT") and "/point" or NS.L["%s (not on this client)"]:format("POINT")
+    assertEqual(dd.list[dd.value], shown, "the dropdown shows the picked emote")
+    local none = Pop.EmoteMenuRows()[1]
+    assertEqual(none.label, NS.L["None"])
+    assertFalse(none.selected, "None is not ticked while an emote is set")
+    -- red under: a None row that only refreshes (the emote stays)
+    none.onClick(none.value, none)
+    assertNil(Pop.Draft().emote)
+    assertTrue(Pop.Save())
+    assertEqual(NS.db.profile.callouts[cid].emote, false)
+    assertEqual(NS.db.profile.callouts[cid].text, "Kick")
+end)
+
+test("popup: [CA-M2-7] Add opens with no emote, ping or marker", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local w = P.during(function() Pop.Open(gid) end)
+    local d = Pop.Draft()
+    assertNil(d.emote)
+    assertNil(d.ping)
+    assertNil(d.marker)
+    local dd = P.find(w, "Dropdown", NS.L["Emote (optional)"])
+    assertEqual(dd.list[dd.value], NS.L["None"])
+end)
+
+test("popup: [CA-M2-7] D10: the Channel list and the Groups rows call gameEmote None (no chat line)", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local w = P.during(function() Pop.Open(gid) end)
+    local found
+    for _, v in ipairs(NS.SchemaRuntime.FindRow("callout.channel").values) do
+        if v.value == "gameEmote" then found = v.text end
+    end
+    -- red under: the Game emote label kept on the channel list (SchemaMembers.lua CHANNEL_LABEL)
+    assertEqual(found, "None (no chat line)")
+    assertTrue(P.find(w, "Dropdown", "Channel") ~= nil)
+    local cid = NS.Library.CreateCalloutIn(gid, { name = "Wave", text = "", channel = "gameEmote", emote = "WAVE" })
+    local label = NS.addon.Settings.Groups.CalloutLabel(NS.db.profile.callouts[cid], cid)
+    -- red under: SHORT_CHANNEL still naming it Game emote (settings/Groups.lua)
+    assertTrue(label:find("None (no chat line)", 1, true) ~= nil, label)
+    assertTrue(label:find("Game emote", 1, true) == nil, label)
+end)
+
+test("popup: [CA-M2-7] the window is measured again when the channel swaps the Text line in or out", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    local heights = {}
+    rawset(Pop.frame, "SetHeight", function(_, v) heights[#heights + 1] = v end)
+    -- red under: the re-render on a None swap without its fit()
+    P.find(w, "Dropdown", "Channel"):__fire("OnValueChanged", "gameEmote")
+    assertTrue(#heights > 0, "fit() sized the window after the re-render")
+end)
+
+-- ── the split check (CA-M2-8, combined actions §7) ───────────────────────────────────────────
+
+-- The error line's text with its color escape taken off.
+local function errorText(P, w, needle)
+    local label = labelWith(P, w, needle)
+    return label and label.text:gsub("^|c%x%x%x%x%x%x%x%x", ""):gsub("|r$", "")
+end
+
+test("popup: [CA-M2-8] the Line is counted in bytes: 255 two-byte letters' worth is refused, 255 bytes saves", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    -- 128 letters of two bytes: 256 bytes, well under 255 characters
+    Pop.Draft().text = ("\195\169"):rep(128)
+    local ok, field = Pop.Save()
+    -- red under: counting characters (chars() <= 255 passes it)
+    assertFalse(ok)
+    assertEqual(field, "text")
+    local refusal = "Text: Too long: with its channel and tokens, a line is at most 255 bytes."
+    assertEqual(errorText(P, w, "Text: Too long"), refusal)
+    assertEqual(NS.db.profile.callouts[cid].text, "Kick", "nothing written")
+    -- CA-M2-R3: "/p " and 253 bytes is 256, which the bake refuses (red under: the raw text alone counted)
+    Pop.Draft().text = ("\195\169"):rep(126) .. "a"
+    assertFalse((Pop.Save()), "253 bytes of text and the /p prefix is over the cap")
+    -- the largest Save is a Line that bakes: "/p " and 252 bytes is 255
+    Pop.Draft().text = ("\195\169"):rep(126)
+    assertTrue(Pop.Save(), "255 bytes with the prefix is the cap, not over it")
+    local stored = NS.db.profile.callouts[cid]
+    local line, reason = NS.Bake.Bake(stored, { group = "party" }, {})
+    assertEqual(reason, nil) assertEqual(#line, 255)
+end)
+
+test("popup: [CA-M2-R3] a live token counts what the game may fill in, as the bake does", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    P.during(function() Pop.Open(gid, cid) end)
+    -- "/p " + 240 + " %t" is 246, plus LIVE_NOMINAL (12) for %t: 258, over the cap
+    Pop.Draft().text = ("a"):rep(240) .. " {target}"
+    -- red under: the raw text's 249 bytes measured alone
+    assertFalse((Pop.Save()))
+    Pop.Draft().text = ("a"):rep(237) .. " {target}"
+    assertTrue(Pop.Save(), "255 with the prefix and the token's nominal bytes")
+end)
+
+test("popup: [CA-M2-8] no action at all is refused by the check, naming the rule, and nothing is created", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local w = P.during(function() Pop.Open(gid) end)
+    Pop.Draft().name = "Nothing"
+    Pop.Draft().channel = "gameEmote"
+    local create = NS.Library.CreateCalloutIn
+    local asked = 0
+    NS.Library.CreateCalloutIn = function(...) asked = asked + 1 return create(...) end
+    local ok, field = Pop.Save()
+    assertFalse(ok)
+    assertEqual(field, "noAction")
+    -- red under: leaving the rule to CreateCalloutIn (the check lets the draft through)
+    assertEqual(asked, 0, "the check refuses it before any write")
+    assertEqual(errorText(P, w, "Set at least one action"),
+        "Set at least one action: a line, an emote, a ping or a marker.", "the rule names itself, no field prefix")
+    assertTrue(Pop.IsOpen())
+    -- an empty Line on a chat channel is no Line either (Bake.HasLine)
+    Pop.Draft().channel = "party"
+    Pop.Draft().text = "   "
+    ok, field = Pop.Save()
+    assertFalse(ok)
+    assertEqual(field, "noAction")
+end)
+
+test("popup: [CA-M2-8] a bad emote, ping or marker names its own field", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    local L = NS.L
+    local cases = {
+        { "emote", "two words", L["Emote (optional)"] .. ": " .. L["Pick an emote from the list."] },
+        { "ping", "threat", L["Ping"] .. ": " .. L["A ping is attack, warning, onmyway or assist, or none."] },
+        { "marker", 9, L["Raid marker"] .. ": " .. L["A marker is a number from 1 (star) to 8 (skull), or 0 for none."] },
+    }
+    for _, case in ipairs(cases) do
+        local d = Pop.Draft()
+        d.emote, d.ping, d.marker = nil, nil, nil
+        d[case[1]] = case[2]
+        local ok, field = Pop.Save()
+        assertFalse(ok, case[1])
+        -- red under: no checkPing / checkMarker (the seam's write refuses it, naming no field)
+        assertEqual(field, case[1])
+        assertEqual(errorText(P, w, case[3]), case[3])
+    end
+    local c = NS.db.profile.callouts[cid]
+    assertTrue(not c.emote and not c.ping and not c.marker, "nothing written")
+end)
+
+test("popup: [CA-M2-8] a ping-only callout with an empty Line on a chat channel still saves", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local w = P.during(function() Pop.Open(gid) end)
+    P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Go")
+    P.find(w, "Dropdown", NS.L["Ping"]):__fire("OnValueChanged", "onmyway")
+    -- red under: checkLine refusing an empty Line when another action is set
+    assertTrue(Pop.Save())
+    local g = NS.Library.Group(gid)
+    local c = NS.db.profile.callouts[g.callouts[#g.callouts]]
+    assertEqual(c.ping, "onmyway")
+    assertEqual(c.text, "")
 end)

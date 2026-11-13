@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1765410)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1780%2F1780_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2028%2F2028_passing-green)
 
 Supports Retail and WoW Forever. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
@@ -91,14 +91,47 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
 - The text is prepared out of combat and loaded onto secure buttons, so a press sends it to the right
   channel (say, yell, party, instance, raid, raid warning, General or emote) even during a boss.
   General falls back to say when you haven't joined it. An emote callout sends its text as a custom
-  emote (`/e`), on Retail and WoW Forever alike. A game emote callout performs one of the game's own
-  emotes (`/point`, `/oom`, `/incoming`...) on your target, picked from a searchable list in the
-  callout editor; voice emotes play their sound. The built-in Emotes group, shown in the open world
-  whatever your group, carries twenty of them: the voice calls first (`/incoming`, `/oom`,
-  `/healme`...), then the social ones (`/wave`, `/thank`, `/dance`...).
+  emote (`/e`), on Retail and WoW Forever alike.
+- One press can do up to four things at once: send the line, perform one of the game's own emotes
+  (`/point`, `/oom`, `/incoming`...) on your target, ping the target and mark it. "Kick on me" in party,
+  `/point`, an Attack ping and a skull all go from one button. A callout can also skip the line
+  (Channel None) and only emote, ping or mark. The whole press has to fit in 255 bytes; a line too
+  long to fit beside the rest is left out, and the other actions still go.
+- The emote is picked from a searchable list in the callout editor, and voice emotes play their sound.
+  The built-in Emotes group, shown in the open world whatever your group, carries twenty of them: the
+  voice calls first (`/incoming`, `/oom`, `/healme`...), then the social ones (`/wave`, `/thank`,
+  `/dance`...).
+- Twelve of the built-in callouts perform a fitting emote with their line: Hello waves, Ready readies,
+  GLHF cheers, the three thanks callouts `/thank`, ggnt says bye, Rare spotted points at the rare,
+  Elite help asks for help, Pulling charges, Need mana says you are out of mana and Wipe flees. Dungeon
+  and Raid each gain a Heal me callout ("Need heals!" in Dungeon, "Need heals on me!" in Raid) with the
+  `/healme` voice emote. An existing profile gets the emote only on the callouts you
+  left as shipped, and the Heal me callout once; arena and battleground callouts gain none, since the
+  game locks emotes in a PvP match.
+- The ping is Attack, Warning, On my way or Assist, and the raid marker anything from star to skull.
+  Both go through the game's own `/ping` and `/tm` commands on the same secure button, and are meant to
+  work in combat too (pending in-game checks). With no target nothing is pinged or marked and the press
+  tells you why; in a raid, marking needs leader or assist.
 - After a press every button dims for about a second. On a boss the game quietly drops lines sent
   faster than that, so if one never arrives you get a note in chat.
-- Text that starts with a slash command is refused. A callout only ever sends chat.
+- Text that starts with a slash command is refused. A callout's text is only ever chat; its ping and
+  marker are the game's own `/ping` and `/tm`.
+
+## Auto-thank
+
+When a stranger buffs you in the open world, a small toast names them and the buff, with a **Thank**
+button. Click it to `/thank` them, whisper them a thank-you ("Thanks for the {buff}, {name}!" unless you
+change it), or both; leave it and it fades away. Nothing is sent unless you click.
+
+- It is on by default in the open world only. The **Auto-thank** settings page turns it off, picks where
+  it runs (dungeons, raids, battlegrounds and so on), what Thank sends, and whose buffs to ignore
+  (strangers, or your friends and guild).
+- A buff counts when another player outside your group casts it on you and it lasts a minute or more.
+  **Raid buffs only** narrows that to Arcane Intellect, Power Word: Fortitude and Mark of the Wild.
+- No toast shows in combat. Buffs you get during a fight are toasted after it, and a toast that is up
+  when a fight starts comes back afterwards.
+- At most three toasts show at once, and the same player's same buff is not toasted again for ten
+  minutes. Drag a toast to move them; right-click one to dismiss it.
 
 ## FAQ
 

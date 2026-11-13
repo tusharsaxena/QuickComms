@@ -647,6 +647,98 @@ function Compat.UseKeyDown()
     return v == true
 end
 
+-- ── Pings and raid target markers (spec §4 step 5, §5, §6): plain reads, safe in combat ─────────
+
+--- The client's localized /ping command (SLASH_PING1), or nil when the client has no ping system
+--- (no C_Ping) or no such command. A Spanish client answers "/aviso".
+function Compat.PingCommand()
+    if C_Ping == nil then return nil end
+    return PlainString(_G.SLASH_PING1)
+end
+
+--- The client's localized /tm command (SLASH_TARGET_MARKER1), or nil.
+function Compat.MarkerCommand()
+    return PlainString(_G.SLASH_TARGET_MARKER1)
+end
+
+--- The client's localized /w command (SLASH_WHISPER1), or nil: the auto-thank whisper's (spec §9 D4).
+function Compat.WhisperCommand()
+    return PlainString(_G.SLASH_WHISPER1)
+end
+
+local function pingsEnabled(ping)
+    if not ping.IsPingSystemEnabled then return nil end
+    local on = plainBool(ping.IsPingSystemEnabled())
+    if on == nil then return nil end
+    local cv = C_CVar
+    local get = (cv and cv.GetCVarBool) or GetCVarBool
+    if on and get then
+        local pref = plainBool(get("enablePings"))
+        if pref == nil then return nil end
+        on = pref
+    end
+    return on
+end
+
+--- "off" (the ping system or the player's enablePings cvar is off), "cooldown" (the ping cooldown
+--- runs: endTimeMs past GetTime()*1000, Blizzard_PingUI's own clock base), "ok", or nil when the
+--- answer cannot be read (no C_Ping, a secret flag). An unreadable end time is no known cooldown.
+function Compat.PingState()
+    local ping = C_Ping
+    if type(ping) ~= "table" then return nil end
+    local on = pingsEnabled(ping)
+    if on == nil then return nil end
+    if not on then return "off" end
+    local info = ping.GetCooldownInfo and ping.GetCooldownInfo()
+    if type(info) == "table" and not Compat.IsSecret(info) and GetTime then
+        local endMs, now = PlainNumber(info.endTimeMs), PlainNumber(GetTime())
+        if endMs and now and endMs > now * 1000 then return "cooldown" end
+    end
+    return "ok"
+end
+
+--- Whether the player has a target: a plain boolean, or nil when it cannot be read.
+function Compat.TargetExists()
+    if not UnitExists then return nil end
+    return plainBool(UnitExists("target"))
+end
+
+--- Whether `unit` can carry a raid target marker (CanBeRaidTarget): plain, or nil when unknown.
+function Compat.CanMark(unit)
+    if not CanBeRaidTarget then return nil end
+    return plainBool(CanBeRaidTarget(unit))
+end
+
+--- True in a raid group (a secret reads false).
+function Compat.InRaid()
+    return IsInRaid ~= nil and plainTrue(IsInRaid())
+end
+
+--- True when the raid has made everyone an assistant (a secret reads false).
+function Compat.EveryoneAssistant()
+    return IsEveryoneAssistant ~= nil and plainTrue(IsEveryoneAssistant())
+end
+
+-- A rights answer read plain: true, false, or nil when secret; a missing API reads false.
+local function rightsRead(fn, ...)
+    if not fn then return false end
+    return plainBool(fn(...))
+end
+
+--- "noRights" in a raid where leader, assist and everyone-assistant all read plainly false; "ok"
+--- outside a raid (a party, or solo: every member may mark; a secret raid answer reads as none, so
+--- no note) or when any of the three is plainly true; nil (unknown, no note) when none is true and one of them is secret.
+--- @return string|nil "ok" | "noRights"
+function Compat.MarkerRights()
+    if not Compat.InRaid() then return "ok" end
+    local leader = rightsRead(UnitIsGroupLeader, "player")
+    local assist = rightsRead(UnitIsGroupAssistant, "player")
+    local everyone = rightsRead(IsEveryoneAssistant)
+    if leader or assist or everyone then return "ok" end
+    if leader == nil or assist == nil or everyone == nil then return nil end
+    return "noRights"
+end
+
 --- Whether a chat line came from the player: true, false, or nil when neither the GUID nor the
 --- name can be read (secret or absent). Never compares a secret. Without the GUID the full name
 --- decides: a sender with a realm is the player only on the player's own realm (a cross-realm
@@ -671,6 +763,94 @@ function Compat.SenderIsPlayer(sender, guid)
     if bare ~= mine then return false end
     if not myRealm then return nil end
     return realm == myRealm
+end
+
+-- ── Auto-thank (spec §9): an aura's caster, the player's helpful auras and a whisper name ────────
+
+--- The name a whisper reaches `name` by: "First-Surname" where names are unique per region
+--- (Compat.RegionalNames: the client's tell parser takes the hyphen form for a stranger, the space
+--- form only for a name AutoComplete knows), else "Name-Realm" with spaces and hyphens stripped from
+--- the realm (the normalized form; a space would end the tell target), or the name alone when the
+--- realm is "" (the player's own). Nil when the name, or a needed realm, is unreadable.
+function Compat.WhisperName(name, realm)
+    name = PlainString(name)
+    if not name or name == "" then return nil end
+    if Compat.RegionalNames() then return (name:gsub("%s+", "-")) end
+    realm = PlainString(realm)
+    if not realm then return nil end
+    realm = realm:gsub("[%s%-]", "")
+    if realm == "" then return name end
+    return name .. "-" .. realm
+end
+
+-- The caster's GUID: C_UnitAuras.GetAuraCasterGUID first (no unit token needed), else the aura's
+-- sourceUnit read through UnitGUID. Nil when neither reads plain.
+local function casterGUID(auraInstanceID, aura)
+    local ua = C_UnitAuras
+    local guid = ua and ua.GetAuraCasterGUID and PlainString(ua.GetAuraCasterGUID("player", auraInstanceID)) or nil
+    if guid or not UnitGUID or type(aura) ~= "table" or Compat.IsSecret(aura) then return guid end
+    local unit = PlainString(aura.sourceUnit)
+    return unit and PlainString(UnitGUID(unit)) or nil
+end
+
+-- True only when the GUID is plainly not in the player's group; a secret answer, or no API, reads
+-- as in the group (the safe side: a group member is never thanked).
+local function outsideGroup(guid)
+    local party = C_PartyInfo
+    if not (party and party.IsGUIDInGroup) then return false end
+    local inGroup = party.IsGUIDInGroup(guid)
+    return not Compat.IsSecret(inGroup) and inGroup ~= true
+end
+
+--- Who cast the player's aura `auraInstanceID`, as { guid, name, whisperName, emoteName, known }
+--- (`emoteName` is what the Thank emote names them by: the name as it reads, with no realm, the form
+--- "/thank <Name>" typed by hand reaches; owner's smoke, 2026-11-11), or nil when
+--- it is not another player outside the group, or any needed read is nil or secret. NPCs, pets and
+--- vehicles fail the "Player-" GUID test; `known` is a friend or a guildmate (a secret reads not known).
+function Compat.AuraCaster(auraInstanceID, aura)
+    local guid = casterGUID(auraInstanceID, aura)
+    if not guid or not guid:find("^Player%-") then return nil end
+    local me = UnitGUID and PlainString(UnitGUID("player")) or nil
+    if not me or guid == me or not outsideGroup(guid) then return nil end
+    if not GetPlayerInfoByGUID then return nil end
+    local _, _, _, _, _, name, realm = GetPlayerInfoByGUID(guid)
+    local whisperName = Compat.WhisperName(name, realm)
+    if NS.Debug then
+        NS.Debug("Thank", "caster %s: name=%q realm=%q regional=%s -> whisper=%q emote=%q", guid,
+            tostring(PlainString(name)), tostring(PlainString(realm)), tostring(Compat.RegionalNames()),
+            tostring(whisperName), tostring(PlainString(name)))
+    end
+    if not whisperName then return nil end
+    local friends = C_FriendList
+    local known = (friends ~= nil and friends.IsFriend ~= nil and plainTrue(friends.IsFriend(guid)))
+        or (IsGuildMember ~= nil and plainTrue(IsGuildMember(guid)))
+    local plain = PlainString(name)
+    return { guid = guid, name = plain, whisperName = whisperName, emoteName = plain, known = known == true }
+end
+
+--- The player's aura `auraInstanceID` as a plain table, or nil when it is gone, secret or unreadable.
+function Compat.AuraByInstance(auraInstanceID)
+    local ua = C_UnitAuras
+    if not (ua and ua.GetAuraDataByAuraInstanceID) then return nil end
+    local aura = ua.GetAuraDataByAuraInstanceID("player", auraInstanceID)
+    if Compat.IsSecret(aura) or type(aura) ~= "table" then return nil end
+    return aura
+end
+
+--- The player's helpful aura instance ids, a plain list in the client's order, or nil when the list
+--- or any element is secret (still restricted: a partial snapshot would toast a known aura later).
+function Compat.HelpfulAuraIds()
+    local ua = C_UnitAuras
+    if not (ua and ua.GetUnitAuraInstanceIDs) then return nil end
+    local ids = ua.GetUnitAuraInstanceIDs("player", "HELPFUL")
+    if Compat.IsSecret(ids) or type(ids) ~= "table" then return nil end
+    local out = {}
+    for i = 1, #ids do
+        local id = PlainNumber(ids[i])
+        if id == nil then return nil end
+        out[i] = id
+    end
+    return out
 end
 
 -- ── The bake context (spec §8.1): the values {me}, {spec}, {dungeon}, {coordinates} and {spell:ID} bake from ──

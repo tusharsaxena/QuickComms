@@ -190,10 +190,18 @@ local function disarmFree(pool)
     for _, btn in ipairs(pool.free) do NS.SendEngine.Disarm(btn) end
 end
 
+-- The echo a disarmed button prints: always a list (Preview.SlotEcho's), a test placeholder's string
+-- or a bare line wrapped as one entry.
+local function echoList(slot)
+    local e = slot.echo or slot.line
+    if type(e) == "string" then return { e } end
+    return e
+end
+
 -- Armed when the slot baked; otherwise disarmed, keeping only what a click may still do (a solo
 -- self-print). A refused or placeholder button carries no chat type, so its click reports nothing.
--- lockText reads the slot's live lock (RefreshLocks keeps it current in combat), so a press on a
--- padlocked button is explained by its lock, never tracked as a send.
+-- lockText names an action's live lock (the press reads it from the current snapshot, CA-M2-R1),
+-- so a padlocked action in a press is explained by its lock, never tracked as a send.
 -- A previewed button (spec §13.3) keeps its line for the tooltip and is disarmed, and carries neither
 -- the solo self-line nor the lock text: a previewed button sends and reports nothing. It carries an
 -- `echo` instead (QC-07: Surfaces.MarkPreview's NS.Preview.SlotEcho, its line with missing tokens
@@ -204,17 +212,20 @@ end
 -- combat only prints a string and writes no attribute. An armed live slot whose text uses
 -- {coordinates} carries `rebake` (Surfaces.Slot), which SendEngine's PreClick hook calls out of combat
 -- to re-arm the line with where you are at the press (QF-03); no other button carries one.
+-- A slot arms when at least one of its actions baked (combined actions §3): a ping-only or a
+-- marker-only callout has no chat type and still arms. The meta carries the baked actions, their
+-- chat types and locks, and the skipped ones.
 local function arm(btn, slot)
     local preview = slot.preview == true
     local meta = { calloutId = slot.calloutId, surfaceId = slot.surfaceId, name = slot.name,
-        chatType = slot.chatType, selfText = (not preview) and slot.selfText or nil,
-        echo = (preview or slot.reason == "testMode") and (slot.echo or slot.line) or nil,
-        lockText = (not preview) and function() return slot.lock and (R.LOCK_TEXT[slot.lock] or tostring(slot.lock)) end or nil }
-    if slot.line and slot.chatType and not preview then
+        chatTypes = slot.chatTypes, actions = slot.actions, locks = slot.locks,
+        skipped = slot.skipped, selfText = (not preview) and slot.selfText or nil,
+        echo = (preview or slot.reason == "testMode") and echoList(slot) or nil,
+        lockText = (not preview) and function(lock) return lock and (R.LOCK_TEXT[lock] or tostring(lock)) end or nil }
+    if slot.line and slot.actions and #slot.actions > 0 and not preview then
         meta.rebake = slot.rebake
         NS.SendEngine.Arm(btn, slot.line, meta)
     else
-        meta.chatType = nil
         NS.SendEngine.Disarm(btn, meta)
     end
 end

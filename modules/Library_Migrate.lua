@@ -6,6 +6,7 @@ local _, NS = ...
 
 NS.Library = NS.Library or {}
 local Lib = NS.Library
+local L = NS.L
 
 -- The growth values a step rewrites: `up` (Upward) split into Right and up / Left and up (B2), and
 -- the old Upward always drew rightward.
@@ -149,7 +150,8 @@ local function addOwnCallouts(profile)
                 if not have[origin] then
                     local c, id = NS.BuiltIns.callouts[origin], takeCalloutId(profile)
                     profile.callouts[id] = { name = c.name, text = c.text, channel = c.channel, icon = c.icon,
-                        iconColor = c.iconColor, emote = c.emote, origin = origin }
+                        iconColor = c.iconColor, emote = c.emote, ping = c.ping, marker = c.marker,
+                        origin = origin }
                     g.callouts[#g.callouts + 1] = id
                 end
             end
@@ -488,4 +490,125 @@ function Lib.MigrateEmotesSet(profile)
             end
         end
     end
+end
+
+-- Step 20's input, frozen here so a later change to BuiltIns cannot change what it recognizes
+-- (combined actions §8): each listed shipped callout's pre-step origin, channel, text (the localized
+-- string it was seeded as) and the emote it gains, in shipped order.
+local COMBO_EMOTES = {
+    { "bi.world.rare",   "general",    L["Rare spotted: {target} @ {coordinates}"], "POINT" },
+    { "bi.world.elite",  "general",    L["Can anyone help with this elite? {target} @ {coordinates}"], "HELPME" },
+    { "bi.world.thanks", "general",    L["Thanks for the help!"], "THANK" },
+    { "bi.group.hello",  "smartGroup", L["Hello!"], "WAVE" },
+    { "bi.group.ready",  "smartGroup", L["Ready"], "READY" },
+    { "bi.group.glhf",   "smartGroup", L["GLHF!"], "CHEER" },
+    { "bi.group.tyff",   "smartGroup", L["tyff"], "THANK" },
+    { "bi.group.ggty",   "smartGroup", L["ggty"], "THANK" },
+    { "bi.group.ggnt",   "smartGroup", L["ggnt"], "BYE" },
+    { "bi.mplus.pull",   "smartGroup", L["Pulling next pack"], "CHARGE" },
+    { "bi.mplus.mana",   "smartGroup", L["Wait, need mana"], "OOM" },
+    { "bi.raid.wipe",    "smartLead",  L["Wipe it, run back"], "FLEE" },
+}
+
+-- A seeded profile step 20 may write: prepared, with its tables and counter well typed. An unprepared
+-- one is left to Prepare, which seeds the full sets from the shipped data.
+local function comboReady(profile)
+    return type(profile) == "table" and profile.seeded == true and type(profile.groups) == "table"
+        and type(profile.callouts) == "table" and type(profile.nextId) == "number"
+end
+
+-- Unedited: the shipped channel and (localized) text, and no emote, ping or marker set. Name, icon and
+-- icon color are not compared, since they do not change what the callout sends (F4a). Text seeded
+-- under another client language reads as edited, the safe side.
+local function unedited(c, r)
+    return c.channel == r[2] and c.text == r[3] and not c.emote and not c.ping and not c.marker
+end
+
+-- Part 1: every stored callout whose origin names a COMBO_EMOTES row, still unedited, gains that
+-- row's emote. Nothing else is written; a copy carries no origin, and a deleted callout is not here.
+local function addComboEmotes(callouts)
+    local byOrigin = {}
+    for _, r in ipairs(COMBO_EMOTES) do byOrigin[r[1]] = r end
+    for _, c in pairs(callouts) do
+        local r = type(c) == "table" and byOrigin[c.origin]
+        if r and unedited(c, r) then c.emote = r[4] end
+    end
+end
+
+-- Step 20's new rows, frozen like COMBO_EMOTES and in shipped order: each origin, the origin of the
+-- callout it goes after, and seedCallout's fields as shipped. `glyph` names the catalog icon, resolved
+-- on write; it is not itself a stored field.
+local COMBO_NEW = {
+    { origin = "bi.mplus.healme", after = "bi.mplus.kicks", name = L["Heal me"], text = L["Need heals!"],
+        channel = "smartGroup", glyph = "gi:heart-plus", iconColor = "40d040", emote = "HEALME" },
+    { origin = "bi.raid.healme", after = "bi.raid.stones", name = L["Heal me"], text = L["Need heals on me!"],
+        channel = "raid", glyph = "gi:heart-plus", iconColor = "40d040", emote = "HEALME" },
+}
+
+-- A fresh stored callout from a frozen COMBO_NEW row, through seedCallout's field list (Library.lua),
+-- never read from BuiltIns at run time (no shipped new row sets a ping or a marker). Returns its id.
+local function writeComboCallout(profile, row)
+    local id = takeCalloutId(profile)
+    local icon = NS.Icon(row.glyph)
+    profile.callouts[id] = { name = row.name, text = row.text, channel = row.channel, icon = icon,
+        iconColor = icon and row.iconColor or nil, emote = row.emote,
+        origin = row.origin }
+    return id
+end
+
+-- placeAfter's callout-list twin: `cid` right after the callout whose origin is `afterOrigin` where
+-- the list holds one, else at its end; a list that holds it already is left as it is. A dangling or
+-- damaged entry is skipped.
+local function placeCalloutAfter(profile, list, cid, afterOrigin)
+    for _, id in ipairs(list) do
+        if id == cid then return end
+    end
+    for i, id in ipairs(list) do
+        local c = profile.callouts[id]
+        if type(c) == "table" and c.origin == afterOrigin then
+            table.insert(list, i + 1, cid)
+            return
+        end
+    end
+    list[#list + 1] = cid
+end
+
+-- The stored group seeded from shipped set `origin` with a well-typed list (the lowest id if stale
+-- data ever held two); a copy carries no origin, so it is never picked.
+local function comboGroup(groups, origin)
+    local found
+    for id, g in pairs(groups) do
+        if type(g) == "table" and g.origin == origin and type(g.callouts) == "table"
+            and (not found or tostring(id) < tostring(found)) then found = id end
+    end
+    return found and groups[found]
+end
+
+local function holdsOrigin(profile, list, origin)
+    for _, id in ipairs(list) do
+        local c = profile.callouts[id]
+        if type(c) == "table" and c.origin == origin then return true end
+    end
+    return false
+end
+
+-- Part 2: each new row goes into its shipped set's stored group once, after its predecessor. A
+-- deleted set has no such group, so it stays deleted; one holding the row already gains nothing.
+local function addComboRows(profile)
+    for _, row in ipairs(COMBO_NEW) do
+        local g = comboGroup(profile.groups, row.origin:match("^(.*)%.[^.]+$"))
+        if g and not holdsOrigin(profile, g.callouts, row.origin) then
+            placeCalloutAfter(profile, g.callouts, writeComboCallout(profile, row), row.after)
+        end
+    end
+end
+
+--- Step 20 (combined actions §8, QuickComms#20): the shipped callouts that now perform an emote with
+--- their line gain it where the player left them unedited, and the Dungeon and Raid sets gain their
+--- Heal me callout. Idempotent: one that has an emote is no longer unedited, and a group that holds
+--- a new row's origin gains it no second time.
+function Lib.MigrateComboCallouts(profile)
+    if not comboReady(profile) then return end
+    addComboEmotes(profile.callouts)
+    addComboRows(profile)
 end

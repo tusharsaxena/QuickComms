@@ -6,7 +6,7 @@ local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
-local ARMED = { calloutId = "c1", name = "Pull", line = "/p Pull", concrete = "party", chatType = "PARTY" }
+local ARMED = { calloutId = "c1", name = "Pull", line = "/p Pull", concrete = "party" }
 
 local function button(NS, m)
     local root = m.CreateFrame("Frame", "QuickCommsPadTest", m.UIParent)
@@ -78,7 +78,7 @@ end
 test("render: a locked button shows the padlock and names the lock; RefreshLock follows the slot", function()
     local NS, m = T.enableAddon()
     local b = button(NS, m)
-    local slot = { calloutId = "c3", name = "Shout", line = "/s Go", concrete = "say", chatType = "SAY", lock = "lockdown" }
+    local slot = { calloutId = "c3", name = "Shout", line = "/s Go", concrete = "say", lock = "lockdown" }
     m.__anchored(b.qcLabel, {})
     function b.qcLabel.ClearAllPoints(self) self.__anchors = {}; return self end
     NS.PadRender.Paint(b, slot, "iconLabel")
@@ -315,7 +315,7 @@ test("render: [icons] a glyph button is drawn in its color; the button repainted
     local NS, m = T.enableAddon()
     local b = button(NS, m)
     local star = NS.Icon("star")
-    NS.PadRender.Paint(b, { calloutId = "c1", name = "Star", line = "/p Go", concrete = "party", chatType = "PARTY",
+    NS.PadRender.Paint(b, { calloutId = "c1", name = "Star", line = "/p Go", concrete = "party",
         icon = star, iconColor = "ff0000" }, "iconLabel")
     assertEqual(b.qcIcon.__texture, star)
     -- red under: Paint setting the texture only
@@ -496,4 +496,68 @@ test("render: [QF-04] a General slot's tooltip names General in channel 1's colo
     -- red under: no Constants.CHAT_COLORS.CHANNEL1 (the fallback is Say's white)
     lines = NS.PadRender.TooltipLines({ name = "Thanks", line = "/1 Thanks", concrete = "general" })
     assertEqual(lines[3], "Channel: |cffffbfbfGeneral|r")
+end)
+
+-- ── a ping or a marker action (CA-M1-12) ───────────────────────────────────────────────────────
+
+test("render: [CA-M1-12] a ping-only button's tooltip shows its line and no channel; a skipped one its reason", function()
+    local NS, m = T.enableAddon()
+    local cid = NS.Library.CreateCallout({ name = "Ping", text = "", channel = "gameEmote", ping = "attack" })
+    local slot = NS.Surfaces.Slot(cid, NS.Library.Callout(cid), {})
+    local lines = NS.PadRender.TooltipLines(slot)
+    assertEqual(lines[1], "Ping")
+    assertEqual(lines[2], "/ping [@target,exists] 1")
+    assertNil(lines[3], "a ping goes to no channel")
+    m.SLASH_PING1 = nil
+    slot = NS.Surfaces.Slot(cid, NS.Library.Callout(cid), {})
+    lines = NS.PadRender.TooltipLines(slot)
+    assertEqual(lines[2], "Pings are not on this client.")
+end)
+
+-- ── one row per action (CA-M2-10, combined actions §7) ─────────────────────────────────────────
+
+-- The client's /point, as ChatEmoteConstants.lua defines it (tests/test_emotes.lua plants more).
+local function comboSlot(NS, m, callout, snap)
+    m.MAXEMOTEINDEX, m.EMOTE73_TOKEN, m.EMOTE73_CMD1 = 80, "POINT", "/point"
+    NS.Emotes.Reset()
+    local cid = NS.Library.CreateCallout(callout)
+    return NS.Surfaces.Slot(cid, NS.Library.Callout(cid), snap or { group = "party", lockdown = {} })
+end
+
+test("render: [CA-M2-10] a combined button's tooltip lists each action, the channel under the Line only", function()
+    local NS, m = T.enableAddon()
+    local slot = comboSlot(NS, m, { name = "Kick", text = "Kick on me", channel = "party", emote = "POINT",
+        ping = "attack", marker = 8 })
+    local lines = NS.PadRender.TooltipLines(slot)
+    -- red under: the joined macro as one row ("/p Kick on me\n/point\n...")
+    assertEqual(lines[1], "Kick")
+    assertEqual(lines[2], "/p Kick on me")
+    assertEqual(lines[3], "Channel: |cffababffParty|r")
+    assertEqual(lines[4], "/point")
+    assertEqual(lines[5], "/ping [@target,exists] 1")
+    assertEqual(lines[6], "/tm [@target,exists] !8")
+    assertNil(lines[7])
+end)
+
+test("render: [CA-M2-10] a skipped action shows its reason in its place; a lock row per lock", function()
+    local NS, m = T.enableAddon()
+    local slot = comboSlot(NS, m, { name = "Long", text = ("x"):rep(250), channel = "party", ping = "attack" })
+    local lines = NS.PadRender.TooltipLines(slot)
+    -- red under: the skipped Line left out (only the ping's row)
+    assertEqual(lines[2], "No line: Too long: a chat line holds 255 bytes.")
+    assertEqual(lines[3], "/ping [@target,exists] 1")
+    assertNil(lines[4])
+    slot = comboSlot(NS, m, { name = "Stack", text = "Stack", channel = "raid", emote = "POINT" },
+        { group = "party", lockdown = {} })
+    lines = NS.PadRender.TooltipLines(slot)
+    assertEqual(lines[2], "/raid Stack")
+    assertEqual(lines[4], "/point")
+    assertEqual(lines[5], NS.PadRender.LOCK_TEXT.notInRaid)
+    assertNil(lines[6])
+    -- nothing bakes, two actions set: each says why
+    m.SLASH_PING1 = nil
+    slot = comboSlot(NS, m, { name = "Bad", text = "/run x", channel = "party", ping = "attack" })
+    lines = NS.PadRender.TooltipLines(slot)
+    assertEqual(lines[2], "No line: Callout text cannot start with /.")
+    assertEqual(lines[3], "No ping: Pings are not on this client.")
 end)

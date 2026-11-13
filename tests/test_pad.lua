@@ -48,7 +48,7 @@ test("pad: the default pad shows the M+ callouts, each button armed with its bak
     assertEqual(inst.root.__name, "QuickCommsPadp1")
     assertTrue(inst.root:IsShown())
     local _, active = NS.Pool.Counts(inst.buttons)
-    assertEqual(active, 18, "Dungeon's seven and In Group's eleven")
+    assertEqual(active, 19, "Dungeon's eight (Heal me, CA-M3-2) and In Group's eleven")
     local button = pull(NS)
     assertEqual(button:GetAttribute("type"), "macro")
     assertEqual(button:GetAttribute("macrotext"), "/p Pulling next pack")
@@ -112,12 +112,12 @@ test("pad: a rebuild with fewer buttons parks the rest, disarmed, for the next",
     -- M+ alone: In Group (active in any party, bg buttons) off before the count
     NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.group"))
     NS.Pad.Apply("p1", planFor(NS))
-    local before = NS.SendEngine.ButtonCount()   -- the pad's seven buttons and the default dial's wedges
+    local before = NS.SendEngine.ButtonCount()   -- the pad's eight buttons and the default dial's wedges
     NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.mplus"))
     NS.Pad.Apply("p1", planFor(NS))
     local free, active = NS.Pool.Counts(inst.buttons)
     assertEqual(active, 0)
-    assertEqual(free, 18, "the eighteen buttons Dungeon and In Group drew, parked")
+    assertEqual(free, 19, "the nineteen buttons Dungeon and In Group drew, parked")
     assertEqual(#NS.SendEngine.ArmedButtons(), 0)
     NS.SchemaRuntime.Set("group.enabled", true, T.seeded(NS, "bi.mplus"))
     NS.Pad.Apply("p1", planFor(NS))

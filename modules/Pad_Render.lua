@@ -145,6 +145,9 @@ R.REASON_TEXT = {
     testMode = L["Test mode: a placeholder that sends nothing."],
     noEmote = L["This callout has no game emote."],
     unknownEmote = L["This game emote is not on this client."],
+    noAction = L["This callout has no action."],
+    noPing = L["Pings are not on this client."],
+    noMarker = L["Raid markers are not on this client."],
 }
 
 -- Why a locked button may not reach anyone (Channels.LockState, spec §8.4).
@@ -187,11 +190,57 @@ local function channelLine(concrete)
     return L["Channel: %s"]:format(("|cff%02x%02x%02x%s|r"):format(byte(r), byte(g), byte(b), name))
 end
 
---- A button's tooltip: its name, then the line it sends and its channel, or why it sends nothing, then
---- any lock.
+-- A skipped action's row, by its kind, with why (the tooltip's, and the editor's preview's).
+R.SKIPPED_TEXT = {
+    line = L["No line: %s"], emote = L["No emote: %s"], ping = L["No ping: %s"], marker = L["No mark: %s"],
+}
+
+-- The fixed order of a callout's actions (D1): the Line, the emote, the ping, the marker.
+local ACTION_ORDER = { line = 1, emote = 2, ping = 3, marker = 4 }
+
+-- Every set action of a slot, baked (slot.actions) or not (slot.skipped), in the fixed order.
+local function slotActions(slot)
+    local all = {}
+    for _, a in ipairs(slot.actions or {}) do all[#all + 1] = a end
+    for _, a in ipairs(slot.skipped or {}) do all[#all + 1] = a end
+    table.sort(all, function(x, y) return (ACTION_ORDER[x.kind] or 9) < (ACTION_ORDER[y.kind] or 9) end)
+    return all
+end
+
+-- One action's rows: a baked one its line (the Line's channel under it), solo with "self" that it
+-- prints to you, a skipped one why.
+local function actionRows(lines, a)
+    if a.line then
+        lines[#lines + 1] = a.line
+        if a.kind == "line" then lines[#lines + 1] = channelLine(a.concrete) end
+    elseif a.kind == "line" and a.reason == "solo" and a.selfPrint then
+        lines[#lines + 1] = L["Solo: prints to you, sends nothing."]
+    else
+        local why = R.REASON_TEXT[a.reason] or tostring(a.reason)
+        lines[#lines + 1] = (R.SKIPPED_TEXT[a.kind] or "%s"):format(why)
+    end
+end
+
+-- A slot's lock rows: one per distinct lock among its baked actions (slot.lock when no list).
+local function lockRows(lines, slot)
+    local seen = {}
+    for _, lock in ipairs(slot.locks or { slot.lock }) do
+        if not seen[lock] then
+            seen[lock] = true
+            lines[#lines + 1] = R.LOCK_TEXT[lock] or tostring(lock)
+        end
+    end
+end
+
+--- A button's tooltip: its name, then one row per action (combined actions §7: each baked line, the
+--- Line's channel under it, a skipped action's reason in its place), or, for a slot of one action that
+--- sends nothing, why; then its locks.
 function R.TooltipLines(slot)
     local lines = { slot.name or "?" }
-    if slot.line then
+    local all = slotActions(slot)
+    if #all > 1 or (#all == 1 and slot.line) then
+        for _, a in ipairs(all) do actionRows(lines, a) end
+    elseif slot.line then
         lines[2] = slot.line
         lines[3] = channelLine(slot.concrete)
     elseif slot.selfText then
@@ -199,7 +248,7 @@ function R.TooltipLines(slot)
     else
         lines[2] = R.REASON_TEXT[slot.reason] or L["Not available here."]
     end
-    if slot.lock then lines[#lines + 1] = R.LOCK_TEXT[slot.lock] or tostring(slot.lock) end
+    lockRows(lines, slot)
     if slot.preview then
         lines[#lines + 1] = L["Preview: this sends nothing."]
         if slot.line then lines[#lines + 1] = L["Click to print its line."] end

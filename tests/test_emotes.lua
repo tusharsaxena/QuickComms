@@ -178,19 +178,24 @@ test("emotes: [QFE-E2] the library stores the token, copies keep it, and the sea
     local ok1, e1, w1 = NS.SchemaRuntime.Set("callout.emote", "/wave", cid)
     assertTrue(ok1, tostring(e1) .. tostring(w1))
     assertEqual(NS.db.profile.callouts[cid].emote, "WAVE", "a command typed reads through the map")
+    -- Nothing is none, but here the emote is the callout's only action (CA-M1-3): refused.
+    assertFalse((NS.SchemaRuntime.Set("callout.emote", "", cid)))
+    assertEqual(NS.db.profile.callouts[cid].emote, "WAVE", "its last action stays")
+    NS.db.profile.callouts[cid].channel, NS.db.profile.callouts[cid].text = "say", "hi"
+    NS.db.profile.callouts[cid].emote = false
     local ok2, e2, w2 = NS.SchemaRuntime.Set("callout.emote", "", cid)
     assertTrue(ok2, tostring(e2) .. tostring(w2))
     assertEqual(NS.db.profile.callouts[cid].emote, false, "nothing is none")
     assertFalse((NS.SchemaRuntime.Set("callout.emote", "two words", cid)))
 end)
 
-test("emotes: [QFE-E2] the channel row offers Game emote; a Groups row previews the command", function()
+test("emotes: [QFE-E2] the channel row offers None (no chat line, D10); a Groups row previews the command", function()
     local NS = live()
     local found
     for _, v in ipairs(NS.SchemaRuntime.FindRow("callout.channel").values) do
         if v.value == "gameEmote" then found = v.text end
     end
-    assertEqual(found, "Game emote")
+    assertEqual(found, "None (no chat line)")
     local G = NS.addon.Settings.Groups
     assertEqual(G.CalloutSummary({ channel = "gameEmote", emote = "POINT", text = "" }), "/point")
     assertEqual(G.CalloutSummary({ channel = "gameEmote", emote = "NOPE", text = "" }), "NOPE (not on this client)")
@@ -238,6 +243,80 @@ test("emotes: [QFE-E2] a previewed game emote prints would emote /point and send
     assertEqual(#m.sentMacros, 0)
 end)
 
+-- ── an Emote action beside a Line (CA-M2-4, combined actions §4, #16) ─────────────────────────
+
+local function partyLive()
+    local NS, env, m = live()
+    NS.Situation.ReadInputs = function() return { inGroup = true } end
+    NS.Situation.RefreshNow("test")
+    return NS, env, m
+end
+
+local function comboGroup(NS, f)
+    local Lib = NS.Library
+    local cid = Lib.CreateCallout(f)
+    Lib.AddGroupToSurface("pad", "p1", Lib.CreateGroup({ name = "Combo", callouts = { cid } }), 1)
+    return cid
+end
+
+test("emotes: [CA-M2-4] an emote beside a Line: its echo is the TEXT_EMOTE, the Line's the PARTY", function()
+    local NS, _, m = partyLive()
+    local cid = comboGroup(NS, { name = "Kick", text = "Kick on me", channel = "party", emote = "POINT" })
+    local b = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertEqual(b:GetAttribute("macrotext"), "/p Kick on me\n/point")
+    local out = {}
+    NS.Bus:NewTarget():RegisterMessage(NS.MSG.SEND_RESULT, function(_, _, _, what) out[#out + 1] = what end)
+    m.__now = 100
+    m.__click(b)
+    assertEqual(NS.SendEngine.EchoState().pending, 2)
+    m.__fire("CHAT_MSG_EMOTE", "never read", "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1, m.playerGUID)
+    assertEqual(NS.SendEngine.EchoState().pending, 2, "a custom emote line is not the echo")
+    m.__fire("CHAT_MSG_TEXT_EMOTE", "never read", "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1, m.playerGUID)
+    assertEqual(#out, 0, "the Line has not echoed")
+    m.__fire("CHAT_MSG_PARTY", "never read", "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1, m.playerGUID)
+    assertEqual(table.concat(out, ","), "sent")
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+end)
+
+-- #16's acceptance, pressed headless: a Line, an emote, a ping and a marker on one press.
+local function kickOnMe(inCombat)
+    local NS, _, m = partyLive()
+    m.__unitExists.target = true
+    local cid = comboGroup(NS, { name = "Kick", text = "Kick on me", channel = "party", emote = "POINT",
+        ping = "attack", marker = 8 })
+    local b = NS.Pad.ButtonsFor("p1", cid)[1]
+    local out, decided = {}, 0
+    NS.Bus:NewTarget():RegisterMessage(NS.MSG.SEND_RESULT, function(_, _, _, what) out[#out + 1] = what end)
+    local decide = NS.SendGuard.Decide
+    NS.SendGuard.Decide = function(...) decided = decided + 1 return decide(...) end
+    if inCombat then
+        m.__setCombat(false)
+        m.__fire("PLAYER_REGEN_DISABLED")
+        m.__setCombat(true)
+    end
+    m.__now = 100
+    m.__click(b)
+    local lines = m.sentLines()
+    assertEqual(#lines, 4)
+    assertEqual(lines[1], "/p Kick on me") assertEqual(lines[2], "/point")
+    assertEqual(lines[3], "/ping [@target,exists] 1") assertEqual(lines[4], "/tm [@target,exists] !8")
+    assertEqual(decided, 1, "one guard decision")
+    assertEqual(NS.SendEngine.GuardState().last, 100, "one stamp")
+    assertEqual(NS.SendEngine.EchoState().pending, 2, "the Line and the emote")
+    m.__fire("CHAT_MSG_PARTY", "never read", "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1, m.playerGUID)
+    m.__fire("CHAT_MSG_TEXT_EMOTE", "never read", "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1, m.playerGUID)
+    assertEqual(table.concat(out, ","), "sent", "one result")
+    assertEqual(#m.blocked, 0)
+end
+
+test("emotes: [CA-M2-4] #16: Kick on me in Party with /point, ping Attack and Skull, out of combat", function()
+    kickOnMe(false)
+end)
+
+test("emotes: [CA-M2-4] #16: Kick on me in Party with /point, ping Attack and Skull, in combat", function()
+    kickOnMe(true)
+end)
+
 -- ── the callout popup ────────────────────────────────────────────────────────────────────────
 
 local function popup()
@@ -247,21 +326,31 @@ local function popup()
     return NS, env, m, P, NS.addon.Settings.CalloutPopup
 end
 
-test("emotes: [QFE-E2] picking Game emote swaps the Text box for the emote picker; a pick names the callout", function()
+test("emotes: [QFE-E2] channel None hides the Text box beside the emote picker; a pick names the callout", function()
     local NS, _, _, P, Pop = popup()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     local w = P.during(function() Pop.Open(gid) end)
     assertTrue(P.find(w, "EditBox", "Text") ~= nil)
+    assertTrue(P.find(w, "Dropdown", "Emote (optional)") ~= nil, "the emote picker beside a Line (CA-M2-7)")
     w = P.during(function() P.find(w, "Dropdown", "Channel"):__fire("OnValueChanged", "gameEmote") end)
-    -- red under: the body is not drawn again for Game emote
+    -- red under: the body is not drawn again for None
     assertNil(P.find(w, "EditBox", "Text"), "no text box")
-    assertTrue(P.find(w, "EditBox", "Game emote") ~= nil, "the emote picker")
-    -- The kit's AceGUI EditBox has no inner .editbox, so the autocomplete is attached only in the client
-    -- (smoke EMOTE-4); here the picker is the box, its search and its pick.
-    if P.find(w, "EditBox", "Game emote").editbox then assertTrue(Pop.emoteSuggest ~= nil) end
-    local rows = Pop.EmoteSuggestions("o")
-    assertEqual(rows[1].token, "INCOMING", "speech first")
-    assertEqual(rows[1].text, "/incoming (voice)")
+    assertTrue(P.find(w, "Dropdown", "Emote (optional)") ~= nil, "the emote picker")
+    -- The menu: None, a rule, then the browse tree; a leaf row is the command, a voice emote marked,
+    -- and its click is the pick. The kit's Dropdown has no button, so the menu opening is smoke EMOTE-4.
+    local rows = Pop.EmoteMenuRows()
+    assertEqual(rows[1].label, "None")
+    assertTrue(rows[2].divider)
+    local leaves = {}
+    local function walk(list)
+        for _, r in ipairs(list) do
+            if r.submenu then walk(r.submenu) elseif r.value and r.value ~= "none" then leaves[r.value] = r end
+        end
+    end
+    walk(rows)
+    assertEqual(leaves.INCOMING.label, "/incoming (voice)")
+    leaves.WAVE.onClick(leaves.WAVE.value, leaves.WAVE)
+    assertEqual(Pop.Draft().emote, "WAVE", "a leaf row's click picks its emote")
     assertTrue(Pop.PickEmote("POINT"))
     assertEqual(Pop.Draft().emote, "POINT")
     assertEqual(Pop.Draft().name, "/point", "the name defaults to the command")
@@ -276,7 +365,7 @@ test("emotes: [QFE-E2] picking Game emote swaps the Text box for the emote picke
     assertEqual(c.text, "")
 end)
 
-test("emotes: [QFE-E2] Save with Game emote and no pick stays open and names the picker", function()
+test("emotes: [QFE-E2] Save with None and no other action stays open: noAction (CA-M2-7)", function()
     local NS, _, _, P, Pop = popup()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     local w = P.during(function() Pop.Open(gid) end)
@@ -284,11 +373,11 @@ test("emotes: [QFE-E2] Save with Game emote and no pick stays open and names the
     P.find(w, "Dropdown", "Channel"):__fire("OnValueChanged", "gameEmote")
     local ok, field = Pop.Save()
     assertFalse(ok)
-    assertEqual(field, "emote")
+    assertEqual(field, "noAction")
     assertTrue(Pop.IsOpen())
 end)
 
-test("emotes: [QFE-E2] a user name is kept, and leaving Game emote drops the token on Save", function()
+test("emotes: [QFE-E2] a user name is kept, and leaving None keeps the emote beside the Line (CA-M2-7)", function()
     local NS, _, _, P, Pop = popup()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     local cid = NS.Library.CreateCalloutIn(gid, { name = "Look", text = "", channel = "gameEmote", emote = "POINT" })
@@ -302,7 +391,7 @@ test("emotes: [QFE-E2] a user name is kept, and leaving Game emote drops the tok
     local c = NS.db.profile.callouts[cid]
     assertEqual(c.channel, "say")
     assertEqual(c.text, "hello")
-    assertEqual(c.emote, false, "one action per callout")
+    assertEqual(c.emote, "WAVE", "the emote sits beside the Line")
 end)
 
 test("emotes: [QFE-E2] the popup's preview names the emote, and an unknown token's reason", function()
@@ -314,4 +403,54 @@ test("emotes: [QFE-E2] the popup's preview names the emote, and an unknown token
     lines = C.PreviewLines({ name = "X", text = "", channel = "gameEmote", emote = "FROMRETAIL" })
     assertEqual(lines[1], "Sends nothing here: This game emote is not on this client.")
     assertEqual(lines[2], "Emote token: FROMRETAIL")
+end)
+
+-- ── the browse tree (the popup's emote dropdown, owner 2026-11-13) ───────────────────────────
+
+test("emotes: the browse tree holds every emote once, at most 10 rows a level and 15 emotes a leaf", function()
+    local NS = live()
+    local E = NS.Emotes
+    local list, letters = {}, "abcdefghijklmnopqrstuvwxyz"
+    -- 520 emotes, uneven by letter (an S run as long as a client's), so the tree needs a third level.
+    for i = 1, 520 do
+        local c = i <= 90 and "s" or letters:sub(i % 26 + 1, i % 26 + 1)
+        list[i] = { token = "T" .. i, command = ("/%s%04d"):format(c, i) }
+    end
+    local seen, depth = {}, 0
+    local function walk(nodes, d)
+        depth = math.max(depth, d)
+        assertTrue(#nodes <= E.TREE_BRANCH, "a level of " .. #nodes .. " rows")
+        for _, n in ipairs(nodes) do
+            assertTrue(type(n.label) == "string" and n.label ~= "")
+            if n.emotes then
+                assertTrue(#n.emotes <= E.TREE_LEAF, "a leaf of " .. #n.emotes .. " emotes")
+                for _, e in ipairs(n.emotes) do
+                    assertNil(seen[e.token], "listed twice: " .. e.token)
+                    seen[e.token] = true
+                end
+            else
+                walk(n.children, d + 1)
+            end
+        end
+    end
+    local tree = E.Tree(list)
+    walk(tree, 1)
+    local n = 0
+    for _ in pairs(seen) do n = n + 1 end
+    assertEqual(n, 520, "every emote, once")
+    assertEqual(depth, 2, "two levels of rows over the emotes: letters, then ranges")
+    -- a letter is never split across two top rows, and the rows run A to Z
+    assertEqual(tree[1].label:sub(1, 1), "A")
+    assertEqual(tree[#tree].label:sub(-1), "Z")
+end)
+
+test("emotes: a short list is one level of letters; a run that fits a leaf holds its emotes", function()
+    local NS = live()
+    local tree = NS.Emotes.Tree({ { token = "WAVE", command = "/wave" }, { token = "BOW", command = "/bow" },
+        { token = "POINT", command = "/point" } })
+    -- red under: a range level added where the run already fits
+    assertEqual(#tree, 3, "a row a letter while there are at most 10")
+    assertEqual(tree[1].label, "B")
+    assertEqual(tree[1].emotes[1].token, "BOW")
+    assertEqual(#NS.Emotes.Tree({}), 0, "no emotes, no rows")
 end)

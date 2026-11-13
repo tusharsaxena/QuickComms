@@ -220,11 +220,6 @@ end
 -- text in muted white, cut at PREVIEW_CHARS characters. User text is drawn literal (literal below),
 -- so a typed "|" never opens an escape; the cut keeps every row one line (options-ui-§18's stride).
 local PREVIEW_CHARS = 40
-local SHORT_CHANNEL = {
-    smartGroup = L["Smart group"], smartLead = L["Smart lead"], party = L["Party"], raid = L["Raid"],
-    instance = L["Instance"], raidWarning = L["Raid warning"], say = L["Say"], yell = L["Yell"],
-    general = L["General"], emote = L["Emote"], gameEmote = L["Game emote"],
-}
 
 local function hex(r, g, b)
     local function byte(v) return math.floor(v * 255 + 0.5) end
@@ -249,24 +244,86 @@ local function preview(text)
     return literal(head)
 end
 
---- What a callout row previews: its text, or for a game emote (QFE-E2) the client's command for its
---- token, or the token and that this client lacks it.
-function G.CalloutSummary(c)
+-- What a callout row previews first: its text, or with no Line (QFE-E2) the client's command for its
+-- emote, the token and that this client lacks it, or nothing when the callout has another action.
+local function summaryHead(c)
     if not NS.Channels.IsGameEmote(c.channel) then return c.text or "" end
     local cmd = NS.Emotes.Command(c.emote)
     if cmd then return cmd end
-    if not c.emote then return L["(no emote)"] end
-    return L["%s (not on this client)"]:format(tostring(c.emote))
+    if c.emote then return L["%s (not on this client)"]:format(tostring(c.emote)) end
+    if c.ping or c.marker then return "" end
+    return L["(no emote)"]
+end
+
+-- The callout's other actions (combined actions §7), each "+ " and its part, a space apart: the emote's
+-- command beside a Line, "ping", and "Mark" with the marker. `paint`, when given, colors one part by
+-- its kind and draws the marker; without it the parts are plain, the marker as its {rtN} token.
+local function summaryParts(c, paint)
+    paint = paint or function(_, s) return s end
+    local parts = {}
+    if c.emote and not NS.Channels.IsGameEmote(c.channel) then
+        parts[#parts + 1] = paint("emote", literal(NS.Emotes.Command(c.emote) or tostring(c.emote)))
+    end
+    if c.ping then parts[#parts + 1] = paint("ping", L["ping"]) end
+    if c.marker then parts[#parts + 1] = paint("marker", L["Mark"], c.marker) end
+    return parts
+end
+
+local function joined(a, b)
+    if a == "" or b == "" then return a .. b end
+    return a .. " " .. b
+end
+
+-- The parts as one suffix, "+ " before each, the plus drawn with `plus` (identity when nil).
+local function suffix(parts, plus)
+    plus = plus or function(s) return s end
+    local out = {}
+    for i, part in ipairs(parts) do out[i] = plus("+") .. " " .. part end
+    return table.concat(out, " ")
+end
+
+local function plainPart(kind, s, marker)
+    if kind == "marker" then return s .. " {rt" .. tostring(marker) .. "}" end
+    return s
+end
+
+--- What a callout row previews: its text (or with no Line its emote's command), then its other
+--- actions, each "+ " and its part ("Kick + /point + ping + Mark {rt8}").
+function G.CalloutSummary(c)
+    return joined(summaryHead(c), suffix(summaryParts(c, plainPart)))
+end
+
+-- A raid target marker drawn as its icon, at the line's height.
+local function markerIcon(n)
+    return "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_" .. tostring(n) .. ":0|t"
+end
+
+-- Each action's own color on a callout row: the emote in the game's emote chat color (a game meaning,
+-- rung 4, as the channel's), the ping in the skin's info color (sem.info), the mark in this addon's
+-- owner token (qc.mark).
+local function paintPart(kind, s, marker)
+    if kind == "emote" then return ("|cff%s%s|r"):format(hex(NS.PadRender.ChannelColor("EMOTE")), s) end
+    if kind == "ping" then return NS.SkinMarkup("sem.info", s) end
+    return NS.SkinMarkup("qc.mark", s) .. " " .. markerIcon(marker)
 end
 
 local function calloutLabel(c, cid)
     if not c then return cid end
     -- The name in the heading gold and the preview in the tooltip's subtle gray, read from the skin
-    -- at call time; the channel keeps WoW's chat-type color (a game meaning, rung 4).
+    -- at call time; the channel keeps WoW's chat-type color (a game meaning, rung 4). The text is
+    -- cut, never the actions; each action wears its own color (paintPart), and a callout with no
+    -- Line leads with its emote's command, in the emote's color.
+    local subtle = function(s) return NS.SkinMarkup("gtip.subtle", s) end
+    local head = summaryHead(c)
+    if head ~= "" then
+        local isEmote = NS.Channels.IsGameEmote(c.channel) and NS.Emotes.Command(c.emote) == head
+        head = isEmote and paintPart("emote", literal(head)) or subtle(preview(head))
+    end
     return ("%s  |cff%s%s|r  %s"):format(NS.SkinMarkup("text.heading", literal(c.name or cid)),
-        channelColor(c.channel), SHORT_CHANNEL[c.channel] or tostring(c.channel),
-        NS.SkinMarkup("gtip.subtle", preview(G.CalloutSummary(c))))
+        channelColor(c.channel), Settings.Callouts.SHORT_CHANNEL[c.channel] or tostring(c.channel),
+        joined(head, suffix(summaryParts(c, paintPart), subtle)))
 end
+G.CalloutLabel = calloutLabel
 
 -- The group part of a Reuse entry ("<group>:", a set's "<set>: <child>:") is drawn in the muted
 -- gold LibKa0s gives a debug line's tag (the skin's log.tag, c9a66b under Ka0s Default), the
@@ -499,7 +556,7 @@ local function renderCallouts(ctx)
         entries[i] = { id = cid, label = calloutLabel(c, cid), ghost = c and c.name or cid,
             icon = c and c.icon or Ed.NoIcon("callout"), iconColor = c and c.iconColor or nil,
             edit = function() Settings.CalloutPopup.Open(gid, cid) end,
-            editTooltip = L["Edit this callout: its name, text, channel and icon."],
+            editTooltip = L["Edit its name, actions and icon."],
             remove = function() G.RemoveCallout(gid, cid) end,
             removeTooltip = L["Delete this callout. Asks first."] }
     end

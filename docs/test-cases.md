@@ -22,7 +22,22 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_mock_secure.lua (28)
+### test_locale.lua (12)
+
+- locale: the scan reads literal L reads, field reads and definitions, and skips comments and strings
+- locale: the enUS files come from the TOC, enUS.lua first and the topic files contiguous after it
+- locale: only enUS.lua creates NS.L; each topic file opens on NS.L and only assigns
+- locale: each topic file's TOC line is preceded by a LOAD-BEARING comment
+- locale: every literal L read resolves in the loaded NS.L, raw
+- locale: no key is dead (defined in an enUS file and read by no addon file)
+- locale: every dynamic L read is accounted for in the allowlist
+- locale: no key is defined twice, in one enUS file or across two
+- locale: the TOC loads locales/enUS_Settings.lua
+- locale: every enUS_Settings.lua key is read only under settings/
+- locale: every enUS.lua key has a reader outside settings/
+- locale: [CA-M4-4] every enUS_AutoThank.lua key is read only from modules/AutoThank*
+
+### test_mock_secure.lua (34)
 
 - mock: a secure button keeps its attributes and answers its name
 - mock: SetAttribute in combat is refused and recorded, never applied
@@ -52,13 +67,19 @@ Total.
 - mock secure: type click forwards to clickbutton-<button>
 - mock secure: a held modifier reads <mod>- and * attributes, never the plain button form
 - mock secure: a header with its mouse off still runs its _onclick from a binding and from Click
+- mock: C_Ping answers enabled with no cooldown by default, and each answer is settable
+- mock: CanBeRaidTarget answers true by default, and is settable
+- mock: IsInRaid, leadership, assist and everyone-assistant answer false by default, and are settable
+- mock: UnitExists("target") is settable and hands a secret back as is
+- mock: the ping and marker slash globals are set, and removable per case
+- mock: sentLines splits a sent macro on newlines, the newest by default
 
 ### test_bus.lua (2)
 
 - bus: every spec §17 message is declared with its exact name
 - bus: no two constants share a name
 
-### test_surface_parity.lua (18)
+### test_surface_parity.lua (21)
 
 - parity: the degraded load really is library-absent, and the live one is not
 - parity: the Core seam's namespace surface survives the library's absence
@@ -76,6 +97,9 @@ Total.
 - parity: the Env seam publishes the same NS members on both paths
 - parity: the Media seam publishes the same NS members on both paths
 - parity: the Glow seam's stub carries the LibKa0s-Glow-1.0 surface
+- parity: the Toast seam's stub carries every member of a live LibKa0s-Toast-1.0 toast
+- parity: the Toast seam publishes the same NS members on both paths
+- toast: the seam owns the toast and answers the library's instance, or the stub when it is absent
 - glow: modules/Glow.lua names no LibCustomGlow-1.0 member; the driver is the one mapping
 - glow: with LibKa0s absent the seam answers false and the button still records its style
 
@@ -108,7 +132,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (21)
+### test_database.lua (32)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -131,8 +155,19 @@ Total.
 - database: [polish] migrate: step 9 drops the retired slice border
 - database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is
 - database: [QFE-E3] step 19 adds the Emotes set to a stored profile once, after Solo, touching nothing else
+- database: [CA-M1-4] step 6's raw copy keeps a shipped callout's ping and marker
+- database: [CA-M3-3] step 20 gives an unedited shipped callout its emote, once, and writes nothing else
+- database: [CA-M3-3] step 20 leaves an edited callout alone: text, channel, emote, ping or marker
+- database: [CA-M3-3] step 20: renamed or recolored still gains (F4a); no origin gains nothing
+- database: [CA-M3-3] step 20 is safe on nil, empty, unseeded and damaged profiles
+- database: [CA-M3-4] step 20 inserts each Heal me row once, after its predecessor, from the frozen row
+- database: [CA-M3-4] step 20 part 2: appended without a predecessor; a renamed or reordered set still gains
+- database: [CA-M3-4] step 20 part 2: a deleted or duplicated set gains nothing; a held row is not added twice
+- database: [CA-M3-4] step 20 part 2: a stale counter whose fresh id the list holds already adds it once
+- database: [CA-M3-4] step 20 part 2 skips a damaged group and a dangling or damaged list entry
+- database: [CA-M3-5] the runner from 19 runs step 20 on every stored profile once
 
-### test_profile.lua (10)
+### test_profile.lua (12)
 
 - profile: behavior defaults match spec §5.1
 - profile: collections exist; default nextId is 1, past every seeded id after boot
@@ -144,8 +179,10 @@ Total.
 - prepare: a callout held by no group is dropped
 - prepare: is idempotent after a split
 - profile: step 18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
+- profile: [CA-M4-3] the thank defaults: on in the open world alone (R-B), an emote, no mute
+- profile: [CA-M4-3] the auto-thank constants (spec §9)
 
-### test_schema.lua (20)
+### test_schema.lua (29)
 
 - schema: every row validates against the defaults
 - schema: a stored row whose path has no default is counted, not passed vacuously
@@ -167,6 +204,15 @@ Total.
 - schema: a callout write that names no id is refused, even with callouts present
 - schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
 - schema: [layout guard] every stored path, default, range and choice set is as item 020 found it
+- schema: [CA-M1-5] callout.ping is a string row, none by default, with none and the four types
+- schema: [CA-M1-5] callout.marker is a number row, none by default, with none and 1 to 8 drawn as their icons
+- schema: [CA-M1-5] the seam sets and clears a ping and a marker, and neither row is reset-exempt
+- schema: [CA-M1-5] callout.emote is reworded: an emote is one of a callout's actions
+- schema: [CA-M4-13] every thank.* row's default is NS.C.PROFILE.thank's, on the Auto-thank page
+- schema: [CA-M4-13] /qc set thank.send line works, and a send kind it does not know is refused
+- schema: [CA-M4-13] the toast's position is reset-exempt: a page's Defaults keeps it, a named reset clears it
+- schema: [CA-M4-13] every thank.* write re-runs AT.Rewire, the only wire
+- schema: [CA-M4-13] switching auto-thank off through the seam takes the frame's UNIT_AURA down
 
 ### test_slash.lua (22)
 
@@ -193,7 +239,7 @@ Total.
 - slash: [toggle] the hidden state is this character's: a /reload or the next login restores it
 - slash: [characterization] PreviewLines' every branch: refused starts, a repeat, list's header, off with nothing on
 
-### test_disabled.lua (26)
+### test_disabled.lua (27)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
 - disabled 2: through /qc disable, nothing is registered, heard or scheduled
@@ -221,8 +267,9 @@ Total.
 - disabled [by hold]: under the perf hold alone, the Toggle Comms Pads key press refuses as /qc toggle does
 - disabled [by hold]: under the perf hold alone, test mode and Preview as refuse with the capture line
 - disabled [by hold]: with both holds the disabled line wins
+- disabled: [CA-M4-5] auto-thank's unit-filter frame holds UNIT_AURA for the player, and the stand-down takes it down
 
-### test_diagnostics.lua (13)
+### test_diagnostics.lua (14)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the launcher
@@ -237,8 +284,9 @@ Total.
 - diagnostics: [dial rework] the report names the pads' hidden state, each dial's look, the ring shown and every ring
 - diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each
 - diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength
+- diagnostics: [CA-M2-5] a combined macro shows each newline as \n, on one Send row
 
-### test_compat.lua (15)
+### test_compat.lua (32)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -255,6 +303,23 @@ Total.
 - compat: [QFE-F1] FrameStrata answers a plain strata, else the fallback (a secret on WoW Forever)
 - compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil
 - compat: [QF-04] GeneralJoined is true only when the client names channel 1 as General
+- compat: [CA-M1-2] PingCommand and MarkerCommand read the localized commands, nil when absent or secret
+- compat: [CA-M1-2] PingState answers off, cooldown or ok, and nil when it cannot read
+- compat: [CA-M1-2] TargetExists and CanMark are plain booleans, nil on a secret or a missing API
+- compat: [CA-M1-2] InRaid and EveryoneAssistant are plain, a secret reads false
+- compat: [CA-M1-2] MarkerRights: a raid needs leader, assist or everyone-assistant; a party may mark
+- compat: [CA-M1-R3] MarkerRights: a secret leader, assist or everyone-assistant answer is unknown, never noRights
+- mock: [CA-M4-1] the player's auras answer by instance id, their casters by GUID, and the helpful id list
+- mock: [CA-M4-1] auraUpdate builds a UNIT_AURA payload, and secretAuraUpdate wraps it
+- mock: [CA-M4-1] GUIDs, player info, group, friend and guild answers are settable
+- mock: [CA-M4-1] every frame answers its alpha and whether the cursor is over it
+- compat: [CA-M4-2] AuraCaster reads the caster's GUID first, then the aura's sourceUnit, and drops when neither reads
+- compat: [CA-M4-2] AuraCaster rejects an NPC, a pet, the player and a group member (a secret answer reads as in group)
+- compat: [CA-M4-2] AuraCaster drops an unreadable name, and marks a friend or a guildmate known
+- compat: [CA-M4-2] AuraByInstance answers the player's plain aura, nil when secret or gone
+- compat: [CA-M4-2] HelpfulAuraIds lists the player's helpful aura ids, nil when any is secret
+- compat: [CA-M4-2] WhisperName is Name-Realm with the realm normalized, the name alone on the same realm
+- compat: [CA-M4-2] WhisperName with regional names is First-Surname, whatever the realm
 
 ### test_identity.lua (11)
 
@@ -372,7 +437,7 @@ Total.
 - channels: [QFE-E1] the channel row offers Emote; the seam accepts it
 - channels: [QFE-E1] a Groups row names Emote in the emote color; a tooltip names its channel
 
-### test_emotes.lua (16)
+### test_emotes.lua (21)
 
 - emotes: [QFE-E2] the map is EMOTEn_TOKEN to its first free EMOTEn_CMDj over the client's indices, first index wins
 - emotes: [QFE-REV] a command the chat parser runs before an emote is skipped for the token's next one
@@ -383,19 +448,24 @@ Total.
 - emotes: [QFE-E2] an unknown or missing token bakes nothing and says why
 - emotes: [QFE-E2] a game emote locks as Say does
 - emotes: [QFE-E2] the library stores the token, copies keep it, and the seam writes it
-- emotes: [QFE-E2] the channel row offers Game emote; a Groups row previews the command
+- emotes: [QFE-E2] the channel row offers None (no chat line, D10); a Groups row previews the command
 - emotes: [QFE-E2] a pad button arms the command, and its echo is the player's CHAT_MSG_TEXT_EMOTE
 - emotes: [QFE-E2] a previewed game emote prints would emote /point and sends nothing
-- emotes: [QFE-E2] picking Game emote swaps the Text box for the emote picker; a pick names the callout
-- emotes: [QFE-E2] Save with Game emote and no pick stays open and names the picker
-- emotes: [QFE-E2] a user name is kept, and leaving Game emote drops the token on Save
+- emotes: [CA-M2-4] an emote beside a Line: its echo is the TEXT_EMOTE, the Line's the PARTY
+- emotes: [CA-M2-4] #16: Kick on me in Party with /point, ping Attack and Skull, out of combat
+- emotes: [CA-M2-4] #16: Kick on me in Party with /point, ping Attack and Skull, in combat
+- emotes: [QFE-E2] channel None hides the Text box beside the emote picker; a pick names the callout
+- emotes: [QFE-E2] Save with None and no other action stays open: noAction (CA-M2-7)
+- emotes: [QFE-E2] a user name is kept, and leaving None keeps the emote beside the Line (CA-M2-7)
 - emotes: [QFE-E2] the popup's preview names the emote, and an unknown token's reason
+- emotes: the browse tree holds every emote once, at most 10 rows a level and 15 emotes a leaf
+- emotes: a short list is one level of letters; a run that fits a leaf holds its emotes
 
-### test_bake.lua (12)
+### test_bake.lua (26)
 
 - bake: a plain callout bakes to prefix + text
 - bake: [review 1] a leading slash is refused, even after whitespace
-- bake: [review 1] newlines and control characters flatten to one line
+- bake: [review 1] newlines and control characters in data flatten: the Line is one line
 - bake: pipes are escaped, spell links are not
 - bake: [final minor 5] the 255-byte boundary counts the whole line: prefix, space, text, live tokens
 - bake: empty or whitespace-only text is refused
@@ -405,6 +475,20 @@ Total.
 - bake: baked token values are sanitized; spell links are not
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
+- bake: [CA-M1-7] BakeActions bakes a Line-only callout to today's Bake line
+- bake: [CA-M1-7] a Line that does not bake keeps today's reason, and the macro is nil
+- bake: [CA-M1-R1] HasLine is the Library's rule: whitespace or control-only text is no Line
+- bake: [CA-M5-2] HasLine answers as B.CleanText does on every kind of text, without cleaning it
+- bake: [CA-M1-7] the emote line is the client's command, on the TEXT_EMOTE chat type and the gameEmote lock
+- bake: [CA-M1-7] a ping bakes /ping [@target,exists] with its numeric keyword, no chat type and no lock
+- bake: [CA-M1-7] a marker bakes /tm [@target,exists] !N, which never toggles a mark off
+- bake: [CA-M1-7] a localized client's commands bake; an absent one gives noPing or noMarker and drops only that action
+- bake: [CA-M1-7] no action is noAction; a non-table is badCallout; Bake's contract is unchanged
+- bake: [CA-M2-2] the macro joins line, emote, ping, marker in that order, and no data byte follows a newline
+- bake: [CA-M2-2] info.total counts each line's budgeted length, a live token at its nominal, and one per newline
+- bake: [CA-M2-2] the Line's budget is the macro's 255 less the other actions and their newlines
+- bake: [CA-M2-2] nothing bakes: the Line's reason when it had one, else the first action's
+- bake: [CA-M2-2] solo with the self fallback: the Line gives no macro line and the other actions arm
 
 ### test_resolver.lua (13)
 
@@ -422,7 +506,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (30)
+### test_builtins.lua (40)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -454,14 +538,25 @@ Total.
 - builtins: [QFE-E3] every seeded emote token exists on both clients; the voice ones are speech emotes
 - builtins: [QFE-E3] each seeded emote bakes to the client's own command
 - builtins: [QFE-E3] a fresh profile seeds Emotes after Solo; Restore built-in groups brings it back
+- builtins: [CA-M1-6] BI.Callout takes extra action fields, and BI.Callouts rows take them as r[6]
+- builtins: [CA-M1-6] the Emotes set's data is as it shipped
+- builtins: [CA-M1-6] every shipped callout passes the callout check and holds an action
+- builtins: [CA-M1-6] no seeded callout keeps the catalog glyph name
+- builtins: [CA-M3-1] twelve shipped callouts carry an emote beside their line, exactly the spec's list
+- builtins: [CA-M3-1] Arena and every battleground set carry no emote (F4b: pvpMatch padlocks one)
+- builtins: [CA-M3-1] #20: Hello in a party sends its line, then its wave, on one press
+- builtins: [CA-M3-2] Dungeon and Raid gain a Heal me callout with the HEALME emote, in place
+- builtins: [CA-M3-2] set sizes: Solo 7, In Group 11, Dungeon 8, Raid 9; none over a dial's slices
+- builtins: [CA-M3-2] a fresh profile seeds both Heal me callouts; no Auto dial gains a page
 
-### test_gameids.lua (5)
+### test_gameids.lua (6)
 
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 - game ids: [instances] INSTANCES are dungeons and raids, cover the season's, and reach past it
 - game ids: [arena] ARENAS are arena maps, one per arena
 - game ids: [QFE-F3] every WoW Forever id has its FOREVER_MAPS row, of its kind
+- game ids: [CA-M4-3] THANK_RAID_BUFFS on each client: the single-target raid buffs a stranger can cast
 
 ### test_client_data.lua (9)
 
@@ -475,7 +570,7 @@ Total.
 - client data: [QFE-F3] the battleground row suggests the seeded sets' maps
 - client data: [QFE-F3] the token help leaves {dungeon} and {key} out on Forever
 
-### test_library.lua (67)
+### test_library.lua (83)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
@@ -544,6 +639,22 @@ Total.
 - library: [inherit] a new or seeded group inherits its parent's When; Duplicate and an untick keep false
 - library: [all] ValidWhen takes all on the instance and battleground rows, and on no other
 - library: [arena] ValidWhen takes arena ids and all on the arena row
+- library: [CA-M1-3] ValidPing takes the four types and none
+- library: [CA-M1-3] ValidMarker takes a whole 1 to 8 and none
+- library: [CA-M1-3] a bad ping or marker is refused on create
+- library: [CA-M1-3] HasAction counts a line, an emote, a ping and a marker
+- library: [CA-M1-3] CreateCallout refuses a callout with no action
+- library: [CA-M2-1] a callout may hold two, three or four actions
+- library: [CA-M1-3] a legacy callout with no action stays editable through the seam
+- library: [CA-M1-3] a seam write that takes away a callout's last action is refused
+- library: [CA-M2-1] a seam write that adds a second, third or fourth action is accepted
+- library: [CA-M2-1] /qc set makes a ping-only callout from a Game emote one
+- library: [CA-M1-3] a legacy game emote callout still validates and edits
+- library: [CA-M1-3] WriteActions judges a several-field edit as a whole
+- library: [CA-M1-4] the callout template carries ping and marker, as none
+- library: [CA-M1-4] CreateCallout keeps a ping and a marker
+- library: [CA-M1-4] a copied callout keeps its ping and its marker
+- library: [CA-M1-4] a seeded callout keeps its shipped ping and marker
 
 ### test_members.lua (28)
 
@@ -576,7 +687,7 @@ Total.
 - members: [inherit] the Enabled tooltip names whose When a sub-group is shown by
 - members: [arena] the CLI sets the arena row by id, name or all, and prints it back
 
-### test_editors.lua (19)
+### test_editors.lua (25)
 
 - editors: [review 2] Select keeps the selection, and nothing else; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -597,8 +708,14 @@ Total.
 - editors: [icons] a row's glyph is drawn in its color; a row with none is white
 - editors: [preview table] TableRows draws a header, then a boxed row per entry: its name in one cell, its text in the other
 - editors: [preview table] a table row gives its text the width the name leaves, and grows with the text
+- editors: [CA-M2-9] PreviewLines' first line sums up every action on one line
+- editors: [CA-M2-9] PreviewLines lists each action with its bytes, the macro total and the target note
+- editors: [CA-M2-9] one action keeps today's rows: no summary, no macro total
+- editors: [CA-M2-9] a skipped action says why; a locked Line gets its own lock row
+- editors: [CA-M2-R2] the summary draws a stored pipe literal, never as a UI escape
+- editors: [CA-M2-R2] a Line skipped for the macro's budget is measured against that budget
 
-### test_callout_popup.lua (38)
+### test_callout_popup.lua (56)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -638,6 +755,24 @@ Total.
 - popup: Name and Channel share a line, Text spans both, the icon has no box and sits under an Icon label
 - popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
 - popup: [icons] an icon that is no texture stays open and names the icon chooser
+- popup: [CA-M1-11] the draft carries emote, ping and marker, after the emote and before the icon
+- popup: [CA-M1-11] a callout set to a ping by /qc set opens with it, and Save keeps it
+- popup: [CA-M1-11] a marker-only callout saves with its marker; an emote keeps its emote
+- popup: [CA-M1-R2] a ping-only chat callout (empty text on party) saves a rename and keeps its ping
+- popup: [CA-M2-7] a Line or an emote picked for a ping callout sits beside the ping
+- popup: [CA-M2-7] the member rows the popup binds: name, channel, text, ping, marker
+- popup: [CA-M2-7] four slots: Name | Channel, Text, the emote, Ping | Marker, then the icon
+- popup: [CA-M2-7] picking a ping and a marker writes the draft; Save keeps them beside the Line
+- popup: [CA-M2-7] channel None hides Text, keeps the emote and the slots, and Save writes no text
+- popup: [CA-M2-7] the emote menu's None clears the draft's emote, and Save takes it off
+- popup: [CA-M2-7] Add opens with no emote, ping or marker
+- popup: [CA-M2-7] D10: the Channel list and the Groups rows call gameEmote None (no chat line)
+- popup: [CA-M2-7] the window is measured again when the channel swaps the Text line in or out
+- popup: [CA-M2-8] the Line is counted in bytes: 255 two-byte letters' worth is refused, 255 bytes saves
+- popup: [CA-M2-R3] a live token counts what the game may fill in, as the bake does
+- popup: [CA-M2-8] no action at all is refused by the check, naming the rule, and nothing is created
+- popup: [CA-M2-8] a bad emote, ping or marker names its own field
+- popup: [CA-M2-8] a ping-only callout with an empty Line on a chat channel still saves
 
 ### test_icon_browser.lua (14)
 
@@ -664,7 +799,7 @@ Total.
 - window icons: an AceGUI image of a game icon is cropped through SetImage and edged on a frame of the addon's own
 - window icons: the callout popup's icon chooser frames a game icon
 
-### test_groups_when.lua (21)
+### test_groups_when.lua (22)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
 - when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
@@ -687,8 +822,9 @@ Total.
 - when: [instances] a typed name finds any journal dungeon or raid, not the season's only
 - when: [arena] the arena row: names, Summary, All arenas, the CLI value, and its tooltip
 - when: [arena] Add the arena you are in reads the live snapshot, and refuses outside an arena
+- when: [CA-M4-14] ContentValues is public, and the content row offers exactly its values
 
-### test_page_groups.lua (49)
+### test_page_groups.lua (53)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -739,6 +875,10 @@ Total.
 - groups page: [rows] a callout row cuts its text at 40 characters, escapes |, and shows the fallback icon
 - groups page: [rows] a callout row's text cut counts UTF-8 characters, not bytes
 - groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it
+- groups page: [CA-M2-9] a callout row names its other actions: + /point + ping + Mark {rtN}
+- groups page: a callout row colors each action and draws its marker as the raid target icon
+- groups page: [CA-M2-9] the edit glyph's tooltip says it edits the callout's actions
+- groups page: [CA-M2-9] What it sends reads each callout's one-line summary
 
 ### test_page_groups_nesting.lua (19)
 
@@ -824,7 +964,7 @@ Total.
 - page dials: [polish] the page is titled Dial
 - page dials: [shine] the Slices tab has a Shine heading
 
-### test_check.lua (6)
+### test_check.lua (9)
 
 - check: a seeded callout prints its line and channel
 - check: a refused callout prints the reason
@@ -832,8 +972,11 @@ Total.
 - check: never calls SendChatMessage
 - check: [final minor 4] unknown and send-time tokens are listed
 - check: [final minor 4] solo with soloFallback=self says it would print locally
+- check: [CA-M1-12] a ping-only or marker-only callout prints its line and bytes
+- check: [CA-M2-10] a combined callout prints each action with its bytes, then the macro total
+- check: [CA-M2-10] a skipped action says why; a locked Line names its lock
 
-### test_send_guard.lua (11)
+### test_send_guard.lua (13)
 
 - guard: Decide is ok outside the window and guarded inside it
 - guard: Remaining counts down to zero
@@ -846,14 +989,17 @@ Total.
 - echo: Expire drops only presses older than the window, oldest first
 - queue: a key replaces its earlier entry and keeps its place
 - echo: [QF-04] only channel 1 is the General echo; an unreadable index is left to the sender rule
+- echo: [CA-M2-4] a press's entries settle once, when every one has echoed
+- echo: [CA-M2-4] Expire reports one drop per press: the first of its entries to expire
 
-### test_sendengine.lua (33)
+### test_sendengine.lua (49)
 
 - sendengine: a send button is a named secure button registered for both edges
 - sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
 - sendengine: in combat, building, arming and disarming are declined, so nothing is blocked
 - sendengine: RunOrQueue runs now out of combat
 - sendengine: in combat the queue keeps the last write per key and drains once at combat end
+- sendengine: [CA-M5-2] Queued says whether a key waits, until it drains or drops
 - sendengine: Drop empties the queue and nothing runs at combat end
 - sendengine: a failing queued entry is reported and the others still run
 - sendengine: Teardown in combat holds one PLAYER_REGEN_ENABLED and releases it when it fires
@@ -882,6 +1028,92 @@ Total.
 - sendengine: [phase 4] a wedge is wrapped before it is hooked, acts on the up edge, and only a left click is a press
 - sendengine: [phase 4] attributes, frame refs and snippets are written out of combat only, never blocked
 - sendengine: [keys] no override binding is written: a dial's key is WoW's own binding (modules/Dial.lua)
+- send: [CA-M1-9] a ping-only press decides once, stamps once, dims once, and reports sent at once (D16)
+- send: [CA-M1-9] in combat an armed ping-only button runs its macro, nothing blocked
+- send: [CA-M1-9] an armed button with no action ticks nothing
+- send: [CA-M1-9] the echo prints before the self line; the self line returns only with no action left
+- send: [CA-M1-9] no file names C_Ping.SendMacroPing: a ping runs from the secure macro only
+- send: [CA-M1-9] the tooltip's reasons name a callout with no action and a missing ping or marker command
+- send: [CA-M1-10] no target: a ping and a mark each say so once, named, in and out of combat
+- send: [CA-M1-10] a target that cannot be marked, and a raid member without rights, are named
+- send: [CA-M1-10] pings off and a running cooldown print; the press's own ping never reads as cooldown
+- send: [CA-M1-10] a secret target prints nothing, and PreClick writes no attribute
+- send: [CA-M2-4] a Line and an emote await two echoes and report one sent
+- send: [CA-M2-4] the emote's echo missing gives one dropped, and the note names the emote
+- send: [CA-M2-4] a locked Line beside an emote prints its note and awaits only the emote
+- send: [CA-M2-4] every action a locked chat action: print each, then no tick and no echo
+- send: [CA-M2-4] a locked Line beside a ping ticks and reports sent at once
+
+### test_autothank.lua (68)
+
+- autothank: [CA-M4-4] Accept takes a stranger's helpful buff (isFromPlayerOrPlayerPet is any player's)
+- autothank: [CA-M4-4] Accept rejects a harmful aura, an NPC's, no caster, and anything not plainly true
+- autothank: [CA-M4-4] Accept needs a duration of at least 60 s: 59 and 0 (no expiry) are refused
+- autothank: [CA-M4-4] Accept keeps a cooldown per caster and spell
+- autothank: [CA-M4-4] Accept with raid-buffs-only takes only THANK_RAID_BUFFS
+- autothank: [CA-M4-4] Accept's two mutes: strangers and known (friends and guild)
+- autothank: [CA-M4-4] Fill fills {name} and {buff}, flattens control bytes and doubles pipes
+- autothank: [CA-M4-4] Fill cuts at the budget on a UTF-8 boundary and never inside a doubled pipe
+- autothank: [CA-M4-4] Fill refuses a text that starts with / and an empty text
+- autothank: [CA-M4-4] Macro per mode: the THANK emote on the caster, a whisper, or both on two lines
+- autothank: [CA-THX-2] the emote names the caster's bare name; the whisper keeps Name-Realm
+- autothank: [CA-M4-4] Macro holds the whole macro to 255 bytes, the whisper's text cut to fit
+- autothank: [CA-M4-4] Macro refuses a / text and an empty one; both keeps the emote
+- autothank: [CA-M4-4] Macro reads the client's own /w through Compat: none refuses the whisper
+- autothank: [CA-M4-5] the frame hears UNIT_AURA for the player alone, on in the open world
+- autothank: [CA-M4-5] off, in a dungeon by default, or stood down, the frame hears nothing
+- autothank: [CA-M4-5] a profile switch re-reads the thank settings
+- autothank: [CA-M4-5] the stand-down unregisters the frame, and the stand-up re-uses it
+- autothank: [CA-M4-5] the frame's UNIT_AURA reaches AT.OnAura with its payload
+- autothank: [CA-M4-6] an added plain aura that passes Accept becomes a candidate, and is known
+- autothank: [CA-M4-6] a full update re-snapshots the known set silently
+- autothank: [CA-M4-6] removed ids leave the known set
+- autothank: [CA-M4-6] a secret or non-table payload sets dirty and indexes nothing
+- autothank: [CA-M4-6] in combat, or on the combat edge, it only marks dirty
+- autothank: [CA-M4-6] stood down, or the content kind off, gives nothing
+- autothank: [CA-M4-6] registering the frame snapshots the player's helpful auras silently
+- autothank: [CA-M4-7] a buff in the edge window is not diffed at the edge, and is thanked after the fight
+- autothank: [CA-M4-7] a secret payload in combat gives the new aura once at the end of combat
+- autothank: [CA-M5-2] auras in combat file the after-combat diff once, with no function made per event
+- autothank: [CA-M4-7] a /reload in combat with no RESTRICTION_CHANGED still diffs at PLAYER_REGEN_ENABLED
+- autothank: [CA-M4-7] a still restricted read stays dirty and toasts nothing
+- autothank: [CA-M4-7] the diff takes at most COMBAT_QUEUE candidates, newest first
+- autothank: [CA-M4-7] expired or unreadable auras drop quietly
+- autothank: [CA-M4-7] the diff waits while in combat or on the edge, and does nothing when clean
+- autothank: [CA-M4-R2] buffs held before a /reload in combat are not thanked after the fight
+- autothank: [CA-M4-R2] a known set kept across the fight still thanks the buff gained in it
+- autothank: [CA-M4-9] five strangers give 3 toasts on screen and 2 queued, shown GAP apart
+- autothank: [CA-M4-9] a toast names the caster and the buff, and starts the caster's cooldown
+- autothank: [CA-M4-9] maxQueue drops the oldest waiting toast
+- autothank: [CA-M4-9] no Show in lockdown: the host holds the payload and the pump waits
+- autothank: [CA-M4-9] the stand-down clears the toast, the host's list and its pump
+- autothank: [CA-M4-10] the combat edge holds the toast with no keepShown, while lockdown still reads false
+- autothank: [CA-M4-10] nothing releases the toast at the start of combat
+- autothank: [CA-M4-10] the end of combat releases the toast before the diff's own shows
+- autothank: [CA-M4-10] a /reload in combat with no RESTRICTION_CHANGED is released by the combat-end hook
+- autothank: [CA-M4-10] what the host held through combat is pumped after the release
+- autothank: [CA-M4-10] Hold(true) and Pause() are never called through a fight
+- autothank: [CA-M4-11] alpha is 1 until the last FADE seconds, then falls to 0
+- autothank: [CA-M4-11] hover holds alpha at 1 and pushes the due time by what it held
+- autothank: [CA-M4-11] leaving with under a second left gives one second
+- autothank: [CA-M4-11] OnUpdate is hooked once per frame, and a new draw starts at full alpha
+- autothank: [CA-M4-11] the fade does nothing in combat
+- autothank: [CA-M4-11] the library hides the toast at DURATION
+- autothank: [CA-M4-R1] a drag holds every toast's fade as the library holds its countdown
+- autothank: [CA-M4-R1] the stand-down forgets a drag in progress
+- autothank: [CA-M5-2] the toast's dragged spot is written through the schema seam, which refuses a bad point
+- autothank: [CA-M5-2] a drag the combat edge cuts short holds no later toast's fade
+- autothank: [CA-M4-12] the Thank click runs the macro of each mode
+- autothank: [CA-THX-2] the debug log traces the caster, the armed macro and the click
+- autothank: [CA-M4-12] a right-click never runs the macro
+- autothank: [CA-M4-12] a Thank click stamps no guard, so the next pad press is not guarded
+- autothank: [CA-M4-12] its result carries the toast key on the thank surface and touches no pad or dial
+- autothank: [CA-M4-12] the whisper under chat lockdown prints its note and awaits no echo
+- autothank: [CA-M4-12] both records two pending entries and gives one result
+- autothank: [CA-M4-12] an empty thank-you text leaves the whisper unarmed, and the toast says why
+- autothank: [CA-M4-12] Attach is called once per pool frame across reuses
+- autothank: [CA-M4-12] a click removes its toast through SE.RunOrQueue
+- autothank: [CA-M4-12] #19: a stranger's UNIT_AURA gives exactly one toast, naming the caster and the buff
 
 ### test_dial_secure.lua (20)
 
@@ -906,7 +1138,7 @@ Total.
 - dial secure: [QF-01] a live dial (no preview, or false) closes on a pick, in and out of combat
 - dial secure: [QF-01] a reload from preview to live clears the flag
 
-### test_preview.lua (36)
+### test_preview.lua (41)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -944,6 +1176,11 @@ Total.
 - preview: [click] a live armed button is unchanged: it sends its line and prints nothing
 - preview: [QF-01] a slice pick on a previewed, test or edit-preview dial echoes and leaves the dial open
 - preview: [QF-01] after /qc preview off a pick on the live dial sends and closes it
+- preview: [CA-M1-12] a previewed ping-only callout prints would ping Attack on your target
+- preview: [CA-M1-12] a previewed marker-only callout prints the marker as its icon
+- preview: [CA-M1-12] a skipped action shows its reason, and every entry is its own print
+- preview: [CA-M2-6] a previewed combined callout prints each action, baked or skipped, in order
+- preview: [CA-M2-6] a Line beside a marker: with no target the Line's %t prints its mock, the marker its icon
 
 ### test_edit_preview.lua (17)
 
@@ -993,7 +1230,7 @@ Total.
 - preview window: [QF-02] the settings window closing hides it; a hidden UIParent ends nothing
 - preview window: [QF-02] `/qc preview off` ends the edit preview too; with nothing on it writes nothing
 
-### test_coordinates.lua (8)
+### test_coordinates.lua (11)
 
 - coordinates: a live button bakes your position, and only a button that uses it re-bakes
 - coordinates: a press after you moved re-arms through PreClick and sends where you are now
@@ -1003,6 +1240,9 @@ Total.
 - coordinates: a Current preview's echo fills the position at the click
 - coordinates: an edit preview's echo fills the position at the click
 - coordinates: a previewed place that is not where you are prints <coordinates>
+- coordinates: [CA-M2-3] a re-bake that pushes the Line over budget refreshes the press meta
+- coordinates: [CA-M2-3] a re-bake where nothing bakes keeps the old macro and meta
+- coordinates: [CA-M2-R1] a lockdown that comes on after a re-bake reaches the press
 
 ### test_master.lua (5)
 
@@ -1070,7 +1310,7 @@ Total.
 - dial layout: [autofit] automatic icon size scales with the ring and clamps
 - dial layout: [autofit] auto cap reads the automatic reach and icon size
 
-### test_surfaces.lua (30)
+### test_surfaces.lua (36)
 
 - surfaces: in a key the default pad's plan is the M+ set, baked to /p
 - surfaces: [review 5] a refused callout is a slot with its reason and no line
@@ -1102,8 +1342,14 @@ Total.
 - surfaces: [nesting] a dial draws a parent's own callouts and a ring per child whose When matches
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 - surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
+- surfaces: [CA-M1-8] a slot carries its baked actions, chat types and locks; the skipped ones apart
+- surfaces: [CA-M1-8] a ping-only and a marker-only callout arm; one whose only action was skipped does not
+- surfaces: [CA-M1-8] RefreshLocks relocks each action and lights the chip when any is lockdown
+- surfaces: [CA-M1-R4] the chip lights when a later action is lockdown and the first lock is not
+- surfaces: [CA-M2-11] no addon file reads or writes slot.chatType or meta.chatType
+- surfaces: [CA-M2-11] an armed button's meta carries chatTypes and no single chatType
 
-### test_pad_render.lua (25)
+### test_pad_render.lua (28)
 
 - render: Dress builds a button's regions once, each its own object
 - render: [audit QC-07] the button's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -1130,6 +1376,9 @@ Total.
 - pad render: [shine] a rebuild that moved neither the look nor a button's size paints no shine
 - pad render: [shine] the pad's look leaves the dial alone
 - render: [QF-04] a General slot's tooltip names General in channel 1's color
+- render: [CA-M1-12] a ping-only button's tooltip shows its line and no channel; a skipped one its reason
+- render: [CA-M2-10] a combined button's tooltip lists each action, the channel under the Line only
+- render: [CA-M2-10] a skipped action shows its reason in its place; a lock row per lock
 
 ### test_pad_looks.lua (21)
 
@@ -1660,7 +1909,7 @@ Total.
 - layers: [audit QC-21] a modal window is clamped, never toplevel, never raised
 - layers: [QUI-Z06] the icon link window is lifted to POPUP
 
-### test_layout.lua (28)
+### test_layout.lua (31)
 
 - layout: [general] Behavior reads Sending, then Pads and dials, with the new labels (QUI-L01, L02)
 - layout: [general] the header Defaults carries the library's Reset all settings tooltip (QUI-L-new2)
@@ -1690,6 +1939,9 @@ Total.
 - layout: [position] the dial's block holds Open at, then the boxes, with their tooltip and Reset
 - layout: [position] the box follows the stored point on a refresh
 - layout: [position] both blocks come from the library's composer
+- layout: [autothank] the page's tabs are General, Where and Filter, with a Defaults that keeps the position
+- layout: [autothank] Where draws one check box per content kind this client offers
+- layout: [autothank] Filter's raid-buffs-only toggle is hidden on a client with no raid-buff ids (FRB)
 
 ### test_skinsetup.lua (25)
 
@@ -2012,7 +2264,7 @@ Total.
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
-### test_skin_switch.lua (26)
+### test_skin_switch.lua (28)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
 - skin switch: a pad's window changes
@@ -2039,6 +2291,8 @@ Total.
 - skin switch: the icon browser's selected cell changes
 - skin switch: the icon browser's selected cell changes with the Scope ignored
 - skin switch: a cell's hover art changes
+- skin switch: the thank toast's frame changes
+- skin switch: the thank toast's frame changes with the Scope ignored
 - skin switch: a settings row's remove mark changes
 
 ### test_client_globals.lua (3)
@@ -2052,53 +2306,55 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 11 |
-| test_mock_secure.lua | 28 |
+| test_locale.lua | 12 |
+| test_mock_secure.lua | 34 |
 | test_bus.lua | 2 |
-| test_surface_parity.lua | 18 |
+| test_surface_parity.lua | 21 |
 | test_setup.lua | 26 |
-| test_database.lua | 21 |
-| test_profile.lua | 10 |
-| test_schema.lua | 20 |
+| test_database.lua | 32 |
+| test_profile.lua | 12 |
+| test_schema.lua | 29 |
 | test_slash.lua | 22 |
-| test_disabled.lua | 26 |
-| test_diagnostics.lua | 13 |
-| test_compat.lua | 15 |
+| test_disabled.lua | 27 |
+| test_diagnostics.lua | 14 |
+| test_compat.lua | 32 |
 | test_identity.lua | 11 |
 | test_probe.lua | 18 |
 | test_restrictions.lua | 20 |
 | test_situation.lua | 20 |
 | test_tokens.lua | 11 |
 | test_channels.lua | 18 |
-| test_emotes.lua | 16 |
-| test_bake.lua | 12 |
+| test_emotes.lua | 21 |
+| test_bake.lua | 26 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 30 |
-| test_gameids.lua | 5 |
+| test_builtins.lua | 40 |
+| test_gameids.lua | 6 |
 | test_client_data.lua | 9 |
-| test_library.lua | 67 |
+| test_library.lua | 83 |
 | test_members.lua | 28 |
-| test_editors.lua | 19 |
-| test_callout_popup.lua | 38 |
+| test_editors.lua | 25 |
+| test_callout_popup.lua | 56 |
 | test_icon_browser.lua | 14 |
 | test_window_icons.lua | 5 |
-| test_groups_when.lua | 21 |
-| test_page_groups.lua | 49 |
+| test_groups_when.lua | 22 |
+| test_page_groups.lua | 53 |
 | test_page_groups_nesting.lua | 19 |
 | test_page_pads.lua | 28 |
 | test_page_dials.lua | 28 |
-| test_check.lua | 6 |
-| test_send_guard.lua | 11 |
-| test_sendengine.lua | 33 |
+| test_check.lua | 9 |
+| test_send_guard.lua | 13 |
+| test_sendengine.lua | 49 |
+| test_autothank.lua | 68 |
 | test_dial_secure.lua | 20 |
-| test_preview.lua | 36 |
+| test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
 | test_preview_window.lua | 25 |
-| test_coordinates.lua | 8 |
+| test_coordinates.lua | 11 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 31 |
-| test_surfaces.lua | 30 |
-| test_pad_render.lua | 25 |
+| test_surfaces.lua | 36 |
+| test_pad_render.lua | 28 |
 | test_pad_looks.lua | 21 |
 | test_pad_header.lua | 9 |
 | test_pad.lua | 47 |
@@ -2115,7 +2371,7 @@ Total.
 | test_glow.lua | 11 |
 | test_shine.lua | 8 |
 | test_layers.lua | 14 |
-| test_layout.lua | 28 |
+| test_layout.lua | 31 |
 | test_skinsetup.lua | 25 |
 | test_launcher_skin_entry.lua | 1 |
 | test_skin_windows.lua | 24 |
@@ -2135,7 +2391,7 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
-| test_skin_switch.lua | 26 |
+| test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1780** |
+| **Total** | **2028** |

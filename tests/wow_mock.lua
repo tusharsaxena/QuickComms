@@ -29,6 +29,30 @@
 --   playerGUID     UnitGUID("player")
 --   playerMap      C_Map.GetBestMapForUnit("player")'s map id (nil: no map, as in an instance)
 --   playerPos      { x, y } (fractions 0-1): C_Map.GetPlayerMapPosition's GetXY on playerMap (nil: none)
+--   pingEnabled    C_Ping.IsPingSystemEnabled()'s answer (true); the enablePings cvar defaults on
+--   pingCooldownEndMs  C_Ping.GetCooldownInfo().endTimeMs (0: no cooldown), on GetTime()*1000's base
+--   raidTargetable CanBeRaidTarget(unit)'s answer (true)
+--   isLeader, isAssist  UnitIsGroupLeader/UnitIsGroupAssistant("player") (false); IsInRaid reads the
+--                  base's __context.inRaid
+--   everyoneAssist IsEveryoneAssistant()'s answer (false)
+--   __unitExists   (the base's) [unit] = UnitExists's answer; a T.secret answer is handed back as is
+--   SLASH_PING1, SLASH_TARGET_MARKER1  "/ping" and "/tm"; a case sets either nil to drop the command
+--   sentLines(i)   the lines of sentMacros[i] (default the newest), split on "\n"; {} when none
+--   auras          [auraInstanceID] = the player's aura data (C_UnitAuras.GetAuraDataByAuraInstanceID)
+--   auraCasters    [auraInstanceID] = the caster's GUID (C_UnitAuras.GetAuraCasterGUID)
+--   auraInstanceIDs  GetUnitAuraInstanceIDs("player", "HELPFUL")'s answer when set; nil: the sorted
+--                  ids of every aura not plainly isHelpful == false (a secret aura is listed)
+--   addAura(fields)  adds an aura (helpful, from a player, 3600 s, Arcane Intellect 1459 unless
+--                  overridden; the next free auraInstanceID); fields.casterGUID fills auraCasters
+--   auraUpdate(t), secretAuraUpdate(t)  a UNIT_AURA updateInfo (isFullUpdate, addedAuras,
+--                  updatedAuraInstanceIDs, removedAuraInstanceIDs), plain or wrapped in T.secret
+--   unitGUIDs      [unit] = UnitGUID(unit) for any unit but "player" (which answers playerGUID)
+--   players        [guid] = { name, realm, class, classToken, race, raceToken, sex }: GetPlayerInfoByGUID
+--                  answers them in the client's order (name 6th, realm 7th); nil for an unknown GUID
+--   groupGUIDs, friendGUIDs, guildGUIDs  [guid] = C_PartyInfo.IsGUIDInGroup, C_FriendList.IsFriend
+--                  and IsGuildMember's answers (false when absent)
+--   SLASH_WHISPER1 "/w"
+--   every frame    SetAlpha/GetAlpha (when the frame has none) and IsMouseOver (`__mouseOver`)
 --   __click(b[, mouseButton])  a full press: the registered down edge, then the up edge; each edge
 --                  runs the button's PreClick script before its OnClick, as the client does
 --   __setCombat(on)            sets inCombat and re-evaluates every visibility driver
@@ -228,11 +252,99 @@ local function build()
         end,
     }
 
+    -- Pings, raid target markers and the target (CA-M1-1): the ping system's answers, the slash
+    -- commands the client registers (localized there; English here), and the player's marking rights.
+    M.cvars.enablePings = "1"
+    M.pingEnabled       = true
+    M.pingCooldownEndMs = 0
+    M.C_Ping = {
+        IsPingSystemEnabled = function() return M.pingEnabled end,
+        GetCooldownInfo = function() return { startTimeMs = 0, endTimeMs = M.pingCooldownEndMs } end,
+    }
+    M.SLASH_PING1          = "/ping"
+    M.SLASH_TARGET_MARKER1 = "/tm"
+    M.raidTargetable = true
+    M.CanBeRaidTarget = function() return M.raidTargetable end
+    M.isLeader, M.isAssist, M.everyoneAssist = false, false, false
+    M.UnitIsGroupLeader    = function(unit) return unit == "player" and M.isLeader or false end
+    M.UnitIsGroupAssistant = function(unit) return unit == "player" and M.isAssist or false end
+    M.IsEveryoneAssistant  = function() return M.everyoneAssist end
+    -- A secret (a kit wrapper, a table) is handed back as is, so a reader's IsSecret arm is reachable.
+    M.UnitExists = function(unit)
+        local v = M.__unitExists[unit]
+        if type(v) == "table" then return v end
+        return v == true
+    end
+    M.sentLines = function(i)
+        local sent = M.sentMacros[i or #M.sentMacros]
+        local lines = {}
+        if not sent then return lines end
+        for line in (sent.text .. "\n"):gmatch("(.-)\n") do lines[#lines + 1] = line end
+        return lines
+    end
+
+    -- Auras, GUIDs, friends and the guild (CA-M4-1, auto-thank): the player's auras by instance id,
+    -- each aura's caster GUID, the players a GUID names, and who is grouped, a friend or a guildmate.
+    -- Every answer is handed back as stored, so a T.secret planted in any table reaches the reader.
+    M.auras, M.auraCasters, M.auraInstanceIDs = {}, {}, nil
+    M.unitGUIDs, M.players, M.groupGUIDs, M.friendGUIDs, M.guildGUIDs = {}, {}, {}, {}, {}
+    local function helpfulIds()
+        local ids = {}
+        for id, aura in pairs(M.auras) do
+            if type(aura) ~= "table" or rawget(aura, "isHelpful") ~= false then ids[#ids + 1] = id end
+        end
+        table.sort(ids)
+        return ids
+    end
+    M.C_UnitAuras = {
+        GetAuraDataByAuraInstanceID = function(unit, id)
+            if unit ~= "player" then return nil end
+            return M.auras[id]
+        end,
+        GetAuraCasterGUID = function(unit, id)
+            if unit ~= "player" then return nil end
+            return M.auraCasters[id]
+        end,
+        GetUnitAuraInstanceIDs = function(unit, filter)
+            if unit ~= "player" or filter ~= "HELPFUL" then return {} end
+            if M.auraInstanceIDs ~= nil then return M.auraInstanceIDs end
+            return helpfulIds()
+        end,
+    }
+    M.addAura = function(fields)
+        local aura = { isHelpful = true, isFromPlayerOrPlayerPet = true, duration = 3600, spellId = 1459,
+            name = "Arcane Intellect" }
+        for k, v in pairs(fields or {}) do if k ~= "casterGUID" then aura[k] = v end end
+        if aura.auraInstanceID == nil then
+            local n = 0
+            for id in pairs(M.auras) do if type(id) == "number" and id > n then n = id end end
+            aura.auraInstanceID = n + 1
+        end
+        M.auras[aura.auraInstanceID] = aura
+        if fields and fields.casterGUID ~= nil then M.auraCasters[aura.auraInstanceID] = fields.casterGUID end
+        return aura
+    end
+    M.auraUpdate = function(t)
+        t = t or {}
+        return { isFullUpdate = t.isFullUpdate == true, addedAuras = t.addedAuras,
+            updatedAuraInstanceIDs = t.updatedAuraInstanceIDs, removedAuraInstanceIDs = t.removedAuraInstanceIDs }
+    end
+    M.secretAuraUpdate = function(t) return _G.QUICKCOMMS_TEST.secret(M.auraUpdate(t)) end
+    M.GetPlayerInfoByGUID = function(guid)
+        local p = M.players[guid]
+        if not p then return nil end
+        return p.class, p.classToken, p.race, p.raceToken, p.sex, p.name, p.realm
+    end
+    M.C_PartyInfo = { IsGUIDInGroup = function(guid) return M.groupGUIDs[guid] or false end }
+    M.C_FriendList = { IsFriend = function(guid) return M.friendGUIDs[guid] or false end }
+    M.IsGuildMember = function(guid) return M.guildGUIDs[guid] or false end
+    M.SLASH_WHISPER1 = "/w"
+
     M.GetCVarBool = function(name) return M.cvars[name] == "1" end
     M.C_CVar      = { GetCVarBool = function(name) return M.cvars[name] == "1" end }
     M.UnitGUID    = function(unit)
         if unit == "player" then return M.playerGUID end
-        return nil
+        return M.unitGUIDs[unit]
     end
     M.SOUNDKIT     = { TELL_MESSAGE = 3081 }
     M.ChatTypeInfo = {
@@ -866,58 +978,70 @@ local function build()
         function f:GetFont() local t = self.__font or {} return t[1], t[2], t[3] end
         return f
     end
+    -- A plain Button records its registered clicks too (the client's default is LeftButtonUp), so
+    -- `__click` and a CLICK binding (`__pressKey`) reach one only on an edge it registered.
+    local function plainClicks(f)
+        f.__clicks = { "LeftButtonUp" }
+        f.RegisterForClicks = function(self, ...)
+            self.__clicks = { ... }
+            return self
+        end
+    end
+    -- A Secure template's frame: refused in combat, its attributes, clicks and handle methods, a
+    -- header when it is a SecureHandler, and it and its ancestors protected.
+    local function dressSecure(f, name, parent, template)
+        if M.inCombat then refuse(f, "CreateFrame") end
+        f.__attrs, f.__clicks = {}, {}
+        f.GetName = function() return name end
+        f.SetAttribute = function(self, key, value)
+            self.__attrs[key] = value
+            return self
+        end
+        f.GetAttribute = function(self, key) return self.__attrs[key] end
+        f.RegisterForClicks = function(self, ...)
+            self.__clicks = { ... }
+            return self
+        end
+        f.__scripts.OnClick = secureOnClick
+        -- Button:Click(button): a virtual press, down then up as `__click` presses it (a
+        -- `type = "click"` forward reaches its delegate this way).
+        f.Click = function(self, mouseButton) M.__click(self, mouseButton) end
+        -- A wrap must come before an OnClick hook (makeHeader's WrapScript checks this flag).
+        local hook = f.HookScript
+        f.HookScript = function(self, script, fn)
+            if script == "OnClick" then self.__hooked = true end
+            return hook(self, script, fn)
+        end
+        addHandleMethods(f)
+        if template:find("SecureHandler", 1, true) then makeHeader(f) end
+        liveShow(f)
+        protect(f)
+        local p = parent
+        while type(p) == "table" and p ~= M.UIParent do
+            protect(p)
+            p = p.__parent
+        end
+        secureFrames[#secureFrames + 1] = f
+    end
     M.CreateFrame = function(frameType, name, parent, template)
         if type(template) == "string" and M.missingTemplates[template] then
             error("CreateFrame: Couldn't find inherited node \"" .. template .. "\"", 2)
         end
         local f = baseCreateFrame(frameType, name, parent, template)
+        -- Every frame answers its alpha and whether the cursor is over it (`__mouseOver`, false until a
+        -- case sets it): the toast's fade and its hover pause read both (CA-M4-1).
+        if rawget(f, "SetAlpha") == nil then
+            f.SetAlpha = function(self, a) self.__alpha = a return self end
+            f.GetAlpha = function(self) return self.__alpha or 1 end
+        end
+        f.IsMouseOver = function(self) return self.__mouseOver == true end
         if template == "SettingsFrameTemplate" then dressSettingsFrame(f) end
         if ours(f) then dress(f) end
         adopt(parent, f)
         if type(name) == "string" then M.__named[name] = f end
-        -- A plain Button records its registered clicks too (the client's default is LeftButtonUp), so
-        -- `__click` and a CLICK binding (`__pressKey`) reach one only on an edge it registered.
-        if frameType == "Button" and not (type(template) == "string" and template:find("Secure", 1, true)) then
-            f.__clicks = { "LeftButtonUp" }
-            f.RegisterForClicks = function(self, ...)
-                self.__clicks = { ... }
-                return self
-            end
-        end
-        if type(template) == "string" and template:find("Secure", 1, true) then
-            if M.inCombat then refuse(f, "CreateFrame") end
-            f.__attrs, f.__clicks = {}, {}
-            f.GetName = function() return name end
-            f.SetAttribute = function(self, key, value)
-                self.__attrs[key] = value
-                return self
-            end
-            f.GetAttribute = function(self, key) return self.__attrs[key] end
-            f.RegisterForClicks = function(self, ...)
-                self.__clicks = { ... }
-                return self
-            end
-            f.__scripts.OnClick = secureOnClick
-            -- Button:Click(button): a virtual press, down then up as `__click` presses it (a
-            -- `type = "click"` forward reaches its delegate this way).
-            f.Click = function(self, mouseButton) M.__click(self, mouseButton) end
-            -- A wrap must come before an OnClick hook (makeHeader's WrapScript checks this flag).
-            local hook = f.HookScript
-            f.HookScript = function(self, script, fn)
-                if script == "OnClick" then self.__hooked = true end
-                return hook(self, script, fn)
-            end
-            addHandleMethods(f)
-            if template:find("SecureHandler", 1, true) then makeHeader(f) end
-            liveShow(f)
-            protect(f)
-            local p = parent
-            while type(p) == "table" and p ~= M.UIParent do
-                protect(p)
-                p = p.__parent
-            end
-            secureFrames[#secureFrames + 1] = f
-        end
+        local secure = type(template) == "string" and template:find("Secure", 1, true)
+        if frameType == "Button" and not secure then plainClicks(f) end
+        if secure then dressSecure(f, name, parent, template) end
         return f
     end
     M.__secureFrames = function() return secureFrames end

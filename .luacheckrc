@@ -82,7 +82,15 @@ files["core/Compat.lua"] = {
   read_globals = { "C_XMLUtil",
     -- the ids probe's readers (QuickComms#21, /qc probe ids), each guarded for absence at call time
     "GetLFDChoiceOrder", "GetLFGDungeonInfo", "GetNumRandomDungeons", "GetLFGRandomDungeonInfo",
-    "GetNumBattlegroundTypes", "C_PvP", "C_LFGList" },
+    "GetNumBattlegroundTypes", "C_PvP", "C_LFGList",
+    -- pings and raid target markers (CA-M1-2): the localized commands, the ping state and marking
+    -- rights, each guarded for absence at call time
+    "C_Ping", "CanBeRaidTarget", "IsEveryoneAssistant", "SLASH_PING1", "SLASH_TARGET_MARKER1",
+    -- auto-thank (CA-M4-2): an aura's caster, the player's helpful auras, the caster's name and
+    -- whether a friend or guildmate cast it, each guarded for absence at call time
+    "C_UnitAuras", "C_PartyInfo", "C_FriendList", "GetPlayerInfoByGUID", "IsGuildMember",
+    -- the auto-thank whisper's localized /w command (CA-M4-4)
+    "SLASH_WHISPER1" },
 }
 
 -- QC:SlashEnabled and QC:OnSlashCommand are methods on the addon object by calling convention;

@@ -47,7 +47,9 @@ local _, NS = ...
 -- RESTRICTION_CHANGED edge into combat (still writable at PLAYER_REGEN_DISABLED) re-arms every such
 -- button once (RefreshRebakes), so a press in combat sends the position at the pull. PreClick is the
 -- client's place to adjust a secure action button's attributes before it acts; the line is written
--- by addon code exactly as Arm writes it at a rebuild, only later.
+-- by addon code exactly as Arm writes it at a rebuild, only later. The same hook, in and out of combat,
+-- reads the press-time notes (SE.PressNotes: no target, no marking rights, pings off or cooling down)
+-- before the macro runs; it only reads, and press() prints them once.
 
 NS.SendEngine = NS.SendEngine or {}
 local SE = NS.SendEngine
@@ -100,6 +102,19 @@ function SE.NewButton(parent, onPress, wrap)
     return b
 end
 
+--- Auto-thank's Thank button (#19, D4): a send button that acts on a left click alone, so a
+--- right-click (the toast's dismiss) never runs its macro. Its press is pressThank's. Nil in combat.
+--- @param parent table the toast frame it sits in
+--- @param onPress function|nil onPress(button), called after a press that sent something
+--- @return table|nil
+function SE.NewThankButton(parent, onPress)
+    local b = SE.NewButton(parent, onPress)
+    if not b then return nil end
+    b:RegisterForClicks("LeftButtonUp", "LeftButtonDown")
+    b.qcLeftOnly = true
+    return b
+end
+
 function SE.ButtonCount()
     return #buttons
 end
@@ -137,15 +152,25 @@ function SE.Disarm(b, meta)
     return true
 end
 
--- Re-arm `b` with its line re-baked now (QF-03), when it carries a `rebake` and is armed. Out of
--- combat only; a line that did not bake, or did not change, writes nothing.
+-- Re-arm `b` with its macro re-baked now (QF-03), when it carries a `rebake` and is armed. Out of
+-- combat only. The re-bake answers BakeActions' macro, reason, info: a macro refreshes the meta's
+-- actions, chat types, locks and skipped ones (combined actions §3), so the echo never waits for a
+-- Line the new position pushed over the macro's budget, and the press says why that Line dropped
+-- (meta.lineNote). Nothing baked keeps the old macro and meta; an unchanged macro writes nothing.
 local function rebake(b)
     local meta = b.qcMeta
     if not (b.qcArmed and meta and meta.rebake) or inCombat() then return false end
     local t0 = Perf.on and debugprofilestop()
-    local line = meta.rebake()
-    local changed = type(line) == "string" and line ~= b:GetAttribute("macrotext")
-    if changed then SE.Arm(b, line, meta) end
+    local macro, _, info = meta.rebake()
+    local changed = false
+    if type(macro) == "string" and type(info) == "table" then
+        NS.Surfaces.ApplyActions(meta, info)
+        local line = info.actions[1]
+        meta.lineNote = line and line.kind == "line" and line.reason == "tooLong"
+            and L["%s: the line is too long to send with its other actions."]:format(tostring(meta.name)) or nil
+        changed = macro ~= b:GetAttribute("macrotext")
+        if changed then SE.Arm(b, macro, meta) end
+    end
     if t0 then Perf.Note("coordsRebake", debugprofilestop() - t0) end
     return changed
 end
@@ -169,11 +194,12 @@ function SE.ArmedButtons()
     return out
 end
 
---- A button's baked line with its pipes doubled, for display (spec §16: shown escaped).
+--- A button's baked macro with its pipes doubled, for display (spec §16: shown escaped), and each
+--- "\n" between its actions shown as " \n " (combined actions §3), so a combined macro stays one row.
 function SE.Escaped(b)
     local text = b:GetAttribute("macrotext")
     if type(text) ~= "string" then return "" end
-    return (text:gsub("|", "||"))
+    return (text:gsub("|", "||"):gsub("\n", " \\n "))
 end
 
 -- ── visibility (spec §10.3): a state driver, never an insecure Show/Hide in combat ─────────
@@ -343,6 +369,13 @@ function SE.Drop(reason, keys)
     return n
 end
 
+--- Whether an entry is waiting under `key`, so a caller on a hot path files it once.
+--- @return boolean
+function SE.Queued(key)
+    local q = State.sendQueue
+    return q ~= nil and q.fns[key] ~= nil
+end
+
 --- The pending keys, for diagnostics.
 function SE.Snapshot()
     local q = State.sendQueue
@@ -404,14 +437,19 @@ local function result(meta, what)
     NS.addon:SendMessage(NS.MSG.SEND_RESULT, meta.calloutId, meta.surfaceId, what)
 end
 
+-- A drop note names the callout, and the emote when that is what dropped (CA-M2-4).
+local DROP_NOTE = {
+    emote = L["%s (emote) may not have been sent."],
+}
+
 local function expire()
     local e = State.sendEcho
     if not e then return end
     for _, p in ipairs(G.Expire(e, GetTime())) do
         result(p.meta, "dropped")
         if NS.Setting("behavior.dropNotes") then
-            NS.Print(L["%s may have been dropped by the game (sent too soon after another message)."]
-                :format(tostring(p.meta.name)))
+            local note = DROP_NOTE[p.kind] or L["%s may have been dropped by the game (sent too soon after another message)."]
+            NS.Print(note:format(tostring(p.meta.name)))
         end
     end
 end
@@ -432,41 +470,135 @@ local function useKeyDown(b)
     return v == true
 end
 
-local function press(b)
-    local meta = b.qcMeta
-    if not meta or NS.IsStoodDown() then return end
-    NS.Debug(TAG_S, "press %s on %s -> %s%s", tostring(meta.calloutId), tostring(meta.surfaceId),
-        tostring(meta.chatType or "none"), b.qcArmed and "" or " (disarmed)")
-    if meta.selfText then
-        NS.Print(meta.selfText)
-        return
-    end
-    -- A previewed button or wedge (disarmed, spec §13.3) or a test placeholder: the line it would have
-    -- sent, its tokens filled at the click (NS.Preview.FillEcho, QC-07), or why it would send
-    -- nothing, printed locally and nothing more. No attribute is read or written, no guard stamped
-    -- and no echo awaited, so a press in combat stays safe.
-    if meta.echo then
-        NS.Print(NS.Preview.FillEcho(meta.echo))
-        return
-    end
-    if not (b.qcArmed and meta.chatType) then return end
-    -- A padlocked button stays armed (spec §8.4), but the game is expected to refuse it: no echo is
-    -- awaited and no guard stamped, so a refusal is never blamed on the spam guard.
-    local lockText = meta.lockText and meta.lockText()
-    if lockText then
-        if NS.Setting("behavior.dropNotes") then
-            NS.Print(L["%s may not have been sent. %s"]:format(tostring(meta.name), lockText))
+local function hasActions(meta)
+    return type(meta.actions) == "table" and #meta.actions > 0
+end
+
+-- A disarmed button's echo: one print per entry (Preview.SlotEcho's list), never a newline inside one.
+local function printNotes(notes)
+    for _, note in ipairs(notes or {}) do NS.Print(note) end
+end
+
+local function printEcho(echo)
+    if type(echo) ~= "table" then echo = { echo } end
+    for _, e in ipairs(echo) do NS.Print(NS.Preview.FillEcho(e)) end
+end
+
+-- A press's baked chat actions, split by their live lock (combined actions §4 step 6): the open ones
+-- await an echo, each locked one prints its note ("may not have been sent", with why) and awaits none.
+-- The lock is read at the press from the current snapshot (CA-M2-R1), never the bake's copy: a
+-- press-time or combat-edge re-bake gives the meta its own action tables, which S.RefreshLocks never
+-- reaches, so a lockdown that came on after it would otherwise be tracked as a send. An action with no
+-- concrete channel (a test's hand-built meta) keeps the lock it carries. Safe in combat: plain reads.
+local function chatActions(meta)
+    local open, locked, snap = {}, {}, nil
+    for _, a in ipairs(meta.actions) do
+        if a.chatType then
+            local lock = a.lock
+            if a.concrete then
+                snap = snap or NS.Situation.Current()
+                lock = NS.Channels.LockState(a.concrete, snap)
+            end
+            if lock then locked[#locked + 1] = lock else open[#open + 1] = a end
         end
+    end
+    return open, locked
+end
+
+local function lockNotes(meta, locked)
+    if not NS.Setting("behavior.dropNotes") then return end
+    for _, lock in ipairs(locked) do
+        local why = meta.lockText and meta.lockText(lock) or tostring(lock)
+        NS.Print(L["%s may not have been sent. %s"]:format(tostring(meta.name), why))
+    end
+end
+
+-- One entry per open chat action, all sharing one press, so the press reports one result (D7); with
+-- none to await, "sent" at once (D16: the flash is not a confirmation).
+local function track(meta, open, now)
+    if not open[1] then
+        result(meta, "sent")
         return
     end
+    local p = { need = #open, got = 0, done = false }
+    for _, a in ipairs(open) do G.Record(echoState(), now, a.chatType, meta, p, a.kind) end
+    scheduleExpiry()
+end
+
+-- Why a Thank action is locked now, or nil: the whisper under the chat lockdown, the emote by the
+-- game emote's own lock. Plain reads, safe in combat.
+local function thankLock(a)
+    if a.kind == "whisper" then
+        return NS.Compat.InChatMessagingLockdown() and "whisperLockdown" or nil
+    end
+    return NS.Channels.LockState("gameEmote", NS.Situation.Current())
+end
+
+-- A Thank press (#19, spec §9 The Thank button): its own path, with no G.Decide and no lastSendAt
+-- stamp, so a Thank click never marks the next pad press as guarded. Each locked action prints its
+-- note and awaits no echo; each open one is one pending entry of the press, which reports one
+-- result under the toast's key on the "thank" surface, a surface no pad or dial owns.
+local function pressThank(b, meta)
+    if not (b.qcArmed and hasActions(meta)) then return end
+    local open, locked = {}, {}
+    for _, a in ipairs(meta.actions) do
+        local lock = thankLock(a)
+        if lock then locked[#locked + 1] = lock else open[#open + 1] = a end
+    end
+    lockNotes(meta, locked)
+    if #locked == #meta.actions then return end
+    track(meta, open, GetTime())
+    if b.qcOnPress then b.qcOnPress(b) end
+end
+
+-- The armed half of a press: the press-time notes, the lock notes, then one G.Decide, one lastSendAt
+-- stamp and one qcOnPress for the open actions.
+local function pressArmed(b, meta, notes)
+    if not (b.qcArmed and hasActions(meta)) then return end
+    -- Why a ping or a mark cannot land (D15): read in PreClick, before the macro ran, printed once;
+    -- and why the press-time re-bake dropped the Line (CA-M2-3).
+    printNotes(notes)
+    if meta.lineNote then NS.Print(meta.lineNote) end
+    -- A padlocked action stays in the armed macro (spec §8.4), but the game is expected to refuse it:
+    -- it prints its note and awaits no echo. When every action is a locked chat action, no guard is
+    -- stamped either, so a refusal is never blamed on the spam guard.
+    local open, locked = chatActions(meta)
+    lockNotes(meta, locked)
+    if #locked == #meta.actions then return end
     local now = GetTime()
     local window = NS.Setting("behavior.spamGuard")
     local verdict = G.Decide(now, State.lastSendAt, window)
     State.lastSendAt = now
-    G.Record(echoState(), now, meta.chatType, meta)
-    scheduleExpiry()
     if verdict == "guarded" then result(meta, "guarded") end
+    track(meta, open, now)
     if b.qcOnPress then b.qcOnPress(b, verdict, window) end
+end
+
+-- The press (combined actions §4). One G.Decide, one lastSendAt stamp and one qcOnPress per press,
+-- however many actions it has (D7).
+local function press(b)
+    local meta, notes = b.qcMeta, b.qcPressNotes
+    b.qcPressNotes = nil
+    if not meta or NS.IsStoodDown() then return end
+    if meta.kind == "thank" then return pressThank(b, meta) end
+    NS.Debug(TAG_S, "press %s on %s -> %s%s", tostring(meta.calloutId), tostring(meta.surfaceId),
+        table.concat(meta.chatTypes or {}, "+"), b.qcArmed and "" or " (disarmed)")
+    -- A previewed button or wedge (disarmed, spec §13.3) or a test placeholder: the line it would have
+    -- sent, its tokens filled at the click (NS.Preview.FillEcho, QC-07), or why it would send
+    -- nothing, printed locally and nothing more. No attribute is read or written, no guard stamped
+    -- and no echo awaited, so a press in combat stays safe. It comes before the self line, so a
+    -- previewed press prints what every action would do and never acts.
+    if meta.echo then
+        printEcho(meta.echo)
+        return
+    end
+    -- The solo self line (the Line's "self" fallback): printed, and the press goes on only for the
+    -- other actions that baked.
+    if meta.selfText then
+        NS.Print(meta.selfText)
+        if not hasActions(meta) then return end
+    end
+    return pressArmed(b, meta, notes)
 end
 
 -- Whether this click edge is the one a press acts on. A catcher's forward clicks a wedge with its
@@ -476,20 +608,75 @@ local function actingPress(b, mouseButton, down)
     return G.IsActingEdge(down, useKeyDown(b))
 end
 
+--- A macro on one line for the debug log: each newline shown as " \\n ", nil as "nil".
+function SE.DebugMacro(macro)
+    if type(macro) ~= "string" then return "nil" end
+    return (macro:gsub("\n", " \\n "))
+end
+
+-- The Thank click's debug trail (owner, 2026-11-11): each edge, whether it acts, and what the secure
+-- template is about to run (its type and macrotext as set on the button now).
+local function debugThank(b, hook, mouseButton, down)
+    if not (b.qcMeta and b.qcMeta.kind == "thank") then return end
+    NS.Debug("Thank", "%s %s: button=%s down=%s acting=%s armed=%s combat=%s type=%s macro=[%s]", hook,
+        tostring(b.qcMeta.calloutId), tostring(mouseButton), tostring(down),
+        tostring(actingPress(b, mouseButton, down)), tostring(b.qcArmed), tostring(inCombat()),
+        tostring(b:GetAttribute("type")), SE.DebugMacro(b:GetAttribute("macrotext")))
+end
+
 --- The OnClick hook every send button carries. Acts once per press, on the edge the secure
 --- template acts on.
 function SE.OnClick(b, mouseButton, down)
+    debugThank(b, "click", mouseButton, down)
     if not actingPress(b, mouseButton, down) then return end
     local t0 = Perf.on and debugprofilestop()
     press(b)
     if t0 then Perf.Note("sendClick", debugprofilestop() - t0) end
 end
 
---- The PreClick hook every send button carries: a re-baking button's line, re-armed with where you
---- are at the press, on the edge the secure template acts on. In combat it returns at once.
+local PING_NOTE = { off = L["%s: pings are turned off."], cooldown = L["%s: your ping is on cooldown."] }
+
+local function markerNotes(out, name, C)
+    local target = C.TargetExists()
+    if target == false then
+        out[#out + 1] = L["%s: no target to mark."]:format(name)
+    elseif target and C.CanMark("target") == false then
+        out[#out + 1] = L["%s: that target cannot be marked."]:format(name)
+    end
+    if C.MarkerRights() == "noRights" then
+        out[#out + 1] = L["%s: you need leader or assist to mark in a raid."]:format(name)
+    end
+end
+
+local function pingNotes(out, name, C)
+    if C.TargetExists() == false then out[#out + 1] = L["%s: no target to ping."]:format(name) end
+    local note = PING_NOTE[C.PingState()]
+    if note then out[#out + 1] = note:format(name) end
+end
+
+--- Why a press's baked pings and marks cannot land (D15): no target, a target that cannot be marked,
+--- no marking rights in a raid, pings off or cooling down. Plain Compat reads only, safe in combat;
+--- an unknown (secret) answer gives no note. Reads, never writes an attribute.
+--- @param meta table the button's meta (actions, name)
+--- @return table|nil notes, each text named with meta.name; nil when there is nothing to say
+function SE.PressNotes(meta)
+    if not (meta and hasActions(meta)) then return nil end
+    local C, name, out = NS.Compat, tostring(meta.name), {}
+    for _, a in ipairs(meta.actions) do
+        if a.kind == "ping" then pingNotes(out, name, C)
+        elseif a.kind == "marker" then markerNotes(out, name, C) end
+    end
+    return out[1] and out or nil
+end
+
+--- The PreClick hook every send button carries, on the edge the secure template acts on. In and out
+--- of combat it reads the press-time notes (before the macro runs, so a press's own ping never reads
+--- as a cooldown); out of combat only, a re-baking button's line is re-armed with where you are.
 function SE.PreClick(b, mouseButton, down)
-    if inCombat() or not (b.qcMeta and b.qcMeta.rebake) then return end
-    if actingPress(b, mouseButton, down) then rebake(b) end
+    if not (b.qcMeta and actingPress(b, mouseButton, down)) then return end
+    b.qcPressNotes = b.qcArmed and SE.PressNotes(b.qcMeta) or nil
+    if inCombat() or not b.qcMeta.rebake then return end
+    rebake(b)
 end
 
 function SE.GuardState()
@@ -515,10 +702,11 @@ function NS.addon.OnSendEcho(_, event, ...)
         return
     end
     local t0 = Perf.on and debugprofilestop()
-    local sender = select(2, ...)
-    local guid = select(12, ...)
-    local hit = G.Match(e, G.CHAT_TYPE_BY_EVENT[event], GetTime(), NS.Compat.SenderIsPlayer(sender, guid))
-    if hit then result(hit.meta, "sent") end
+    -- A whisper's echo names the recipient as its sender: it is the player's own (D4).
+    local fromMe = true
+    if event ~= "CHAT_MSG_WHISPER_INFORM" then fromMe = NS.Compat.SenderIsPlayer(select(2, ...), select(12, ...)) end
+    local hit = G.Match(e, G.CHAT_TYPE_BY_EVENT[event], GetTime(), fromMe)
+    if hit and G.Settle(hit) then result(hit.meta, "sent") end
     if t0 then Perf.Note("echoMatch", debugprofilestop() - t0) end
 end
 

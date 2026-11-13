@@ -48,7 +48,7 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time by LibKa0s-Glow-1.0 and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.95.0 payload, of which sixteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.95.0 payload, of which seventeen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -66,6 +66,7 @@ lists the toolchain):
 | Perf | `core/PerfSetup.lua` | the performance harness |
 | DebugLog | `core/DebugLogSetup.lua` | the debug console and the diagnostics report |
 | Launcher | `core/LauncherSetup.lua` | the minimap button and broker plugin, one object |
+| Toast | `core/ToastSetup.lua` | auto-thank's "buffed you" toast (`NS.NewToast`, #19): the stacked, draggable alert shell `modules/AutoThank_Toast.lua` draws in, at the library's HIGH strata, with a no-op stub (`NS.ToastStub`) when the library is absent |
 | Schema | `settings/SchemaSetup.lua` | the write seam's runtime |
 | Options | `settings/OptionsSetup.lua` | the settings panel, the When tab's drawers among its rows (`H.Drawer`, `OptionsDrawer.lua`, since v1.73.0) |
 | Slash | `settings/Slash.lua` | the `/qc` dispatcher |
@@ -81,10 +82,13 @@ On screen: the settings panel, the editor pages, the minimap button, the Comms P
 ## Module Map
 
 Every file, its kind, its TOC position and what it does is in [`module-map.md`](module-map.md). In
-short: `core/` holds the identity, twelve of the setup files, the session state, the addon object and
+short: `core/` holds the identity, thirteen of the setup files, the session state, the addon object and
 its lifecycle, and the migration runner; `defaults/` the default values and the shipped built-in sets
 (seed data); `modules/` the modules and the diagnostics sections; `settings/` the schema, the panel
-pages and the slash table and its verb bodies. `Bindings.xml` sits at the root, beside the TOC, and is
+pages and the slash table and its verb bodies. `locales/` holds the base locale, `enUS.lua` (the only
+file that creates `NS.L`), and its topic files `enUS_Settings.lua`, which holds the strings only
+`settings/` reads, and `enUS_AutoThank.lua`, which holds the strings only `modules/AutoThank*.lua` reads
+(localization-§6). `Bindings.xml` sits at the root, beside the TOC, and is
 not a TOC line: the client reads it there, and the standard allows it (layout-§1, toc-file-§4
 (standard v2.80.0)).
 
@@ -95,7 +99,9 @@ dial and owns the one rebuild request. `Library` is the one registry writer. `Se
 secure writer, and `Dial_Secure` holds the dial's restricted snippets as text and asks SendEngine for
 every write. The render modules (`Pad_Render`, `Dial_Render`, `Dial_Slices`, `IconStyle`, `Glow`,
 `Shine`) paint insecure visuals, and the frame modules (`Pad`, `Dial`, `PreviewWindow`) own the
-frames and pools. `Preview` holds test mode and the two previews as session state, and the settings
+frames and pools. `AutoThank` (#19) decides which buffs from other players to thank, purely, and listens
+to the player's auras on a private unit-filter frame; `AutoThank_Toast` turns each candidate into a
+paced toast whose Thank button is a SendEngine send button. `Preview` holds test mode and the two previews as session state, and the settings
 files build the panel pages, the callout popup and the icon browser.
 
 ### Per-client features
@@ -123,6 +129,8 @@ the tracked source against both clients' API sets.
 | The role (the Role condition, `{role}`, `/qc why`) | the player's pick, then the group's assigned role, then the spec's | the pick, the assigned role, then the talent tree with the most points spent, then the spec's (C1) | `Role.Resolve` over `db.char.role`, `core/Compat.lua` `PlayerRole`; the Role row on General → Behavior |
 | `/qc probe`, `/qc probe ids`, `/qc probe clear` | yes, records under `global.probes.retail` | yes, records under `global.probes.forever`, with the talent groups; `probe ids` is the in-game check of Forever's derived ids, read with no travel (QuickComms#21), its group finder line comparing the shipped ids with the activities Forever's own group finder lists (D5) | `settings/SlashVerbs.lua`, `Compat.ProbeInstance` / `TalentGroups` / `EmoteTokens` / `ProbeMapNames` / `ProbeDungeonFinder` / `ProbeBattlegrounds` / `ProbeGroupFinder` |
 | Emote callouts (`emote`, a custom `/e`; `gameEmote`, the client's own emote) and the Emotes set | yes | yes, the same (the emote lists are byte-identical, C5) | `modules/Channels.lua`, `modules/Emotes.lua`, `defaults/BuiltIns_Emotes.lua` |
+| Auto-thank's raid-buffs-only allowlist (#19, `thank.raidBuffsOnly`) | Arcane Intellect, Power Word: Fortitude and Mark of the Wild (1459, 21562, 1126) | every rank of the same three (Arcane Intellect 1459-1461, 10156, 10157; Power Word: Fortitude 1243-1245, 2791, 10937, 10938; Mark of the Wild 1126, 5232, 6756, 5234, 8907, 9884, 9885), from Forever's own spell tables, so the toggle shows on both clients (FRB); a client whose list were empty would hide it. The ids are unverified in game (THANK-7) | `THANK_RAID_BUFFS`, `defaults/GameIds_Clients.lua`; `settings/AutoThank.lua` |
+| A callout's Ping (#17) and Raid marker (#18) actions, on the target | yes: `/ping [@target,exists] <n>` (Blizzard_PingUI's secure `/ping`) and `/tm [@target,exists] !<n>` | yes, the same: Forever ships Blizzard_PingUI and the same `/ping` and `/tm` handlers (build 1.60.1.70888); whether its servers deliver a ping is unverified (PING-3), and `/tm`'s name there is MARK-6. Each command is the client's localized one, and a client with no `C_Ping` drops the Ping action alone | `modules/Bake.lua` (`B.BakeActions`), `Compat.PingCommand` / `MarkerCommand`, `core/Compat.lua` |
 
 ## Settings Schema
 
@@ -132,7 +140,14 @@ Master controls rows (`enabled`, `visibility`, `scale`, `alpha` and `locked`, de
 `always`, 1, 1 and `false`; the session rows `state.debugConsole`, `state.testMode` and
 `state.previewAs`; the minimap row), then the Behavior rows (`behavior.*`, spliced in by
 `settings/SchemaRows.lua`, with the seven `skin.*` rows the Skin tab draws), then the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`,
-`settings/SchemaMembers.lua`), each addressed through `Library.Member`. Every module reads a setting
+`settings/SchemaMembers.lua`), each addressed through `Library.Member`. A callout's actions are its
+Line (`callout.channel` and `callout.text`), `callout.emote` (the game emote it performs, after its line
+if it has one), `callout.ping` (none, attack, warning, onmyway or assist) and `callout.marker` (none,
+or 1 star to 8 skull). A write that would take away a callout's last action is refused (`noAction`,
+`Library.KeepsAction`); a callout holds up to four, one per kind (#16). Auto-thank's rows are `thank.*`
+(`settings/AutoThank.lua`, the Auto-thank page): `enabled`, `send` (emote, line or both), `text`, `mute`,
+`raidBuffsOnly`, one `thank.content.<kind>` per content kind, and `position`, the toast's dragged spot,
+which a page's Defaults keeps; every one's `onChange` re-runs `AutoThank.Rewire`. Every module reads a setting
 through `NS.Setting(path)`, which answers the row's default before the database exists; the shared
 reactions are `Settings.REACTIONS`, and `enabled` is `writeThrough` so `/qc enable|disable` still
 lands on a load where the composers are hollow (options-ui-§1 route (a)).
@@ -140,7 +155,9 @@ lands on a load where the composers are hollow (options-ui-§1 route (a)).
 The structural registry (membership and order of the callouts, groups, pads and dials, `nextId`, the
 seeding records) has one writer, `modules/Library.lua`, with its schemaVersion steps in
 `modules/Library_Migrate.lua`; each user callout sits in exactly one user group. The shipped sets are
-seed data, given to each profile once as ordinary groups. `Library.Prepare` is the load pass after the
+seed data, given to each profile once as ordinary groups; schema step 20 (`Library.MigrateComboCallouts`)
+gives a stored profile's unedited shipped callouts their new emote and the Dungeon and Raid sets their
+Heal me callout, from frozen tables, never from the shipped data at run time. `Library.Prepare` is the load pass after the
 migrations: it seeds, normalizes, drops dangling ids and keeps the ownership rule. The rows, every
 default, the member rows' addressing, the migrations and the one list of named non-setting state
 (each key's owner module and every writer) are in [`schema.md`](schema.md); the panel is in
@@ -155,9 +172,9 @@ tracked registration down and replay it.
 
 | `NS.MSG` key | Wire suffix | Sender | Payload | Consumers |
 |---|---|---|---|---|
-| `PROFILE_CHANGED` | `ProfileChanged` | `core/QuickComms.lua` `reloadProfile` (every AceDB profile event) | none | Surfaces (`Request`, after dropping the queued `surfaces` and `positions` entries; a held drag's stop stays); the editor pages (`settings/Editors.lua`, one deferred repaint); the icon browser (closes as Cancel) |
-| `SITUATION_CHANGED` | `SituationChanged` | `modules/Situation.lua`, only when the signature moves | snapshot, previous | Surfaces (`Request`); the editor pages (`settings/Editors.lua`, one deferred repaint) |
-| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua`, when the set of blocking reasons (combat included) moves | reason, canSendChat | Situation (merges lockdown and combat into the snapshot in place); Surfaces (`RefreshLocks`: padlocks, the lockdown chip, the fade); Preview (ends test mode, Preview as and the edit preview at the combat edge); the Groups page (`settings/Groups.lua` `SyncEditPreview(true)`: the edit preview back once combat ends, while the page is on screen, with no start line); Pad (ends a drag at the combat edge); SendEngine (drains the combat-end queue) |
+| `PROFILE_CHANGED` | `ProfileChanged` | `core/QuickComms.lua` `reloadProfile` (every AceDB profile event) | none | Surfaces (`Request`, after dropping the queued `surfaces` and `positions` entries; a held drag's stop stays); the editor pages (`settings/Editors.lua`, one deferred repaint); the icon browser (closes as Cancel); AutoThank (`AT.Rewire`: the unit-filter frame on or off for the new profile) |
+| `SITUATION_CHANGED` | `SituationChanged` | `modules/Situation.lua`, only when the signature moves | snapshot, previous | Surfaces (`Request`); the editor pages (`settings/Editors.lua`, one deferred repaint); AutoThank (`AT.Rewire`: the unit-filter frame on or off for the content kind) |
+| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua`, when the set of blocking reasons (combat included) moves | reason, canSendChat | Situation (merges lockdown and combat into the snapshot in place); Surfaces (`RefreshLocks`: padlocks, the lockdown chip, the fade); Preview (ends test mode, Preview as and the edit preview at the combat edge); the Groups page (`settings/Groups.lua` `SyncEditPreview(true)`: the edit preview back once combat ends, while the page is on screen, with no start line); Pad (ends a drag at the combat edge); SendEngine (drains the combat-end queue); the thank toast host (`modules/AutoThank_Toast.lua`: holds the toasts into combat, releases them after it, then runs a dirty after-combat diff) |
 | `LIBRARY_CHANGED` | `LibraryChanged` | `modules/Library.lua`, on every registry write, and `Library.Touch` for every member row the seam writes; inside `Library.Batch` (New group, OfferGroup, Restore built-in groups, a Parent group write and the surfaces it leaves, an icon with its color, the callout popup's Save, a page's Defaults) one per act, its kind the kinds touched joined by commas, with no id and no field | kind, id, field | Surfaces (`Request`); the editor pages (`settings/Editors.lua`, one deferred repaint); the icon browser (closes as Cancel when its opener's member is gone) |
 | `ACTIVE_GROUPS_CHANGED` | `ActiveGroupsChanged` | `modules/Surfaces.lua` `ApplyAll`, when a pad's or a dial's ordered active groups change | surfaceId (a pad's or a dial's) | none (Surfaces rebuilds pads and dials itself) |
 | `SURFACE_REBUILT` | `SurfaceRebuilt` | `modules/Surfaces.lua`: `true` when a rebuild is held for combat, `false` when it ran | surfaceId (a pad's or a dial's), stale | none |
@@ -180,13 +197,21 @@ Every game event is declared in `NS.FEATURE_EVENTS` and registered through `NS.S
 so `OnEnable` and the stand-up register exactly that list and the stand-down unregisters it. The list
 holds the situation and restriction edges' rows (zone, key, group, spec and restriction events, and
 the two combat edges, which `Restrictions` owns; `CHANNEL_UI_UPDATE` and `CHAT_MSG_CHANNEL_NOTICE`
-refresh the snapshot's `general`, QF-04), and the send engine's twelve `CHAT_MSG_*` rows (say, yell,
-party and its leader, raid and its leader, raid warning, instance and its leader, channel, emote, and text emote for a game emote), whose
+refresh the snapshot's `general`, QF-04), and the send engine's thirteen `CHAT_MSG_*` rows (say, yell,
+party and its leader, raid and its leader, raid warning, instance and its leader, channel, emote, text emote for a game emote, and whisper inform for auto-thank's whisper, whose sender is the recipient), whose
 handler matches an echo to a press without reading the text. `CHAT_MSG_CHANNEL` fires for every
 channel the player is in, so the handler drops a line whose channel index (the 8th payload field) is
 readable and not 1 (`SendGuard.IsGeneralEcho`) before matching. The one registration outside
 `NS.FEATURE_EVENTS` is `SendEngine`'s private `PLAYER_REGEN_ENABLED` target, which exists only while
 a stand-down is held in combat and is released when it fires (slash-commands-§7).
+
+Auto-thank's `UNIT_AURA` is not on `NS.addon`: `modules/AutoThank.lua` registers it on its own private
+frame through `NS.SafeRegisterUnitEvent(frame, "UNIT_AURA", ..., "player")`, the unit-filter frame
+events-frames-taint-§1 carves out, so the client filters the unit and no possibly secret unit is
+compared. `AutoThank.Rewire` registers it only while `thank.enabled` is on, the addon is up and the
+current content kind is ticked (the open world alone by default), on `SITUATION_CHANGED`,
+`PROFILE_CHANGED`, a `thank.*` write and the stand-up; `NS.STAND_DOWN` unregisters it, since AceAddon's
+`UnregisterAllEvents` never reaches that frame.
 
 `Restrictions` also owns `ENCOUNTER_END`: it re-reads the client at the event and once more 1 s later
 (`RefreshAfterLift`, one pending re-read that the stand-down cancels), because a chat lockdown can
@@ -209,12 +234,24 @@ while disabled. Events the client refuses are kept in `NS.rejectedEvents` and re
 
 Every secure rule lives in `modules/SendEngine.lua`, the only code that makes a `Secure*` frame,
 calls `SetAttribute` or registers a state driver, and `tests/test_sendengine.lua` greps every other
-shipped file to keep it so. Send buttons are armed with one baked macro line, only out of combat; a
+shipped file to keep it so. Send buttons are armed with one baked macro, only out of combat: one line
+per set action (the Line, an emote, a ping, a marker, in that order), joined with `"\n"` by Bake
+alone, so a newline never comes from callout text (`B.CleanText` flattens it), and held to 255 bytes in
+all (`B.MAX_MACRO`); a
 rebuild asked for in combat waits in a keyed combat-end queue; the click and `PreClick` hooks are
 insecure and cannot cancel a click, so the spam guard is soft. The Comms Dial is one secure header
 per dial whose restricted snippets alone act in combat, with one secure catcher per ring and a
 full-screen catcher on a key open. The settings panel, the callout popup and the icon browser are
-refused or locked in combat. The full notes, frame by frame: [`taint.md`](taint.md).
+refused or locked in combat. A ping and a raid marker are the client's own `/ping` and `/tm` lines in
+that macro, run by Blizzard's code on the untainted click: no addon code calls `C_Ping.SendMacroPing`
+or `SetRaidTarget`, and none reads `GetRaidTargetIndex` (`/tm !N` makes the read Blizzard's). The
+`PreClick` hook also reads the press-time notes (no target, no marking rights, pings off or cooling
+down) before the macro runs, in and out of combat; it reads plain Compat answers and writes no
+attribute. Auto-thank's toast carries a secure child, its Thank button (`SE.NewThankButton`, left
+click only, so the toast's right-click dismiss never runs it), so the toast is never shown, moved or
+hidden in combat: every Show waits for the end of combat, and a toast on screen at the pull is held
+back into the library's queue at the still-writable `PLAYER_REGEN_DISABLED` edge and released after it.
+The full notes, frame by frame: [`taint.md`](taint.md).
 
 Every strata and frame level the addon sets is named once, in `core/Constants.lua`
 `NS.Constants.LAYERS`, whose header comment records the whole stack; `tests/test_layers.lua` pins it.
@@ -328,7 +365,15 @@ flavor ([Per-client features](#per-client-features)). The spam guard is soft and
 line it last held; General is sent only when the client confirms channel 1 is General, else Say; a
 lockdown that clears late can keep its padlock until the next event; the dial is Relaxed only and its
 key belongs to its place in the dial order; a few battleground and instance names are ours or
-ambiguous; and another Ka0s addon carrying a newer LibKa0s runs its newer modules inside this one.
+ambiguous; the 255-byte cap covers a callout's whole macro, so a Line beside other actions has less
+room and is refused alone when it does not fit; a ping or a marker needs a target, a raid mark needs leader or assist, macros mark at
+most three units in a short time, and a ping-only or marker-only press flashes with no confirmation;
+the shipped In Group emotes are padlocked in arenas and battlegrounds (`pvpMatch`), so no arena or
+battleground callout ships one, and an existing profile gains a shipped emote only on callouts left as
+shipped; auto-thank's buff filter is a guess (a buff of a minute or more from another player outside
+your group), its raid-buffs-only list holds three buffs, a buff gained and lost inside one fight is
+never seen, and a pad placed over the toast covers it; and another Ka0s addon carrying a newer LibKa0s
+runs its newer modules inside this one.
 Each, with why: [`known-limitations.md`](known-limitations.md).
 
 ## Documentation map
@@ -421,9 +466,14 @@ Nothing is over the cap today. `tests/test_page_groups.lua` reached it exactly a
 own section headings (`80a0fbb`, 2026-10-25): 1131 lines now, beside `tests/test_page_groups_nesting.lua`
 at 418. `tests/test_dial.lua` was split the same way at 1471 lines (2026-10-31): 764 now, beside
 `tests/test_dial_catcher.lua` at 288 and `tests/test_dial_look.lua` at 388, with their shared helpers in
-`tests/dial_helpers.lua`. Seven files sit in the 1000-1500 band (`locales/enUS.lua` 1459,
-`modules/Library.lua` 1358, `tests/test_page_groups.lua` 1131, `tests/test_library.lua` 1057,
-`tests/test_pad.lua` 1049, `tests/wow_mock.lua` 1084, `tests/test_skin_flip.lua` 1064; recounted on the
-Forever port and emotes branch, 2026-11-10); the automated-test record's watch list gives each its
-disposition. `locales/enUS.lua` is 41 lines under the cap and on notice: a batch of strings that
-would cross 1500 splits or trims it first.
+`tests/dial_helpers.lua`. `locales/enUS.lua` reached 1474 lines and was split along localization-§6
+(CA-M0-3, 2026-11-11): the strings only `settings/` reads moved into the topic file
+`locales/enUS_Settings.lua`, so `enUS.lua` was 693 lines then, beside `enUS_Settings.lua` at 826, and
+`tests/test_locale.lua` holds the union gates and the placement both ways; auto-thank added a third
+topic file, `locales/enUS_AutoThank.lua`, the strings only `modules/AutoThank*.lua` reads. Today
+`enUS.lua` is 729 lines, `enUS_Settings.lua` 889 and `enUS_AutoThank.lua` 21. Ten files sit in the
+1000-1500 band (`modules/Library.lua` 1455, `core/Compat.lua` 1014, `settings/SchemaMembers.lua` 1019,
+`tests/test_callout_popup.lua` 1318, `tests/test_library.lua` 1271, `tests/wow_mock.lua` 1208,
+`tests/test_page_groups.lua` 1182, `tests/test_autothank.lua` 1073, `tests/test_pad.lua` 1049,
+`tests/test_skin_flip.lua` 1064; recounted at the CA-M5-3 complexity pass, 2026-11-11); `modules/Library.lua` is the nearest the cap, and the
+automated-test record's watch list gives each its disposition.

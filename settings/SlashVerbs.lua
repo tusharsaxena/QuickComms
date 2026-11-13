@@ -15,10 +15,55 @@ local function braced(list)
     return table.concat(out, ", ")
 end
 
+-- A ping or a marker action (combined actions §7): its line and bytes, or why it does not bake.
+local function targetActionLines(id, a)
+    if not a.line then return { L["%s -> not sent here (%s)"]:format(id, tostring(a.reason)) } end
+    return { ("%s -> %s"):format(id, a.line), L["  action: %s, %d of 255 bytes"]:format(a.kind, a.length) }
+end
+
+-- The Line's notes: its lock, the tokens filled at send time and the unknown tokens.
+local function lineNotes(out, lock, missing, unknown)
+    if lock then out[#out + 1] = L["  locked: %s"]:format(lock) end
+    if missing and #missing > 0 then out[#out + 1] = L["  baked at send time: %s"]:format(braced(missing)) end
+    if unknown and #unknown > 0 then out[#out + 1] = L["  unknown tokens: %s"]:format(braced(unknown)) end
+end
+
+-- One action of a combined callout (combined actions §7): "<kind>: <line>, N of 255 bytes", the
+-- Line's channel and notes under it; or why it does not bake.
+local function actionLines(out, a)
+    if not a.line then
+        if a.kind == "line" and a.reason == "solo" and a.selfPrint then
+            out[#out + 1] = L["  %s: would print locally, not sent (solo fallback: self)"]:format(a.kind)
+        elseif a.kind == "line" and a.reason == "tooLong" and a.budget then
+            -- held by the macro's budget (D13): its bytes against the share it had (CA-M2-R2)
+            out[#out + 1] = L["  %s: not sent here (%s), %d of %d bytes"]:format(a.kind, a.reason, a.length, a.budget)
+        else
+            out[#out + 1] = L["  %s: not sent here (%s)"]:format(a.kind, tostring(a.reason))
+        end
+        return
+    end
+    out[#out + 1] = L["  %s: %s, %d of 255 bytes"]:format(a.kind, a.line, a.length)
+    if a.kind == "line" then
+        out[#out + 1] = L["  channel: %s"]:format(tostring(a.concrete))
+        lineNotes(out, a.lock, a.missing, a.unknown)
+    elseif a.lock then
+        out[#out + 1] = L["  locked: %s"]:format(a.lock)
+    end
+end
+
+-- `/qc check` for a callout with several actions: one row per action, then the macro's total.
+local function combinedLines(id, info)
+    local out = { L["%s -> %d actions"]:format(id, #info.actions) }
+    for _, a in ipairs(info.actions) do actionLines(out, a) end
+    if #info.baked > 0 then out[#out + 1] = L["  macro: %d of 255 bytes"]:format(info.total) end
+    return out
+end
+
 --- The lines `/qc check <id>` prints: the baked line under the current situation, the channel,
---- any lock, and the tokens the line leaves out. Pure formatting, never sends (spec P8, D12). No
---- ctx is passed, so the baked tokens ({me}, {spec}, {role}, {key}, {dungeon}, {spell:ID}) are
---- listed as filled at send time rather than guessed here.
+--- any lock, and the tokens the line leaves out (a ping or a marker: its line and bytes; a callout
+--- with several actions: one row per action, then the macro's bytes). Pure formatting, never sends
+--- (spec P8, D12). No ctx is passed, so the baked tokens ({me}, {spec}, {role}, {key}, {dungeon},
+--- {spell:ID}) are listed as filled at send time rather than guessed here.
 --- @param id string
 --- @return string[]
 function V.CheckLines(id)
@@ -26,7 +71,12 @@ function V.CheckLines(id)
     local callout = NS.Library.Callout(id)
     if not callout then return { L["No callout with id %s."]:format(id) } end
     local snap = NS.Situation.Current()
-    local line, reason, info = NS.Bake.Bake(callout, snap, { soloFallback = NS.Setting("behavior.soloFallback") })
+    local soloFallback = NS.Setting("behavior.soloFallback")
+    local _, _, actions = NS.Bake.BakeActions(callout, snap, { soloFallback = soloFallback })
+    if #actions.actions > 1 then return combinedLines(id, actions) end
+    local first = actions.actions[1]
+    if first and (first.kind == "ping" or first.kind == "marker") then return targetActionLines(id, first) end
+    local line, reason, info = NS.Bake.Bake(callout, snap, { soloFallback = soloFallback })
     if not line then
         if reason == "solo" and info.selfPrint then
             return { L["%s -> would print locally, not sent (solo fallback: self)"]:format(id) }
@@ -35,13 +85,7 @@ function V.CheckLines(id)
     end
     local out = { ("%s -> %s"):format(id, line),
         L["  channel: %s, %d of 255 bytes"]:format(tostring(info.concrete), info.length) }
-    if info.lock then out[#out + 1] = L["  locked: %s"]:format(info.lock) end
-    if #info.missing > 0 then
-        out[#out + 1] = L["  baked at send time: %s"]:format(braced(info.missing))
-    end
-    if #info.unknown > 0 then
-        out[#out + 1] = L["  unknown tokens: %s"]:format(braced(info.unknown))
-    end
+    lineNotes(out, info.lock, info.missing, info.unknown)
     return out
 end
 
@@ -375,12 +419,10 @@ end
 -- as listed when any of its ids is), and the maps it lists that no shipped id carries, "Name (id)",
 -- each once in the order read. Zone activities (maxNumPlayers 0) are not places; a nil count is kept.
 -- An empty list reads as not checked, never as "none".
-local function groupFinderLine(acts)
-    if #acts == 0 then return L["  group finder: not checked, the group finder listed no activities"] end
-    local G, listed, shipped, missing, extra, seen = NS.GameIds, {}, {}, {}, {}, {}
-    for _, a in ipairs(acts) do
-        if a.mapID then listed[a.mapID] = true end
-    end
+-- The shipped ids the group finder does not list, each "dungeon 123", "raid 456" or a whole
+-- battleground set; every shipped id is marked in `shipped` on the way.
+local function missingShipped(listed, shipped)
+    local G, missing = NS.GameIds, {}
     for _, kind in ipairs({ { G.DUNGEONS, L["dungeon %d"] }, { G.RAIDS, L["raid %d"] } }) do
         for _, id in ipairs(kind[1] or {}) do
             shipped[id] = true
@@ -394,6 +436,12 @@ local function groupFinderLine(acts)
         end
         if not any then missing[#missing + 1] = L["battleground set %s (%s)"]:format(s.key, table.concat(s.ids, ", ")) end
     end
+    return missing
+end
+
+-- The maps the group finder lists that no shipped id carries, "Name (id)", each once.
+local function extraMaps(acts, shipped)
+    local extra, seen = {}, {}
     for _, a in ipairs(acts) do
         local id = a.mapID
         if id and a.maxNumPlayers ~= 0 and not shipped[id] and not seen[id] then
@@ -401,6 +449,17 @@ local function groupFinderLine(acts)
             extra[#extra + 1] = L["%s (%d)"]:format(orDash(a.name), id)
         end
     end
+    return extra
+end
+
+local function groupFinderLine(acts)
+    if #acts == 0 then return L["  group finder: not checked, the group finder listed no activities"] end
+    local listed, shipped = {}, {}
+    for _, a in ipairs(acts) do
+        if a.mapID then listed[a.mapID] = true end
+    end
+    local missing = missingShipped(listed, shipped)
+    local extra = extraMaps(acts, shipped)
     return L["  group finder: %d activities; shipped ids it does not list: %s; maps it lists that no shipped id carries: %s"]
         :format(#acts, listOrNone(missing), listOrNone(extra))
 end

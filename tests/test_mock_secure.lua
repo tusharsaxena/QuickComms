@@ -415,3 +415,73 @@ test("mock secure: a header with its mouse off still runs its _onclick from a bi
     assertEqual(m.__runSnippet(h, "", "return last"), "hub", "Click runs it with the button named")
     assertEqual(#m.blocked, 0)
 end)
+
+-- ── ping, marker and target surfaces (CA-M1-1) ─────────────────────────────────────────────────
+
+test("mock: C_Ping answers enabled with no cooldown by default, and each answer is settable", function()
+    local _, m = T.newAddon()
+    assertTrue(m.C_Ping.IsPingSystemEnabled())
+    assertEqual(m.C_Ping.GetCooldownInfo().endTimeMs, 0)
+    assertTrue(m.GetCVarBool("enablePings"), "the enablePings cvar defaults on")
+    m.pingEnabled = false
+    m.pingCooldownEndMs = 5000
+    m.cvars.enablePings = "0"
+    assertFalse(m.C_Ping.IsPingSystemEnabled())
+    assertEqual(m.C_Ping.GetCooldownInfo().endTimeMs, 5000)
+    assertFalse(m.GetCVarBool("enablePings"))
+end)
+
+test("mock: CanBeRaidTarget answers true by default, and is settable", function()
+    local _, m = T.newAddon()
+    assertTrue(m.CanBeRaidTarget("target"))
+    m.raidTargetable = false
+    assertFalse(m.CanBeRaidTarget("target"))
+end)
+
+test("mock: IsInRaid, leadership, assist and everyone-assistant answer false by default, and are settable", function()
+    local _, m = T.newAddon()
+    assertFalse(m.IsInRaid())
+    assertFalse(m.UnitIsGroupLeader("player"))
+    assertFalse(m.UnitIsGroupAssistant("player"))
+    assertFalse(m.IsEveryoneAssistant())
+    m.__context.inRaid = true
+    m.isLeader, m.isAssist, m.everyoneAssist = true, true, true
+    assertTrue(m.IsInRaid())
+    assertTrue(m.UnitIsGroupLeader("player"))
+    assertTrue(m.UnitIsGroupAssistant("player"))
+    assertTrue(m.IsEveryoneAssistant())
+    assertFalse(m.UnitIsGroupLeader("party1"), "only the player's flags are modeled")
+end)
+
+test("mock: UnitExists(\"target\") is settable and hands a secret back as is", function()
+    local _, m = T.newAddon()
+    assertFalse(m.UnitExists("target"))
+    m.__unitExists.target = true
+    assertTrue(m.UnitExists("target"))
+    local s = T.secret(true)
+    m.__unitExists.target = s
+    assertTrue(T.isSecret(m.UnitExists("target")), "a secret answer stays secret")
+end)
+
+test("mock: the ping and marker slash globals are set, and removable per case", function()
+    local NS, m = T.newAddon()
+    assertEqual(m.SLASH_PING1, "/ping")
+    assertEqual(m.SLASH_TARGET_MARKER1, "/tm")
+    m.SLASH_PING1, m.SLASH_TARGET_MARKER1 = nil, nil
+    assertNil(m.SLASH_PING1)
+    assertNil(m.SLASH_TARGET_MARKER1)
+    assertTrue(NS ~= nil)
+end)
+
+test("mock: sentLines splits a sent macro on newlines, the newest by default", function()
+    local _, m = T.newAddon()
+    assertEqual(#m.sentLines(), 0, "nothing sent")
+    m.sentMacros[1] = { text = "/p one" }
+    m.sentMacros[2] = { text = "/p two\n/ping [@target,exists] 1\n/tm [@target,exists] !8" }
+    local lines = m.sentLines()
+    assertEqual(#lines, 3)
+    assertEqual(lines[1], "/p two")
+    assertEqual(lines[3], "/tm [@target,exists] !8")
+    assertEqual(#m.sentLines(1), 1)
+    assertEqual(m.sentLines(1)[1], "/p one")
+end)

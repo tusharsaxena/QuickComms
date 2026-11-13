@@ -50,11 +50,11 @@ test("surfaces: in a key the default pad's plan is the M+ set, baked to /p", fun
     assertTrue(plan.hasActive)
     assertEqual(plan.sections[1].title, "Dungeon")
     assertEqual(plan.sections[2].title, "In Group")
-    assertEqual(#plan.sections[1].slots, 7)
+    assertEqual(#plan.sections[1].slots, 8, "Heal me is the eighth (CA-M3-2)")
     local pull = plan.sections[1].slots[1]
     assertEqual(pull.calloutId, T.seeded(NS, "bi.mplus.pull"))
     assertEqual(pull.line, "/p Pulling next pack")
-    assertEqual(pull.chatType, "PARTY")
+    assertEqual(table.concat(pull.chatTypes, ","), "PARTY")
     assertEqual(pull.surfaceId, "p1")
     assertEqual(pull.name, "Pulling")
 end)
@@ -64,7 +64,7 @@ test("surfaces: [review 5] a refused callout is a slot with its reason and no li
     local cid = userCallout(NS, { name = "Bad", text = "/run x", channel = "party" })
     local slot = slotOf(planFor(NS), cid)
     assertNil(slot.line)
-    assertNil(slot.chatType)
+    assertEqual(#slot.chatTypes, 0)
     assertEqual(slot.reason, "startsWithSlash")
     assertEqual(slotOf(planFor(NS), T.seeded(NS, "bi.mplus.pull")).line, "/p Pulling next pack", "the others still bake")
 end)
@@ -593,4 +593,138 @@ test("surfaces: [inherit] a child that inherits shows wherever its parent's When
     for _, sec in ipairs(plan.sections) do shown = shown or sec.groupId == kid end
     -- red under: R.ActiveGroups judging the child by its own arena When
     assertTrue(shown, "in a key, by its parent's When")
+end)
+
+-- ── the slot's action lists and the arm gate (CA-M1-8, combined actions §3) ─────────────────────
+
+local function none(fields)
+    local c = { name = "Act", text = "", channel = "gameEmote", emote = false, ping = false, marker = false }
+    for k, v in pairs(fields) do c[k] = v end
+    return c
+end
+
+test("surfaces: [CA-M1-8] a slot carries its baked actions, chat types and locks; the skipped ones apart", function()
+    local NS, m = live()
+    local snap = { group = "party", instanceGroup = false, lockdown = { encounter = true } }
+    m.SLASH_TARGET_MARKER1 = nil
+    -- S.Slot bakes any table: a Line beside a ping (M2 lets a callout hold both; the slot already does)
+    local slot = NS.Surfaces.Slot("c1", { name = "Go", text = "go", channel = "say", ping = "attack", marker = 8 },
+        snap, {})
+    -- red under: S.Slot baking the Line alone
+    assertEqual(slot.line, "/s go\n/ping [@target,exists] 1")
+    assertEqual(#slot.actions, 2)
+    assertEqual(slot.actions[1].kind, "line") assertEqual(slot.actions[2].kind, "ping")
+    assertEqual(#slot.skipped, 1) assertEqual(slot.skipped[1].kind, "marker")
+    assertEqual(slot.skipped[1].reason, "noMarker")
+    assertEqual(table.concat(slot.chatTypes, ","), "SAY")
+    -- red under: S.ApplyActions still writing the single t.chatType (CA-M2-11 retires it)
+    assertNil(slot.chatType)
+    assertEqual(table.concat(slot.locks, ","), "lockdown")
+    assertEqual(slot.lock, "lockdown")
+    assertNil(slot.reason)
+end)
+
+test("surfaces: [CA-M1-8] a ping-only and a marker-only callout arm; one whose only action was skipped does not", function()
+    local NS, m = live()
+    local ping = userCallout(NS, none{ name = "Ping", ping = "attack" })
+    local mark = userCallout(NS, none{ name = "Mark", marker = 8 })
+    local pb, mb = NS.Pad.ButtonsFor("p1", ping)[1], NS.Pad.ButtonsFor("p1", mark)[1]
+    -- red under: arm() gating on slot.chatType
+    assertTrue(pb.qcArmed, "ping-only arms")
+    assertEqual(pb:GetAttribute("macrotext"), "/ping [@target,exists] 1")
+    assertTrue(mb.qcArmed, "marker-only arms")
+    assertEqual(mb:GetAttribute("macrotext"), "/tm [@target,exists] !8")
+    assertEqual(#pb.qcMeta.actions, 1)
+    assertEqual(pb.qcMeta.actions[1].kind, "ping")
+    m.SLASH_PING1 = nil
+    local gone = userCallout(NS, none{ name = "NoPing", ping = "warning" })
+    local slot = slotOf(planFor(NS), gone)
+    assertNil(slot.line) assertEqual(slot.reason, "noPing")
+    assertEqual(#slot.actions, 0) assertEqual(slot.skipped[1].reason, "noPing")
+    assertFalse(NS.Pad.ButtonsFor("p1", gone)[1].qcArmed, "nothing baked, nothing armed")
+end)
+
+test("surfaces: [CA-M1-8] RefreshLocks relocks each action and lights the chip when any is lockdown", function()
+    local NS = live()
+    local snap = { group = "party", instanceGroup = false, lockdown = {} }
+    local slot = NS.Surfaces.Slot("c1", { name = "Go", text = "go", channel = "say", ping = "attack" }, snap, {})
+    assertNil(slot.lock)
+    assertEqual(#slot.locks, 0)
+    local plan = { sections = { { slots = { slot } } } }
+    NS.State.surfacePlans = { p1 = plan }
+    NS.Situation.Current = function() return { group = "party", instanceGroup = false, lockdown = { encounter = true } } end
+    NS.Situation.Restamp = function() end
+    NS.Surfaces.RefreshLocks()
+    -- red under: RefreshLocks reading slot.concrete alone
+    assertEqual(slot.lock, "lockdown")
+    assertEqual(table.concat(slot.locks, ","), "lockdown")
+    assertTrue(plan.lockdownChip)
+end)
+
+test("surfaces: [CA-M1-R4] the chip lights when a later action is lockdown and the first lock is not", function()
+    local NS, m = live()
+    m.MAXEMOTEINDEX = 80
+    m.EMOTE73_TOKEN, m.EMOTE73_CMD1 = "POINT", "/point"
+    NS.Emotes.Reset()
+    local snap = {}
+    for k, v in pairs(NS.Situation.Current()) do snap[k] = v end
+    snap.lockdown = { encounter = true }
+    -- a raid Line in a party (padlock notInRaid) beside an emote under the encounter lockdown
+    local slot = NS.Surfaces.Slot("c1", { name = "Go", text = "go", channel = "raid", emote = "POINT" }, snap, {})
+    assertEqual(table.concat(slot.locks, ","), "notInRaid,lockdown")
+    assertEqual(slot.lock, "notInRaid")
+    -- red under: S.SlotLockdown reading slot.lock alone
+    assertTrue(NS.Surfaces.SlotLockdown(slot))
+    local cid, gid = userCallout(NS, { name = "Go", text = "go", channel = "raid" })
+    NS.Library.AddGroupToSurface("dial", "d2", gid, 1)
+    local function dialChip(s)
+        return NS.Surfaces.BuildDialPlan("d2", NS.db.profile.dials.d2, s, NS.Surfaces.Deps(s)).lockdownChip
+    end
+    assertFalse(planFor(NS, snap).lockdownChip, "the raid Line alone is no lockdown")
+    assertFalse(dialChip(snap), "nor on the dial")
+    NS.db.profile.callouts[cid].emote = "POINT"   -- two actions, as M2 allows; the slot bakes both
+    local plan = planFor(NS, snap)
+    assertEqual(slotOf(plan, cid).lock, "notInRaid")
+    -- red under: BuildPlan or BuildDialPlan lighting the chip on slot.lock == "lockdown"
+    assertTrue(plan.lockdownChip)
+    assertTrue(dialChip(snap))
+    NS.State.surfacePlans = { p1 = planFor(NS) }
+    assertFalse(NS.State.surfacePlans.p1.lockdownChip, "no lockdown outside the encounter")
+    NS.Situation.Current = function() return snap end
+    NS.Situation.Restamp = function() end
+    NS.Surfaces.RefreshLocks()
+    -- red under: RefreshLocks lighting the chip on slot.lock == "lockdown"
+    assertTrue(NS.State.surfacePlans.p1.lockdownChip)
+end)
+
+-- ── the single chatType is retired (CA-M2-11, combined actions §3) ─────────────────────────────
+
+test("surfaces: [CA-M2-11] no addon file reads or writes slot.chatType or meta.chatType", function()
+    local hits = {}
+    for _, rel in ipairs(T.loadAddon.tocFiles) do
+        if rel:match("%.lua$") then
+            local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
+            local src = fh:read("*a")
+            fh:close()
+            local n = 0
+            for line in src:gmatch("[^\n]+") do
+                n = n + 1
+                -- red under: Surfaces' t.chatType = t.chatTypes[1], Pad's meta chatType = slot.chatType
+                for _, pat in ipairs({ "slot%.chatType%f[^%w_]", "meta%.chatType%f[^%w_]", "t%.chatType%f[^%w_]",
+                    "chatType = slot%.", "chatType = t%." }) do
+                    if line:find(pat) then hits[#hits + 1] = rel .. ":" .. n end
+                end
+            end
+        end
+    end
+    assertEqual(#hits, 0, table.concat(hits, ", "))
+end)
+
+test("surfaces: [CA-M2-11] an armed button's meta carries chatTypes and no single chatType", function()
+    local NS = live()
+    local cid = userCallout(NS, { name = "Go", text = "go", channel = "party" })
+    local b = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertTrue(b.qcArmed)
+    assertEqual(table.concat(b.qcMeta.chatTypes, ","), "PARTY")
+    assertNil(b.qcMeta.chatType)
 end)

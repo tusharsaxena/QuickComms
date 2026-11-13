@@ -25,13 +25,17 @@ BI.COLOR = { red = "ff4040", green = "40d040", blue = "4da6ff", gold = "ffd100",
 --- `glyph` names its icon in the LibKa0s catalog (B7; library-stack-§8: a shipped mark, never one
 --- drawn here) and `color` tints it ("rrggbb", where the color carries meaning). The catalog name is
 --- kept as `glyph` for the integrity tests; seeding copies `icon` (its texture path) and `iconColor`.
---- Without the library the icon is nil, and so is the color, which only a glyph takes.
+--- Without the library the icon is nil, and so is the color, which only a glyph takes. `extra`
+--- (optional) carries the callout's other actions (spec §2): `emote`, `ping` and `marker`, each
+--- copied in as given (none is nil).
 --- @return string id
-function BI.Callout(groupId, short, name, text, channel, glyph, color)
+function BI.Callout(groupId, short, name, text, channel, glyph, color, extra)
     local id = groupId .. "." .. short
     local icon = glyph and NS.Icon(glyph) or nil
-    BI.callouts[id] = { name = name, text = text, channel = channel, icon = icon, glyph = glyph,
+    local c = { name = name, text = text, channel = channel, icon = icon, glyph = glyph,
         iconColor = icon and color or nil }
+    if extra then c.emote, c.ping, c.marker = extra.emote, extra.ping, extra.marker end
+    BI.callouts[id] = c
     return id
 end
 
@@ -83,9 +87,9 @@ function BI.Seeded()
     return out
 end
 
---- Callouts from a list of { short, name, text, glyph[, color] } rows, all on `channel`.
+--- Callouts from a list of { short, name, text, glyph[, color[, extra]] } rows, all on `channel`.
 function BI.Callouts(groupId, channel, rows)
     local ids = {}
-    for n, r in ipairs(rows) do ids[n] = BI.Callout(groupId, r[1], r[2], r[3], channel, r[4], r[5]) end
+    for n, r in ipairs(rows) do ids[n] = BI.Callout(groupId, r[1], r[2], r[3], channel, r[4], r[5], r[6]) end
     return ids
 end

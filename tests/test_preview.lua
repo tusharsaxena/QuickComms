@@ -634,3 +634,94 @@ test("preview: [QF-01] after /qc preview off a pick on the live dial sends and c
     assertEqual(#m.sentMacros, before + 1, "the live pick sends")
     assertFalse(NS.Dial.IsOpen("d2"), "and closes the dial")
 end)
+
+-- ── a ping or a marker action (CA-M1-12, combined actions §4 step 9) ───────────────────────────
+
+local function actionGroup(NS, fields)
+    local Lib = NS.Library
+    fields.name, fields.text, fields.channel = fields.name or "Act", "", "gameEmote"
+    local cid = Lib.CreateCallout(fields)
+    local gid = Lib.CreateGroup({ name = "Actions", callouts = { cid } })
+    Lib.AddGroupToSurface("pad", "p1", gid, 1)
+    return cid
+end
+
+test("preview: [CA-M1-12] a previewed ping-only callout prints would ping Attack on your target", function()
+    local NS, m = live()
+    local cid = actionGroup(NS, { ping = "attack" })
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
+    -- red under: SlotEcho answering a string (meta.echo is always a list now)
+    assertEqual(type(button.qcMeta.echo), "table")
+    m.prints = {}
+    m.sentMacros = {}
+    m.__click(button)
+    -- red under: the raw macro printed ("/ping [@target,exists] 1")
+    assertEqual(#m.prints, 1)
+    assertEqual(m.prints[1], NS.PREFIX .. " would ping Attack on your target")
+    assertEqual(#m.sentMacros, 0)
+end)
+
+test("preview: [CA-M1-12] a previewed marker-only callout prints the marker as its icon", function()
+    local NS, m = live()
+    local cid = actionGroup(NS, { marker = 8 })
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    m.prints = {}
+    m.__click(NS.Pad.ButtonsFor("p1", cid)[1])
+    assertEqual(m.prints[1], NS.PREFIX .. " would mark your target " .. RT8)
+end)
+
+test("preview: [CA-M1-12] a skipped action shows its reason, and every entry is its own print", function()
+    local NS, m = live()
+    m.SLASH_PING1 = nil
+    local cid = actionGroup(NS, { ping = "warning" })
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    m.prints = {}
+    m.__click(NS.Pad.ButtonsFor("p1", cid)[1])
+    assertEqual(#m.prints, 1)
+    assertEqual(m.prints[1], NS.PREFIX .. " (nothing sent: " .. NS.PadRender.REASON_TEXT.noPing .. ")")
+    local slot = NS.Surfaces.Slot(cid, NS.Library.Callout(cid), NS.Situation.Current())
+    local echo = NS.Preview.SlotEcho(slot, NS.Library.Callout(cid), NS.Situation.Current())
+    assertEqual(#echo, 1)
+    for _, e in ipairs(echo) do assertTrue(not e:find("\n", 1, true), "no raw newline in one print") end
+end)
+
+-- ── one echo row per action (CA-M2-6, combined actions §4 step 9) ───────────────────────────────
+
+test("preview: [CA-M2-6] a previewed combined callout prints each action, baked or skipped, in order", function()
+    local NS, m = live()
+    m.SLASH_TARGET_MARKER1 = nil   -- the marker is skipped: noMarker
+    -- the emote is skipped too: no emote map is planted here, so POINT is not on this client
+    local cid = NS.Library.CreateCallout({ name = "Kick", text = "Kick {target}", channel = "say", emote = "POINT",
+        ping = "attack", marker = 8 })
+    NS.Library.AddGroupToSurface("pad", "p1", NS.Library.CreateGroup({ name = "Combo", callouts = { cid } }), 1)
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertEqual(#button.qcMeta.echo, 4, "one entry per set action")
+    m.__unitExists.target = true
+    m.UnitName = function(unit) return unit == "target" and "Bossman" or "Testchar" end
+    m.prints, m.sentMacros = {}, {}
+    m.__click(button)
+    local R = NS.PadRender.REASON_TEXT
+    -- red under: SlotEcho listing the baked actions, then the skipped ones (no KIND_ORDER sort)
+    assertEqual(#m.prints, 4, "each entry its own print")
+    assertEqual(m.prints[1], NS.PREFIX .. " /s Kick Bossman", "the target filled at the click")
+    assertEqual(m.prints[2], NS.PREFIX .. " (nothing sent: " .. R.unknownEmote .. ")")
+    assertEqual(m.prints[3], NS.PREFIX .. " would ping Attack on your target")
+    assertEqual(m.prints[4], NS.PREFIX .. " (nothing sent: " .. R.noMarker .. ")")
+    for _, p in ipairs(m.prints) do assertTrue(not p:find("\n", 1, true), p) end
+    assertEqual(#m.sentMacros, 0)
+end)
+
+test("preview: [CA-M2-6] a Line beside a marker: with no target the Line's %t prints its mock, the marker its icon", function()
+    local NS, m = live()
+    local cid = NS.Library.CreateCallout({ name = "Mark", text = "Skull on {target}", channel = "say",
+        marker = 8 })
+    NS.Library.AddGroupToSurface("pad", "p1", NS.Library.CreateGroup({ name = "Combo", callouts = { cid } }), 1)
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    m.prints = {}
+    m.__click(NS.Pad.ButtonsFor("p1", cid)[1])
+    assertEqual(#m.prints, 2)
+    assertEqual(m.prints[1], NS.PREFIX .. " /s Skull on " .. NS.Preview.MOCK.target)
+    assertEqual(m.prints[2], NS.PREFIX .. " would mark your target " .. RT8)
+end)

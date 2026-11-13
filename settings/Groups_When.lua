@@ -204,9 +204,11 @@ local function tokenValues(row)
     return out
 end
 
--- The content kinds this client offers (every one but NS.GameIds.HIDDEN_CONTENT: WoW Forever offers no
--- Mythic+, delve, scenario, arena or housing, QFE-F3), so Select all ticks only these.
-local function contentValues()
+--- The content kinds this client offers (every one but NS.GameIds.HIDDEN_CONTENT: WoW Forever offers no
+--- Mythic+, delve, scenario, arena or housing, QFE-F3), so Select all ticks only these. Public, so the
+--- Auto-thank page's Where tab (settings/AutoThank.lua) offers the same kinds, labeled the same way.
+--- @return table { { value, text } }
+function W.ContentValues()
     local hiddenKinds, out = NS.GameIds.HIDDEN_CONTENT or {}, {}
     for _, v in ipairs(NS.Resolver.TOKENS.content) do
         if not hiddenKinds[v] then out[#out + 1] = { value = v, text = NS.PadRender.CONTENT[v] or v } end
@@ -267,7 +269,7 @@ end
 --- row picked, or the player's own; a spec chosen earlier stays listed so it can be cleared.
 --- @return table { { value, text } }
 function W.Values(row, when)
-    if row == "content" then return contentValues() end
+    if row == "content" then return W.ContentValues() end
     if NS.Resolver.TOKENS[row] then return tokenValues(row) end
     if row == "class" then return classValues() end
     if row == "spec" then return specValues(when) end

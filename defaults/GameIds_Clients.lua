@@ -18,6 +18,10 @@ local _, NS = ...
 --                       id, in place of the one it declares (BuiltIns.WhenOf). Seeds only: a copy
 --                       already stored keeps the When it has.
 --   BATTLEGROUND_SETS   the battleground sets seeded, by key (bi.bg.<key>); nil seeds every one.
+--   THANK_RAID_BUFFS    auto-thank's raid-buffs-only allowlist (spec §9, D3), a set of spell ids: the
+--                       single-target raid buffs a stranger can cast on the player (a party- or raid-wide
+--                       one reaches only the caster's own group, which auto-thank never thanks). Every id
+--                       is UNVERIFIED until the THANK-7 smoke check.
 -- WoW Forever's ids are derived from Forever's own GroupFinderActivity and Map tables (build
 -- 1.60.1.70862), joined on map id (the forever-ids design, D3-R and D5, QuickComms#21): each is a Map
 -- row of its kind (its FOREVER_MAPS row in tests/test_gameids.lua), the dungeons are exactly the party
@@ -81,6 +85,17 @@ local FOREVER_RAIDS = {
     2856, -- Scarlet Enclave
 }
 
+-- WoW Forever's raid buffs (FRB): every player rank of Arcane Intellect, Power Word: Fortitude and Mark
+-- of the Wild, derived from Forever's SpellName and SkillLineAbility tables (build 1.60.1.70862, wago.tools
+-- product wowf, fetched through tools/client_tables.py), matched by spell name and kept to the ranks a
+-- class skill line teaches. Arcane Brilliance, Prayer of Fortitude (Forever's 21562) and Gift of the
+-- Wild are group buffs, so they are left out.
+local FOREVER_RAID_BUFFS = {
+    1459, 1460, 1461, 10156, 10157,       -- Arcane Intellect
+    1243, 1244, 1245, 2791, 10937, 10938, -- Power Word: Fortitude
+    1126, 5232, 6756, 5234, 8907, 9884, 9885, -- Mark of the Wild
+}
+
 local function concat(a, b)
     local out = {}
     for _, id in ipairs(a) do out[#out + 1] = id end
@@ -99,6 +114,8 @@ G.BY_CLIENT = {
         DUNGEONS = G.DUNGEONS, RAIDS = G.RAIDS, INSTANCES = G.INSTANCES, ARENAS = G.ARENAS,
         HIDDEN_CONTENT = {}, HIDDEN_ROWS = {}, HIDDEN_TOKENS = {}, SKIP_BUILTINS = {}, BUILTIN_WHEN = {},
         BATTLEGROUND_SETS = nil,
+        -- Arcane Intellect, Power Word: Fortitude and Mark of the Wild
+        THANK_RAID_BUFFS = set({ 1459, 21562, 1126 }),
     },
     forever = {
         DUNGEONS = FOREVER_DUNGEONS, RAIDS = FOREVER_RAIDS,
@@ -114,13 +131,14 @@ G.BY_CLIENT = {
         BUILTIN_WHEN = { ["bi.mplus"] = { content = { dungeon = true } } },
         -- Warsong Gulch, Arathi Basin and Alterac Valley, with the ids and callouts Retail's sets carry
         BATTLEGROUND_SETS = set({ "wsg", "ab", "av" }),
+        THANK_RAID_BUFFS = set(FOREVER_RAID_BUFFS),
     },
 }
 
 -- Every name a client's table sets, so a pick replaces the other client's whole (Retail's
 -- BATTLEGROUND_SETS is nil).
 local KEYS = { "DUNGEONS", "RAIDS", "INSTANCES", "ARENAS", "HIDDEN_CONTENT", "HIDDEN_ROWS", "HIDDEN_TOKENS",
-    "SKIP_BUILTINS", "BUILTIN_WHEN", "BATTLEGROUND_SETS" }
+    "SKIP_BUILTINS", "BUILTIN_WHEN", "BATTLEGROUND_SETS", "THANK_RAID_BUFFS" }
 
 --- Put client `key`'s data ("retail" | "forever"; anything else is Retail) under the names every
 --- reader uses. Called once below. The headless harness calls it once more after a load, with

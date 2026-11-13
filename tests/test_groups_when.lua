@@ -296,3 +296,21 @@ test("when: [arena] Add the arena you are in reads the live snapshot, and refuse
     assertTrue(W.AddHere(gid, "arena"))
     assertTrue(NS.db.profile.groups[gid].when.arena[1505])
 end)
+
+test("when: [CA-M4-14] ContentValues is public, and the content row offers exactly its values", function()
+    local NS, W = boot()
+    -- red under: contentValues left a local of settings/Groups_When.lua
+    assertTrue(type(W.ContentValues) == "function", "Settings.GroupsWhen.ContentValues")
+    local function flat(list)
+        local out = {}
+        for i, v in ipairs(list) do out[i] = v.value .. "=" .. v.text end
+        return table.concat(out, ",")
+    end
+    assertEqual(flat(W.ContentValues()), flat(W.Values("content", {})))
+    assertEqual(flat(W.ContentValues()), "openWorld=World,dungeon=Dungeon,mythicPlus=M+,raid=Raid,delve=Delve,"
+        .. "scenario=Scenario,battleground=Battleground,arena=Arena,housing=Housing")
+    NS.GameIds.UseClient("forever")
+    assertEqual(flat(W.ContentValues()), "openWorld=World,dungeon=Dungeon,raid=Raid,battleground=Battleground",
+        "WoW Forever's kinds")
+    NS.GameIds.UseClient("retail")
+end)

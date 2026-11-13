@@ -25,6 +25,18 @@ C.CHAT_COLORS = {
 -- A button's flash for each send result is the skin's (modules/Pad_Render.lua R.Chrome, QC-03): gold
 -- sent (text.accent), red dropped (qc.dropped), amber guarded (sem.warn), as spec §10.1 drew them.
 
+-- Auto-thank (#19, spec §9): the buff filter, the per-caster cooldown and the toast's pacing.
+C.THANK = {
+    MIN_DURATION = 60,   -- seconds: a shorter buff (or one with no expiry, 0) is never thanked (D3, D23)
+    COOLDOWN = 600,      -- seconds per caster and spell between two toasts
+    GAP = 1.5,           -- the fewest seconds between two toast Show calls
+    STACK = 3,           -- the most toasts on screen at once
+    MAX_QUEUE = 5,       -- the most toasts waiting behind the stack
+    COMBAT_QUEUE = 10,   -- the most candidates the after-combat diff takes, newest first
+    DURATION = 10,       -- the toast's seconds on screen
+    FADE = 2,            -- the last seconds over which an unclicked toast fades (D26)
+}
+
 -- ── LAYERS (frame-layering, standard v2.88.0) ───────────────────────────────────────────────────
 -- Every strata and frame level the addon sets, named once. Every SetFrameStrata and SetFrameLevel in
 -- core/, modules/ and settings/ reads this table (tests/test_layers.lua greps for a literal), and every
@@ -69,6 +81,8 @@ C.CHAT_COLORS = {
 --                      back on hide, ModalWindow.LiftConfirm) and the icon browser's Wowhead link window
 --                      (a CopyWindow lifted after the library builds it). Also the library's menus, the
 --                      AceGUI pull-outs and Blizzard's ColorPickerFrame, which the addon does not pick.
+-- HIGH: the auto-thank toast (modules/AutoThank_Toast.lua) sets no strata or level of its own: it is
+--   LibKa0s-Toast-1.0's, the library's T5 alert tier (HIGH, lib.STRATA), under the pads (DIALOG).
 --   TOOLTIP            GameTooltip and the library's reorder ghost (Blizzard's and the library's).
 -- Library bands the addon's frames meet: the drag strip and its marks (parent + 1 / handle + 1), the
 -- resize grip (+10), the reorder drop line (+20) and row box (-1), the combat cover over a settings

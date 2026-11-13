@@ -418,3 +418,56 @@ test("layout: [position] both blocks come from the library's composer", function
     -- red under: the hand-built offset boxes
     assertEqual(table.concat(calls, ","), "pads:Position,dials:Position")
 end)
+
+-- ── Auto-thank page (CA-M4-14, spec §9 Settings page) ───────────────────────────────────────
+
+local function labels(P, widgets)
+    local out = {}
+    for _, w in ipairs(P.all(widgets, "CheckBox")) do out[#out + 1] = w.labelText or w.text end
+    return table.concat(out, ",")
+end
+
+test("layout: [autothank] the page's tabs are General, Where and Filter, with a Defaults that keeps the position", function()
+    local NS, _, P = open("Auto-thank")
+    -- red under: no Auto-thank page registered by settings/AutoThank.lua
+    assertTrue(P.ctx("autothank") ~= nil, "the page")
+    assertEqual(strip(NS, "autothank"), "General,Where,Filter")
+    assertEqual(paths(rowsOf(NS, "autothank", "General")),
+        "thank.enabled,thank.send,thank.text,thank.mute,thank.position")
+    assertEqual(P.ctx("autothank").panel.defaultsTooltip,
+        "Put auto-thank's settings back to their defaults. The toast's position is kept.")
+    local w = P.tab("autothank", "General")
+    assertTrue(P.find(w, "CheckBox", "Enable auto-thank") ~= nil, "General draws Enable auto-thank")
+    assertTrue(P.find(w, nil, "Thank button sends") ~= nil)
+    assertNil(P.find(w, nil, "Toast position"), "the position is the toast's drag, never a widget")
+end)
+
+test("layout: [autothank] Where draws one check box per content kind this client offers", function()
+    local NS, _, P = open("Auto-thank")
+    local w = P.tab("autothank", "Where")
+    assertEqual(labels(P, w), "World,Dungeon,M+,Raid,Delve,Scenario,Battleground,Arena,Housing")
+    NS.GameIds.UseClient("forever")
+    w = P.tab("autothank", "Where")
+    -- red under: a Where row drawn for a kind in NS.GameIds.HIDDEN_CONTENT
+    assertEqual(labels(P, w), "World,Dungeon,Raid,Battleground", "WoW Forever's kinds")
+    NS.GameIds.UseClient("retail")
+    local box = P.find(P.tab("autothank", "Where"), "CheckBox", "Dungeon")
+    box:__fire("OnValueChanged", true)
+    assertTrue(NS.db.profile.thank.content.dungeon == true, "a tick writes the kind")
+end)
+
+test("layout: [autothank] Filter's raid-buffs-only toggle is hidden on a client with no raid-buff ids (FRB)", function()
+    local NS, _, P = open("Auto-thank")
+    assertTrue(P.find(P.tab("autothank", "Filter"), "CheckBox", "Raid buffs only") ~= nil)
+    assertEqual(strip(NS, "autothank"), "General,Where,Filter")
+    NS.GameIds.UseClient("forever")
+    assertTrue(next(NS.GameIds.THANK_RAID_BUFFS) ~= nil, "WoW Forever's ids are derived, so it keeps the toggle")
+    assertTrue(P.find(P.tab("autothank", "Filter"), "CheckBox", "Raid buffs only") ~= nil)
+    NS.GameIds.THANK_RAID_BUFFS = {}
+    local w = P.redraw("autothank")
+    -- red under: the toggle drawn over an empty allowlist, which would toast nothing
+    assertNil(P.find(w, "CheckBox", "Raid buffs only"))
+    assertTrue(NS.SchemaRuntime.FindRow("thank.raidBuffsOnly").skipRender == true)
+    NS.GameIds.UseClient("retail")
+    assertFalse(NS.SchemaRuntime.FindRow("thank.raidBuffsOnly").skipRender == true)
+end)

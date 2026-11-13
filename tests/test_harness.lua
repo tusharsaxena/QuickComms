@@ -31,7 +31,10 @@ test("harness: the addon's file list is the TOC's, Namespace first and Profiles 
     local files = T.loadAddon.tocFiles
     assertTrue(#files >= 20, "the TOC lists the addon's files")
     assertEqual(files[1], "locales/enUS.lua")
-    assertEqual(files[2], "core/Namespace.lua")
+    -- The enUS topic files (localization-§6) load contiguously after it, then Namespace.
+    local n = 1
+    while files[n + 1] and files[n + 1]:match("^locales/enUS_") do n = n + 1 end
+    assertEqual(files[n + 1], "core/Namespace.lua")
     assertEqual(files[#files], "settings/Profiles.lua")
 end)
 
@@ -48,6 +51,8 @@ test("harness: every adopted LibKa0s module is the live library, not its stub", 
     assertTrue(NS.Pool == ls("LibKa0s-Pool-1.0", true), "Pool")
     assertTrue(NS.addon.Settings.SchemaLib == ls("LibKa0s-Schema-1.0", true), "Schema")
     assertTrue(NS.GlowLib == ls("LibKa0s-Glow-1.0", true), "Glow")
+    assertTrue(NS.NewToast{ build = function() end } ~= NS.ToastStub and ls("LibKa0s-Toast-1.0", true) ~= nil,
+        "Toast")
     assertTrue(NS.SafeToString == ls("LibKa0s-Core-1.0", true).SafeToString, "Core")
     assertTrue(type(NS.Perf.Note) == "function" and NS.Perf.OnCommand ~= nil and NS.Perf.BuildRecord ~= nil,
         "Perf is the live instance")

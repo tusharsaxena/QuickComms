@@ -397,3 +397,86 @@ test("editors: [preview table] a table row gives its text the width the name lea
     assertEqual(name.frame.points[1][5], -(42 + 2 * Ed.TABLE_VPAD - 14) / 2)
     assertEqual(text.frame.points[1][5], -Ed.TABLE_VPAD)
 end)
+
+-- ── what a callout sends, one row per action (CA-M2-9, combined actions §7) ──────────────────
+
+local KICK = { name = "Kick", text = "Kick on me", channel = "party", emote = "POINT", ping = "attack", marker = 8 }
+
+-- The client's /point, as ChatEmoteConstants.lua defines it (tests/test_emotes.lua plants more).
+local function plantPoint(NS, env)
+    env.MAXEMOTEINDEX, env.EMOTE73_TOKEN, env.EMOTE73_CMD1 = 80, "POINT", "/point"
+    NS.Emotes.Reset()
+end
+
+local function previewIn(inputs, callout)
+    local NS, env = T.enableAddon()
+    plantPoint(NS, env)
+    NS.Situation.ReadInputs = function() return inputs end
+    NS.Situation.RefreshNow("test")
+    return NS, NS.addon.Settings.Callouts.PreviewLines(callout)
+end
+
+local function has(lines, s)
+    for _, l in ipairs(lines) do if l == s then return true end end
+    return false
+end
+
+test("editors: [CA-M2-9] PreviewLines' first line sums up every action on one line", function()
+    local _, lines = previewIn(MPLUS, KICK)
+    -- red under: [1] still the Line's own row (Sends: /p Kick on me)
+    assertEqual(lines[1], '"Kick on me" in Party, /point, ping Attack, mark Skull')
+end)
+
+test("editors: [CA-M2-9] PreviewLines lists each action with its bytes, the macro total and the target note", function()
+    local NS, lines = previewIn(MPLUS, KICK)
+    local _, _, info = NS.Bake.BakeActions(KICK, NS.addon.Settings.Editors.Snapshot(), {})
+    local rows = {}
+    for _, a in ipairs(info.actions) do rows[a.kind] = a end
+    -- red under: one action's rows only
+    for _, want in ipairs({ "Sends: /p Kick on me", "Emotes: /point", "Pings: Attack", "Marks: Skull",
+        ("%d of 255 bytes"):format(rows.line.length), ("%d of 255 bytes"):format(rows.ping.length),
+        ("%d of 255 bytes"):format(rows.marker.length), ("Macro: %d of 255 bytes"):format(info.total),
+        "Needs a target when pressed." }) do
+        assertTrue(has(lines, want), want .. " in: " .. table.concat(lines, " | "))
+    end
+    local notes = 0
+    for _, l in ipairs(lines) do if l == "Needs a target when pressed." then notes = notes + 1 end end
+    assertEqual(notes, 1, "the target note once, for the ping and the marker together")
+end)
+
+test("editors: [CA-M2-9] one action keeps today's rows: no summary, no macro total", function()
+    local _, lines = previewIn(MPLUS, { name = "Kick", text = "Kick", channel = "party" })
+    assertEqual(lines[1], "Sends: /p Kick")
+    assertEqual(lines[2], "7 of 255 bytes")
+    for _, l in ipairs(lines) do assertTrue(not l:find("^Macro:"), l) end
+end)
+
+test("editors: [CA-M2-9] a skipped action says why; a locked Line gets its own lock row", function()
+    local long = ("x"):rep(250)
+    local _, lines = previewIn(MPLUS, { name = "Long", text = long, channel = "party", ping = "attack" })
+    -- the Line over its share of the macro is skipped; the ping still bakes
+    assertEqual(lines[1], "ping Attack", "the summary names what bakes")
+    -- red under: a skipped action left out of the rows
+    assertTrue(has(lines, "No line: Too long to send with its other actions."), table.concat(lines, " | "))
+    local NS
+    NS, lines = previewIn({}, { name = "Stack", text = "Stack", channel = "raid", emote = "POINT" })
+    local R = NS.PadRender
+    local lockRows = 0
+    for _, l in ipairs(lines) do if l == R.LOCK_TEXT.notInRaid then lockRows = lockRows + 1 end end
+    assertEqual(lockRows, 1, "one lock row for the locked Line: " .. table.concat(lines, " | "))
+end)
+
+test("editors: [CA-M2-R2] the summary draws a stored pipe literal, never as a UI escape", function()
+    local _, lines = previewIn(MPLUS, { name = "Pipe", text = "go |cffff0000now", channel = "party", ping = "attack" })
+    -- red under: short() quoting NS.Bake.CleanText, which leaves the pipe single
+    assertEqual(lines[1], '"go ||cffff0000now" in Party, ping Attack')
+end)
+
+test("editors: [CA-M2-R2] a Line skipped for the macro's budget is measured against that budget", function()
+    -- "/p " + 250 is 253 bytes; the ping's 24 and its newline leave the Line 230
+    local _, lines = previewIn(MPLUS, { name = "Long", text = ("x"):rep(250), channel = "party", ping = "attack" })
+    -- red under: the skip worded as the 255-byte line cap, and its bytes counted against 255
+    assertTrue(has(lines, "No line: Too long to send with its other actions."), table.concat(lines, " | "))
+    assertTrue(has(lines, "253 of 230 bytes"), table.concat(lines, " | "))
+    assertTrue(not has(lines, "253 of 255 bytes"), "never against the line cap")
+end)

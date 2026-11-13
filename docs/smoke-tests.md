@@ -42,8 +42,12 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | PLOOK-1..11 | [The pad's look per skin](#the-pads-look-per-skin) | The pad in each skin: edges, buttons and shine (the owner's findings of 2026-11-01) |
 | FSKIN-1..13 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost, a stored pick of the deleted Friz |
 | ROLE-1..3 | [Role and character](#role-and-character) | The Role row on General → Behavior and its Automatic phrase, the group's assigned role winning over the spec, the Character and Specialization rows of the When editor (Retail; FOREVER-18 to FOREVER-21 re-run them on Forever) |
-| FOREVER-1..25 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, Forever's place ids against the client's own names and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone; `/qc probe ids`, the no-travel sweep of the client's map, dungeon finder and battleground names |
-| EMOTE-1..8 | [Emotes](#emotes) | Retail, then Forever: a custom emote callout (`/e`) and its lock, a game emote callout, the emote picker's order and voice marks, preview, throttle and an unknown token, a game emote during an encounter, the Emotes set in the open world and an existing profile gaining it once |
+| FOREVER-1..26 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, Forever's place ids against the client's own names and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone; `/qc probe ids`, the no-travel sweep of the client's map, dungeon finder and battleground names; the combined-actions core re-run |
+| EMOTE-1..10 | [Emotes](#emotes) | Retail, then Forever: a custom emote callout (`/e`) and its lock, a game emote callout, the emote picker's order and voice marks, preview, throttle and an unknown token, a game emote during an encounter, the Emotes set in the open world and an existing profile gaining it once, the shipped callouts that emote with their line and the two Heal me callouts, and an existing profile gaining them (step 20) |
+| ACTION-1..8 | [Combined actions](#combined-actions) | Retail, then Forever: one press that sends a line, an emote, a ping and a marker (#16), in combat, with no target, the 255-byte macro cap, Say and an emote outdoors, a boss encounter, a locked Line beside a marker, a legacy game-emote callout |
+| THANK-1..12 | [Auto-thank](#auto-thank) | Retail, then Forever: a stranger's buff toasted and thanked (#19), whether the caster reads, the whisper and the emote at a cross-realm caster, a buff mid-fight, a burst throttled, raid buffs only, where it stays quiet, combat with a toast up, a right-click, the spam guard, the mute modes |
+| PING-1..5 | [Pings](#pings) | Retail, then Forever: a callout's ping on the target (#17), solo and grouped, in combat, Forever's server delivery, an encounter lockdown, pings off and on cooldown |
+| MARK-1..7 | [Raid markers](#raid-markers) | Retail, then Forever: a callout's raid target marker on the target (#18), solo, in a party and in a raid with and without assist, a second press, no target and an unmarkable one, Forever's `/tm`, marking in combat and during an encounter |
 | SKIN-1..31 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker; no line under any window title |
 
 ## Before you start
@@ -2446,6 +2450,10 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
   with its `id`, `name`, `categoryID`, `mapID`, `maxNumPlayers` and `isPvp`); Darkspear Islands is among
   the group finder's activities and gets no set of its own (D3-R), and Battle for Gilneas is not listed
   by the group finder. Result: passed (owner, 2026-11-10)
+- **FOREVER-26. The combined-actions core on Forever.** On WoW Forever, run ACTION-1 (one press sends a
+  line, an emote, a ping and a marker), PING-2 (a ping in a party, in combat), MARK-2 (a mark in a party
+  as a non-leader) and MARK-7 (marking in combat and during a boss encounter) → each as its check
+  describes; record any that differs from Retail. Result: passed (owner, 2026-11-13)
 
 ## Emotes
 
@@ -2472,22 +2480,27 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
 
 - **EMOTE-3. A game emote callout performs the game's emote (QFE-E2).** Out of combat in the open
   world, target a nearby player or NPC, and edit a callout in a group on your pad → the **Channel**
-  dropdown lists **Game emote** last. Pick it → the Text box gives way to a **Game emote** box. Type
-  `po` → a list hangs under the box with `/point` among its rows; pick it → the Name, if empty, becomes
-  `/point`, and What it sends reads `Emotes: /point`. Save → its Groups row reads `/point  Game emote
-  /point` with the channel in the emote color. Click its button → your character points at your
+  dropdown lists **None (no chat line)** last (the game-emote kind, relabeled by combined actions D10).
+  Pick it → the Text box is hidden; the **Emote (optional)** dropdown stays. Open it and go
+  to the letter run holding P, then (if shown) the range holding `po` → `/point` is a row; pick it → the Name, if empty, becomes
+  `/point`, and What it sends reads `Emotes: /point`. Save → its Groups row reads `/point  None (no
+  chat line)  /point` with the channel in the emote color. Click its button → your character points at your
   target and chat shows the game's own line (`You point at <target>.`), once, with no "interface action
   blocked" and no drop note (`/qc debug on` shows an `Echo` line ending `sent`: the
   `CHAT_MSG_TEXT_EMOTE` echo is matched). With no target it points ahead as `/point` typed does.
-  Repeat on WoW Forever. Result: passed (owner, 2026-11-10)
-- **EMOTE-4. The picker's order, its voice marks and the name rule (QFE-E2).** In the Game emote box
-  type `o` → the first rows are speech emotes (`/incoming (voice)`, `/oom (voice)`...), then the
-  animated ones (`/bow`, `/point`...), then the rest; the arrow keys and Enter pick from the
-  list. Rename the callout `Look`, then pick `/wave` → the name stays `Look`. Pick `/oom` on a new
-  callout → What it sends adds *A voice emote: it also plays its sound.*; its button plays the voice
-  line. Typing `/wave` and pressing Enter without picking a row also picks it. Switch the channel back
-  to Say → the Text box returns; Save → the callout sends its text and keeps no emote
-  (`/qc get callout.emote <id>` prints false). Result: passed (owner, 2026-11-10)
+  Repeat on WoW Forever. Result: owed (passed by the owner 2026-11-10; CA-M2-7 changed the editor it
+  walks through)
+- **EMOTE-4. The emote menu, its voice marks and the name rule (QFE-E2).** Open the Emote (optional)
+  dropdown → a menu opens under it: *None*, a rule, then at most 10 letter rows A to Z (`A`, `B–C`...,
+  only letters that have emotes), each with an arrow. Hover one → a level opens beside it: either its
+  emotes (at most 15) or at most 10 ranges (`Ba–Bl`...), each opening at most 15 emotes, A to Z, a
+  speech emote marked `(voice)`. The picked emote is ticked when the menu opens again. Rename the
+  callout `Look`, then pick `/wave` → the name stays `Look`. Pick `/oom` on a new callout → What it
+  sends adds *A voice emote: it also plays its sound.*; its button plays the voice line. Open the menu
+  and press Escape → the menu and the popup both close, no menu left floating. Switch the channel back
+  to Say and type a text → the Text box returns and the emote stays; Save → one press says the text
+  and waves (combined actions, #16). Pick *None* and Save → `/qc get callout.emote <id>` prints false.
+  Repeat on WoW Forever. Result: owed (the dropdown replaced the search box, owner 2026-11-13)
 - **EMOTE-5. Preview, throttle and an unknown token (QFE-E2).** Turn on **Preview as... → World** and
   click the `/point` button → one `[QC] would emote /point` line and no emote. Turn preview off and
   press it twice quickly → the second press is dimmed by the guard as for chat. Then run
@@ -2512,6 +2525,191 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
   build (Solo on the pad) → after the update the pad lists Emotes right after Solo and nothing else
   moved; an edited Solo callout keeps its text. Delete Emotes and `/reload` → it does not come back.
   Result: passed (owner, 2026-11-10)
+- **EMOTE-9. Shipped callouts emote with their line (QuickComms#20, combined actions §8).** On a fresh
+  profile (or after **Restore built-in groups**) → in the callout editor, each of these carries its
+  emote: Solo's Rare spotted (POINT), Elite help (HELPME) and Thanks (THANK); In Group's Hello (WAVE), Ready
+  (READY), GLHF (CHEER), tyff and ggty (THANK) and ggnt (BYE); Dungeon's Pulling (CHARGE) and Need mana
+  (OOM); Raid's Wipe (FLEE). Dungeon lists **Heal me** (*Need heals!*, Smart group) last, and Raid
+  lists **Heal me** (*Need heals on me!*, Raid) right after Healthstones, before Pull in 10; both with
+  the green heart-plus icon and the HEALME emote. Each sends its line and then its emote on one press,
+  once each, with no drop note. In a key, outside a boss, Pulling and Heal me show no padlock and both
+  actions go; during a boss, the emote's lock note prints. Note any token that gives no emote line in
+  chat without a target. Repeat on WoW Forever (no listed set is skipped there). Result: passed (owner, 2026-11-13)
+- **EMOTE-10. An existing profile gains them once (step 20).** On a profile saved before this build,
+  with In Group's Ready text edited, Hello renamed, the Raid set deleted and Solo's Thanks deleted →
+  after the update and a `/reload`: every unedited listed callout carries its emote, once; the edited
+  Ready does not; the renamed Hello does; the Raid set stays deleted; Thanks does not come back; Dungeon
+  gains **Heal me** once, after Kick order. A second `/reload` changes nothing. Repeat on WoW Forever.
+  Result: passed (owner, 2026-11-13)
+
+## Combined actions
+
+**Client: Retail, then WoW Forever**, every check here (QuickComms#16, the combined-actions design
+`docs/superpowers/specs/2026-11-10-combined-actions-design.md` §2 to §4 and §7). **Code:**
+`modules/Bake.lua` (`B.BakeActions`, `B.MAX_MACRO`), `modules/Surfaces.lua` (`S.ApplyActions`),
+`modules/SendEngine.lua` and `modules/SendEngine_Guard.lua` (one result per press), `settings/CalloutPopup.lua`
+(the four action slots), `settings/Callouts.lua` (What it sends), `modules/Pad_Render.lua` (the tooltip)
+and `settings/SlashVerbs.lua` (`/qc check`).
+
+**Set-up, for every check here.** Edit a callout in a group on your pad → the popup draws Name | Channel,
+Text, **Emote (optional)** across both columns, then **Ping** | **Raid marker**. Set the Name `Kick`,
+Channel Party, Text `Kick on me`, the emote `/point`, Ping Attack and Raid marker Skull, and Save → What
+it sends opens with `"Kick on me" in Party, /point, ping Attack, mark Skull`, lists each action with its
+bytes, `Macro: <n> of 255 bytes` and *Needs a target when pressed.*; its Groups row ends `+ /point + ping +
+Mark` and the skull icon, with `/point` in the emote chat color, `ping` in blue and `Mark` in violet. `/qc check <id>` → `<id> -> 4 actions`, then `line: /p Kick on me, 13 of 255 bytes`,
+`channel: party`, `emote: /point, 6 of 255 bytes`, `ping: /ping [@target,exists] 1, 24 of 255 bytes`,
+`marker: /tm [@target,exists] !8, 23 of 255 bytes` and `macro: 69 of 255 bytes`. Hover its button → one
+row per action, `Channel: Party` under the line only.
+
+- **ACTION-1. One press sends all four (#16 AC).** Out of combat, in a party, with a target → one press
+  sends `Kick on me` to party, you point at the target, the Attack ping lands on it and the skull marks
+  it, with no "interface action blocked" and no drop note. The button flashes once and the guard dims
+  every button once; `/qc debug on` shows one press and one `sent`. Result: passed (owner, 2026-11-13)
+- **ACTION-2. The same callout in combat.** As ACTION-1, in combat → all four go out, with no taint or
+  blocked-action error. Result: passed (owner, 2026-11-13)
+- **ACTION-3. No target.** As ACTION-1, with no target → the line and the emote go out (the emote with no
+  target, as typed), and chat shows `[QC] Kick: no target to ping.` and `[QC] Kick: no target to mark.`;
+  no ping lands on a unit you did not pick and nothing is marked (`exists`). Result: passed (owner, 2026-11-13)
+- **ACTION-4. The macro cap (D13, UNVERIFIED).** Set the Text to a 250-byte line, keep the emote and the
+  ping, clear the marker → What it sends reads `No line: Too long to send with its other actions.` and
+  `253 of <n> bytes`, the Line's share of the macro (`/qc check <id>`: `line: not sent here (tooLong),
+  253 of <n> bytes`), and the others still bake; a press performs the emote and the ping and sends no line. Then, on a dev build
+  with `B.MAX_MACRO` raised, check whether a 300-byte, four-line macro runs in full: if it does, the
+  total cap is larger than 255 and `MAX_MACRO` can be raised (the re-check trigger in
+  `known-limitations.md`). Result: passed (owner, 2026-11-13)
+- **ACTION-5. Say and an emote outdoors (UNVERIFIED).** In the open world, solo or grouped, a callout with
+  Channel Say and the emote `/wave` → one press says the line and waves: the one hardware event covers
+  the second line. Result: passed (owner, 2026-11-13)
+- **ACTION-6. During a boss encounter (UNVERIFIED).** A Line, an emote and a ping on one callout, pressed
+  on a boss → record which of the three go out (the encounter's throttle and chat lockdown), and whether
+  the press reports `sent` or one drop note naming what dropped. Result: passed (owner, 2026-11-13)
+- **ACTION-7. A locked Line beside a marker.** A callout with Channel Say and Raid marker Skull, pressed
+  under a chat lockdown (a raid boss), with a target → chat shows `[QC] <name> may not have been sent.`
+  with the lock's reason, the skull still lands, and no drop note follows for the Line. Result: passed (owner, 2026-11-13)
+- **ACTION-8. A legacy game-emote callout.** On a profile saved before this build, a Game emote callout
+  (EMOTE-3) still performs its emote on a press. Its editor shows Channel **None (no chat line)**, the
+  Text box hidden and the emote in **Emote (optional)**; its Groups row names the channel *None (no chat
+  line)*. Result: passed (owner, 2026-11-13)
+
+## Pings
+
+**Client: Retail, then WoW Forever**, every check here (QuickComms#17, the combined-actions design
+`docs/superpowers/specs/2026-11-10-combined-actions-design.md` §5). **Code:** `modules/Bake.lua`
+(`B.BakeActions`: `/ping [@target,exists] <n>`), `core/Compat.lua` (`PingCommand`, `PingState`,
+`TargetExists`), `modules/SendEngine.lua` (`SE.PressNotes`, read in `PreClick`; the synthetic `sent`, D16),
+`modules/Preview.lua` and `settings/SlashVerbs.lua`.
+
+**Set-up, for every check here.** A ping callout: take a Game emote callout on your pad (EMOTE-3), then
+`/qc set callout.ping <id> attack` and `/qc set callout.emote <id> none`, so its one action is the Attack
+ping (`/qc set callout.ping <id> warning|onmyway|assist` for the others). Run these checks on the build
+where callouts combine actions (CA-M2-1 and later): the M1 build's one-action rule refuses the first
+command. `/qc check <id>` → `<id> -> /ping [@target,exists] 1` and `action: ping, <n> of 255 bytes`.
+
+- **PING-1. Solo, with a target, each of the four types (#17).** Out of combat in the open world, solo,
+  target a nearby NPC and press the callout once for each of Attack, Warning, On my way and Assist, a few
+  seconds apart → each places its ping on the target, with no "interface action blocked" and no drop
+  note; the button flashes once per press and the guard dims once. Turn on **Preview as... → World** and
+  click it → one `[QC] would ping Attack on your target` line and no ping. Record whether a solo ping
+  shows at all (UNVERIFIED: solo pinging). Result: passed (owner, 2026-11-13)
+- **PING-2. In a party, in combat (#17 AC).** In a party, in combat with a target → the press places the
+  ping on the target and a party member sees it; no taint or blocked-action error. Result: passed (owner, 2026-11-13)
+- **PING-3. WoW Forever: the ping is placed and seen (R5).** On a live Forever client, in a party with a
+  target → is the ping placed, and does a party member see it? Record both (UNVERIFIED: server
+  delivery); a failure narrows #17's AC on Forever. Result: passed (owner, 2026-11-13)
+- **PING-4. During an encounter lockdown (D25).** On a raid or dungeon boss, with a target → record whether
+  the ping is placed. If the encounter blocks `/ping`, a `LOCKS.ping` row is the follow-up. Result: passed (owner, 2026-11-13)
+- **PING-5. Pings off, and on cooldown (D17).** Turn off the game's Enable pings option and press → chat
+  shows `[QC] <name>: pings are turned off.` and nothing is pinged; turn it back on. Press quickly
+  several times on a target → once the client's cooldown runs, `[QC] <name>: your ping is on cooldown.`
+  prints; a single press off cooldown prints no false cooldown note. With no target →
+  `[QC] <name>: no target to ping.` and nothing is pinged on a unit you did not pick (`exists`). Record
+  whether the client prints an error of its own on a refused ping (if it prints nothing,
+  `PING_SYSTEM_ERROR` is a follow-up). Result: passed (owner, 2026-11-13)
+
+## Raid markers
+
+**Client: Retail, then WoW Forever**, every check here (QuickComms#18, the combined-actions design §6).
+**Code:** `modules/Bake.lua` (`B.BakeActions`: `/tm [@target,exists] !<n>`), `core/Compat.lua`
+(`MarkerCommand`, `TargetExists`, `CanMark`, `MarkerRights`, `InRaid`, `EveryoneAssistant`),
+`modules/SendEngine.lua` (`SE.PressNotes`), `modules/Preview.lua` and `settings/SlashVerbs.lua`.
+
+**Set-up, for every check here.** A marker callout, as for the pings: a Game emote callout, then
+`/qc set callout.marker <id> 8` and `/qc set callout.emote <id> none`, so its one action is Skull (1 star
+to 8 skull). On the build where callouts combine actions (CA-M2-1 and later), as above. `/qc check <id>`
+→ `<id> -> /tm [@target,exists] !8` and `action: marker, <n> of 255 bytes`.
+
+- **MARK-1. Solo, marking a target (#18).** Out of combat in the open world, solo, target a nearby NPC and
+  press → the skull lands on it, with no "interface action blocked"; the button flashes once (D16: no
+  echo is awaited). Turn on **Preview as... → World** and click it → one `[QC] would mark your target`
+  line ending in the skull icon, and nothing is marked. Record whether a solo mark lands (UNVERIFIED: solo
+  rights). Result: passed (owner, 2026-11-13)
+- **MARK-2. In a party, as a non-leader.** In a party you do not lead, with a target → the mark lands and
+  no rights note prints. Result: passed (owner, 2026-11-13)
+- **MARK-3. In a raid, without assist and with it.** In a raid, without leader or assist (and Everyone is
+  assistant off) → `[QC] <name>: you need leader or assist to mark in a raid.` prints and no mark lands.
+  Given assist → no note, and the mark lands. With Everyone is assistant on and no assist → no note, and
+  the mark lands. Result: passed (owner, 2026-11-13)
+- **MARK-4. A second press keeps the mark (`!N`).** Press it twice on the same target → the skull stays
+  on; the second press does not clear it. Result: passed (owner, 2026-11-13)
+- **MARK-5. No target, and a target that cannot be marked.** With no target → `[QC] <name>: no target to
+  mark.` and nothing is marked. Target a unit that cannot carry a marker → `[QC] <name>: that target
+  cannot be marked.` Result: passed (owner, 2026-11-13)
+- **MARK-6. WoW Forever: `/tm` is the command (UNVERIFIED).** On Forever, `/qc check <id>` → the line
+  opens with the client's own marker command, and a press marks the target. Result: passed (owner, 2026-11-13)
+- **MARK-7. Marking in combat, and during a boss encounter (R4).** In a party, on both clients: press on a
+  target in combat, then during a boss encounter → record whether the mark lands and whether any taint or
+  blocked-action error shows (`SetRaidTarget`'s restrictions; the secret `GetRaidTargetIndex` compare in
+  `/tm`'s `!` branch). A failure narrows #18's AC. Result: passed (owner, 2026-11-13)
+
+## Auto-thank
+
+**Client: Retail, then WoW Forever**, every check here (QuickComms#19, the combined-actions design §9 and
+§13). **Code:** `modules/AutoThank.lua` (the filter, the unit-filter frame, the after-combat diff),
+`modules/AutoThank_Toast.lua` (the toast, its pump, Hold and Release, the fade), `core/ToastSetup.lua`,
+`modules/SendEngine.lua` (`SE.NewThankButton`, `pressThank`), `core/Compat.lua` (`AuraCaster`,
+`AuraByInstance`, `HelpfulAuraIds`, `WhisperName`, `WhisperCommand`) and `settings/AutoThank.lua` (the
+Auto-thank page). **Set-up:** a fresh profile (auto-thank on, the open world alone, Emote), and a second
+character or a stranger who can cast a long buff on you.
+
+- **THANK-1. A stranger's buff, thanked (#19).** In the open world, out of combat, not grouped, a stranger
+  casts Arcane Intellect on you → one toast: the buff's icon and *<name> buffed you with Arcane
+  Intellect*. Click **Thank** → you `/thank` them (the client's own emote line in chat), and the toast
+  goes. Again, and leave it → it fades over its last two seconds and goes after about ten; hovering it
+  holds it. Result: passed (owner, 2026-11-13)
+- **THANK-2. Whether the caster reads for a stranger (R1).** With friendly nameplates off and the stranger
+  not your target, then targeted: run `/dump C_UnitAuras.GetAuraCasterGUID("player", <id>)` first and the
+  aura's `sourceUnit` second (`/dump C_UnitAuras.GetAuraDataByAuraInstanceID("player", <id>).sourceUnit`),
+  and record each answer both ways; then record `GetPlayerInfoByGUID(<guid>)`'s name and realm (the 6th and
+  7th returns) for that stranger. A caster that reads in neither way shows no toast. Result: passed (owner, 2026-11-13)
+- **THANK-3. `/thank Name` out of range or out of sight (UNVERIFIED).** Let the stranger walk out of range,
+  or behind a wall, before you click Thank → record whether the emote names them or falls back to the
+  untargeted form. Result: passed (owner, 2026-11-13)
+- **THANK-4. The whisper and the emote reach a cross-realm caster.** Set Thank button sends to Whisper →
+  a click whispers *Thanks for the Arcane Intellect, <name>!*, the whisper reaches the caster and no drop
+  note prints (the echo is matched). On Retail use a cross-realm caster whose realm name has a space; on
+  Forever a "First Surname" caster (whispered as `First-Surname`). Then Emote: the emote names the bare
+  name (`/thank Name`, `/thank First Surname`; CA-THX-2: the whisper form thanked everyone) → record
+  whether it lands on the cross-realm caster on Retail (UNVERIFIED); on Forever it did (owner, 2026-11-11).
+  Then Both: one click sends the emote, then the whisper.
+  Result: passed (owner, 2026-11-13)
+- **THANK-5. A buff mid-fight.** Get buffed by a stranger while in combat → no toast in combat; one after
+  it. Repeat after a `/reload` in combat (the toast still comes after the fight). Result: passed (owner, 2026-11-13)
+- **THANK-6. A burst is throttled.** Five strangers buff you in a burst → at most three toasts on screen,
+  about a second and a half apart, and the rest after, never five at once. Result: passed (owner, 2026-11-13)
+- **THANK-7. Raid buffs only.** Tick **Filter → Raid buffs only** → Arcane Intellect, Power Word: Fortitude
+  and Mark of the Wild from a stranger toast and no other buff does, on Retail and on Forever (whose list
+  holds every rank of the three; UNVERIFIED ids). Record any of the three that does not toast. Result: passed (owner, 2026-11-13)
+- **THANK-8. Where it stays quiet.** In a dungeon (off by default) → no toast. In the open world: a buff
+  you cast on yourself, a group member's buff and a pet's buff → no toast. Result: passed (owner, 2026-11-13)
+- **THANK-9. Combat starts with a toast up.** With a toast on screen, pull a mob → the toast goes at once
+  with no "interface action blocked" or taint error, and comes back after the fight. Result: passed (owner, 2026-11-13)
+- **THANK-10. A right-click dismisses.** Right-click a toast → it goes and nothing is sent. Result: passed (owner, 2026-11-13)
+- **THANK-11. Thank does not trip the spam guard.** Click Thank, then press a pad button at once → the pad
+  press is sent and not "guarded". Result: passed (owner, 2026-11-13)
+- **THANK-12. The mute modes.** Set **Mute → Strangers**: a stranger's buff shows no toast, a friend's and a
+  guildmate's do. Set **Friends and guild**: a friend's buff and a guildmate's buff show no toast, a
+  stranger's does. This confirms `C_FriendList.IsFriend(guid)` and `IsGuildMember(guid)` answer for a
+  GUID. Result: passed (owner, 2026-11-13)
 
 ## Pending sign-off
 
@@ -2589,3 +2787,11 @@ FOREVER-18 to FOREVER-21, new, each owed. From QFE-F5: FOREVER-22 and FOREVER-23
 Owed from the Forever ids run (QuickComms#21, FID-1 to FID-3, `docs/superpowers/specs/2026-11-10-forever-ids-design.md`): FOREVER-25, new, owed; FOREVER-13 (the derived lists, by name against the ids record), FOREVER-16 (now `/qc probe ids`, with no travel) and FOREVER-22 (the place probe where you happen to be, beside the ids record), rewritten, each owed. From FID-4 (the design's Revision 2026-11-10, group finder): FOREVER-13 (30 dungeons, 12 raids), FOREVER-16 and FOREVER-25 (the group finder line) have a changed expected result and stay owed.
 
 On 2026-11-10 the owner reported that every check owed from the WoW Forever port and emotes run (Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`) and the Forever ids run (QuickComms#21) passed. Passed, recorded on each `Result:` line as `passed (owner, 2026-11-10)`: ROLE-1 to ROLE-3, FOREVER-1 to FOREVER-25 and EMOTE-1 to EMOTE-8. FOREVER-16's line also records what the ids record showed.
+
+Owed from combined actions M1 (QuickComms#17 and #18, CA-M1-1 to CA-M1-12, `docs/superpowers/specs/2026-11-10-combined-actions-design.md` §5, §6 and §13): PING-1 to PING-5 and MARK-1 to MARK-7, new, each owed. Each runs on the build where callouts combine actions (CA-M2-1 and later), since the M1 build's one-action rule refuses the set-up's first command.
+
+Owed from combined actions M2 (QuickComms#16, CA-M2-1 to CA-M2-11, the same design §2 to §4 and §7): ACTION-1 to ACTION-8, new, each owed; EMOTE-3 and EMOTE-4 (the callout editor's four action slots and Channel None changed their expected result, so each lost its pass mark). PING-1 to PING-5 and MARK-1 to MARK-7 are runnable from this build on.
+
+Owed from combined actions M3 (QuickComms#20, CA-M3-1 to CA-M3-5, the same design §8 and §10): EMOTE-9 and EMOTE-10, new, each owed.
+
+Owed from combined actions M4 (QuickComms#19, CA-M4-1 to CA-M4-14, the same design §9 and §13): THANK-1 to THANK-12 and FOREVER-26, new, each owed.

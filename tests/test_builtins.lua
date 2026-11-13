@@ -85,6 +85,14 @@ test("builtins: bake audit, every callout bakes under its set's snapshot", funct
             assertTrue(info.length <= 255, cid .. " length")
             assertTrue(#(info.unknown or {}) == 0, cid .. " unknown token")
             assertTrue(info.lock == nil, cid .. " locked under its own snapshot: " .. tostring(info.lock))
+            -- every action, not only the Line (CA-M3-1): an emote beside a line bakes, fits, and is
+            -- not padlocked under its own set's snapshot
+            local _, why, all = NS.Bake.BakeActions(BI.callouts[cid], snap, { ctx = { me = "Traxex" } })
+            assertTrue(#all.baked == #all.actions, cid .. ": an action skipped: " .. tostring(why))
+            assertTrue(all.total <= NS.Bake.MAX_MACRO, cid .. " macro length")
+            for _, a in ipairs(all.baked) do
+                assertTrue(a.lock == nil, cid .. " " .. a.kind .. " locked: " .. tostring(a.lock))
+            end
         end
     end
 end)
@@ -191,11 +199,12 @@ test("builtins: [QF-05] the owner's edits are the shipped look, with no schema s
     assertEqual(stone.glyph, "gi:tombstone-sbed")
     assertEqual(stone.iconColor, "b07cff")
     assertEqual(BI.groups["bi.group"].callouts[2], "bi.group.stone", "2nd in In Group")
-    -- red under: a migration step added for the prebuilts (D4c: no migration). Step 10 is QC-03's
-    -- reset onto the skin and step 11 the Font flags' move to From skin (LibKa0s v1.82.0); neither
-    -- touches a prebuilt, nor does step 18, the Friz move (R3-FRIZ), nor step 19, which only adds the
-    -- new Emotes set (QFE-E3).
-    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 19)
+    -- red under: a migration step added for these prebuilt changes (D4c: no migration). Step 10 is
+    -- QC-03's reset onto the skin and step 11 the Font flags' move to From skin (LibKa0s v1.82.0);
+    -- neither touches a prebuilt, nor does step 18, the Friz move (R3-FRIZ), nor step 19, which only
+    -- adds the new Emotes set (QFE-E3). Step 20 does touch prebuilts (combined actions §8): it gives
+    -- unedited shipped callouts their emote and adds the two Heal me rows, not these colors or At Stone.
+    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 20)
 end)
 
 test("builtins: [polish] every battleground node set has map-wide callouts of its own", function()
@@ -507,14 +516,25 @@ test("builtins: [QFE-E3] every seeded emote token exists on both clients; the vo
     local speech = {}
     for _, token in ipairs(EMOTES.speech) do speech[token] = true end
     for n, cid in ipairs(BI.groups["bi.emotes"].callouts) do
-        local token = BI.callouts[cid].emote
-        -- red under: a token only one client's ChatEmoteConstants.lua has (ATTACKTARGET, LOL)
-        assertTrue(EMOTES.retail[token] ~= nil, token .. " on Retail")
-        assertTrue(EMOTES.forever[token] ~= nil, token .. " on WoW Forever")
-        assertEqual(EMOTES.retail[token], EMOTES.forever[token], token .. " at the same index")
-        if n <= #VOICE then assertTrue(speech[token], token .. " plays a voice line") end
+        if n <= #VOICE then assertTrue(speech[BI.callouts[cid].emote], cid .. " plays a voice line") end
     end
+    -- every shipped emote, the Emotes set's and those beside a line (CA-M3-1, spec §8)
+    local n = 0
+    for cid, c in pairs(BI.callouts) do
+        local token = c.emote
+        if token then
+            n = n + 1
+            -- red under: a token only one client's ChatEmoteConstants.lua has (ATTACKTARGET, LOL)
+            assertTrue(EMOTES.retail[token] ~= nil, cid .. " " .. token .. " on Retail")
+            assertTrue(EMOTES.forever[token] ~= nil, cid .. " " .. token .. " on WoW Forever")
+            assertEqual(EMOTES.retail[token], EMOTES.forever[token], token .. " at the same index")
+        end
+    end
+    assertTrue(n > #VOICE + #SOCIAL, "the emotes beside a line are checked too")
 end)
+
+-- The set a shipped group sits under, and its snapshot.
+local function topOf(BI, id) local g = BI.groups[id] while g.parent do id = g.parent g = BI.groups[id] end return id end
 
 test("builtins: [QFE-E3] each seeded emote bakes to the client's own command", function()
     local NS, env = T.newAddon()
@@ -524,6 +544,19 @@ test("builtins: [QFE-E3] each seeded emote bakes to the client's own command", f
         local c = BI.callouts[cid]
         local line = NS.Bake.Bake(c, snap, { ctx = {} })
         assertEqual(line, EMOTES.commands[EMOTES[CLIENT][c.emote]], cid)
+    end
+    -- and every emote beside a line, as its own action under its set's snapshot (CA-M3-1)
+    for gid, g in pairs(BI.groups) do
+        for _, cid in ipairs(g.callouts or {}) do
+            local c = BI.callouts[cid]
+            if c.emote then
+                local _, _, info = NS.Bake.BakeActions(c, BI.SNAPSHOTS[topOf(BI, gid)], { ctx = {} })
+                local emote
+                for _, a in ipairs(info.actions) do if a.kind == "emote" then emote = a end end
+                assertTrue(emote ~= nil, cid .. " has an emote action")
+                assertEqual(emote.line, EMOTES.commands[EMOTES[CLIENT][c.emote]], cid)
+            end
+        end
     end
     assertEqual(NS.Bake.Bake(BI.callouts["bi.emotes.oom"], snap, { ctx = {} }), "/oom")
     assertEqual(NS.Bake.Bake(BI.callouts["bi.emotes.follow"], snap, { ctx = {} }), "/followme", "FOLLOW's own first command")
@@ -551,4 +584,180 @@ test("builtins: [QFE-E3] a fresh profile seeds Emotes after Solo; Restore built-
     assertTrue(back ~= nil, "back")
     assertEqual(#p.groups[back].callouts, #VOICE + #SOCIAL, "with every callout")
     assertEqual(p.callouts[p.groups[back].callouts[#VOICE + #SOCIAL]].emote, "BYE")
+end)
+
+-- ── extra action fields and the integrity row (CA-M1-6, spec §2) ──────────────────────────────
+
+-- One line per shipped callout of `prefix`, every field in key order, for a byte-for-byte pin.
+local function fingerprint(BI, prefix)
+    local ids = {}
+    for id in pairs(BI.callouts) do if id:sub(1, #prefix) == prefix then ids[#ids + 1] = id end end
+    table.sort(ids)
+    local lines = {}
+    for _, id in ipairs(ids) do
+        local c, keys = BI.callouts[id], {}
+        for k in pairs(c) do keys[#keys + 1] = k end
+        table.sort(keys)
+        local parts = { id }
+        for _, k in ipairs(keys) do parts[#parts + 1] = k .. "=" .. tostring(c[k]) end
+        lines[#lines + 1] = table.concat(parts, ";")
+    end
+    local text = table.concat(lines, "\n")
+    local a, b = 1, 0
+    for i = 1, #text do a = (a + text:byte(i)) % 65521; b = (b + a) % 65521 end
+    return #ids, #text, b * 65536 + a
+end
+
+test("builtins: [CA-M1-6] BI.Callout takes extra action fields, and BI.Callouts rows take them as r[6]", function()
+    local _, BI = bi()
+    -- red under: BI.Callout without its `extra` argument
+    local id = BI.Callout("bi.test", "ping", "Ping", "", "gameEmote", nil, nil, { ping = "attack", marker = 8 })
+    assertEqual(BI.callouts[id].ping, "attack")
+    assertEqual(BI.callouts[id].marker, 8)
+    local ids = BI.Callouts("bi.test", "gameEmote", { { "wave", "Wave", "", nil, nil, { emote = "WAVE" } } })
+    assertEqual(BI.callouts[ids[1]].emote, "WAVE")
+    assertNil(BI.callouts[ids[1]].extra, "the fields, not the table")
+    BI.callouts[id], BI.callouts[ids[1]] = nil, nil
+end)
+
+test("builtins: [CA-M1-6] the Emotes set's data is as it shipped", function()
+    local _, BI = bi()
+    local n, len, sum = fingerprint(BI, "bi.emotes.")
+    -- red under: any change to a shipped emote callout's fields (the move to `extra` changes none)
+    -- Taken before the move, on both kit profiles (the icon paths are one catalog's).
+    assertEqual(n .. "/" .. len .. "/" .. sum, "20/3604/676677894")
+end)
+
+test("builtins: [CA-M1-6] every shipped callout passes the callout check and holds an action", function()
+    local NS, BI = bi()
+    for id, c in pairs(BI.callouts) do
+        -- red under: a shipped callout with no Line, emote, ping or marker, or a bad ping or marker
+        local ok, why = NS.Library.ValidCallout(c)
+        assertTrue(ok, id .. ": " .. tostring(why))
+        assertTrue(NS.Library.HasAction(c), id .. " holds an action")
+        assertTrue(NS.Library.ValidPing(c.ping) and NS.Library.ValidMarker(c.marker), id)
+    end
+end)
+
+test("builtins: [CA-M1-6] no seeded callout keeps the catalog glyph name", function()
+    local NS = T.bootAddon()
+    for id, c in pairs(NS.db.profile.callouts) do
+        assertNil(c.glyph, id)
+    end
+end)
+
+-- ── #20: shipped callouts gain an emote (CA-M3-1, spec §8) ──────────────────────────────────────
+
+-- The 12 additions, exactly the spec's §8 table.
+local COMBO = {
+    ["bi.world.rare"] = "POINT", ["bi.world.elite"] = "HELPME", ["bi.world.thanks"] = "THANK",
+    ["bi.group.hello"] = "WAVE", ["bi.group.ready"] = "READY", ["bi.group.glhf"] = "CHEER",
+    ["bi.group.tyff"] = "THANK", ["bi.group.ggty"] = "THANK", ["bi.group.ggnt"] = "BYE",
+    ["bi.mplus.pull"] = "CHARGE", ["bi.mplus.mana"] = "OOM", ["bi.raid.wipe"] = "FLEE",
+}
+
+test("builtins: [CA-M3-1] twelve shipped callouts carry an emote beside their line, exactly the spec's list", function()
+    local _, BI = bi()
+    local got = {}
+    for cid, c in pairs(BI.callouts) do
+        if c.emote and not cid:match("^bi%.emotes%.") and not cid:match("%.healme$") then
+            got[#got + 1] = cid .. "=" .. c.emote
+        end
+    end
+    table.sort(got)
+    local want = {}
+    for cid, token in pairs(COMBO) do want[#want + 1] = cid .. "=" .. token end
+    table.sort(want)
+    -- red under: a listed row without its `extra = { emote = ... }`, or an emote the list does not name
+    assertEqual(table.concat(got, ","), table.concat(want, ","))
+    for cid in pairs(COMBO) do
+        local c = BI.callouts[cid]
+        assertTrue(c.text ~= "", cid .. " keeps its line")
+        assertNil(c.ping, cid) assertNil(c.marker, cid)
+    end
+    assertEqual(BI.callouts["bi.group.hello"].text, "Hello!", "no shipped line changes")
+    assertEqual(BI.callouts["bi.raid.wipe"].channel, "smartLead")
+end)
+
+test("builtins: [CA-M3-1] Arena and every battleground set carry no emote (F4b: pvpMatch padlocks one)", function()
+    local _, BI = bi()
+    for cid, c in pairs(BI.callouts) do
+        -- red under: an emote added to a set whose snapshot is pvpMatch-locked
+        if cid:match("^bi%.arena%.") or cid:match("^bi%.bg%.") or cid:match("^bi%.bg$") then
+            assertNil(c.emote, cid)
+        end
+    end
+end)
+
+test("builtins: [CA-M3-1] #20: Hello in a party sends its line, then its wave, on one press", function()
+    local NS, env, m = T.enableAddon()
+    plantEmotes(NS, env)
+    NS.Situation.ReadInputs = function() return { inGroup = true } end
+    NS.Situation.RefreshNow("test")
+    local b = NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.group.hello"))[1]
+    assertTrue(b ~= nil, "In Group is on the pad in a party")
+    m.__click(b)
+    local lines = m.sentLines()
+    -- red under: bi.group.hello shipped without its emote
+    assertEqual(#lines, 2)
+    assertEqual(lines[1], "/p Hello!")
+    assertEqual(lines[2], EMOTES.commands[EMOTES[CLIENT].WAVE])
+end)
+
+test("builtins: [CA-M3-2] Dungeon and Raid gain a Heal me callout with the HEALME emote, in place", function()
+    local _, BI = bi()
+    local C = BI.COLOR
+    local want = { ["bi.mplus.healme"] = { "Need heals!", "smartGroup", "bi.mplus.kicks", 8 },
+        ["bi.raid.healme"] = { "Need heals on me!", "raid", "bi.raid.stones", 7 } }
+    for cid, w in pairs(want) do
+        local c = BI.callouts[cid]
+        -- red under: no healme row in defaults/BuiltIns_MythicPlus.lua or defaults/BuiltIns_Raid.lua
+        assertTrue(c ~= nil, cid .. " is shipped")
+        assertEqual(c.name, "Heal me", cid)
+        assertEqual(c.text, w[1], cid)
+        assertEqual(c.channel, w[2], cid)
+        assertEqual(c.emote, "HEALME", cid)
+        assertEqual(c.glyph, "gi:heart-plus", cid)
+        assertEqual(c.iconColor, C.green, cid)
+        assertNil(c.ping, cid) assertNil(c.marker, cid)
+        local list = BI.groups[cid:match("^(.*)%.healme$")].callouts
+        assertEqual(list[w[4]], cid, cid .. " in place")
+        assertEqual(list[w[4] - 1], w[3], cid .. " right after its predecessor")
+    end
+    assertEqual(BI.groups["bi.raid"].callouts[8], "bi.raid.pull10", "the lead list after the raid list")
+end)
+
+test("builtins: [CA-M3-2] set sizes: Solo 7, In Group 11, Dungeon 8, Raid 9; none over a dial's slices", function()
+    local NS, BI = bi()
+    local sizes = { ["bi.world"] = 7, ["bi.group"] = 11, ["bi.mplus"] = 8, ["bi.raid"] = 9 }
+    for gid, n in pairs(sizes) do assertEqual(#BI.groups[gid].callouts, n, gid) end
+    for gid in pairs(sizes) do
+        assertTrue(#BI.groups[gid].callouts <= NS.DialLayout.MAX_SLICES, gid .. " fits one Auto page")
+    end
+end)
+
+test("builtins: [CA-M3-2] a fresh profile seeds both Heal me callouts; no Auto dial gains a page", function()
+    local NS = T.enableAddon()
+    local p, Lib = NS.db.profile, NS.Library
+    local snap = NS.Situation.Current()
+    for _, set in ipairs({ "bi.world", "bi.group", "bi.mplus", "bi.raid" }) do
+        local gid = T.seeded(NS, set)
+        local group = { id = gid, title = set, slots = {} }
+        for _, cid in ipairs(Lib.Group(gid).callouts) do
+            group.slots[#group.slots + 1] = NS.Surfaces.Slot(cid, Lib.Callout(cid), snap, { soloFallback = "none", ctx = {} })
+        end
+        local rings, open = NS.DialLayout.Rings({ group }, { slices = NS.DialLayout.AUTO, title = "Comms Dial" })
+        assertEqual(rings[open].pages, 1, set .. " on one Auto page")
+    end
+    for _, set in ipairs({ "bi.mplus", "bi.raid" }) do
+        local id = T.seeded(NS, set .. ".healme")
+        -- red under: Heal me shipped but not seeded into its set
+        assertTrue(id ~= nil, set .. ".healme seeded")
+        local c = p.callouts[id]
+        assertEqual(c.emote, "HEALME")
+        assertEqual(c.icon, NS.Icon("gi:heart-plus"))
+        assertNil(c.glyph)
+    end
+    local list = p.groups[T.seeded(NS, "bi.raid")].callouts
+    assertEqual(p.callouts[list[7]].origin, "bi.raid.healme", "seeded in shipped order")
 end)

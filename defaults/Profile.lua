@@ -11,6 +11,8 @@ local _, NS = ...
 -- AceDB a profile whose `enabled` reads nil. The design's data model (spec §5.1) lives here too:
 -- the Behavior values and the registry, whose only writer is modules/Library.lua.
 
+local L = NS.L
+
 NS.C = {
     PROFILE = {
         enabled    = true,       -- master switch (the `disabled` hold reads it)
@@ -39,6 +41,21 @@ NS.C = {
         padOrder  = {},
         dialOrder = {},
         seeded    = false, -- set by Library.Prepare once the default pad and dial exist
+
+        -- Auto-thank (#19, spec §9): a toast names a stranger who buffed you, with a Thank button. On by
+        -- default in the open world alone (owner ruling R-B); AceDB merges the block into every existing
+        -- profile, so no step is owed. `position` is the toast's dragged spot (false: the library's),
+        -- reset-exempt.
+        thank = {
+            enabled = true,
+            content = { openWorld = true, dungeon = false, mythicPlus = false, raid = false, delve = false,
+                scenario = false, battleground = false, arena = false, housing = false },
+            send = "emote",            -- "emote" | "line" | "both"
+            text = L["Thanks for the {buff}, {name}!"],
+            mute = "none",             -- "none" | "strangers" | "known" (friends and guild)
+            raidBuffsOnly = false,     -- D3's allowlist: only NS.GameIds.THANK_RAID_BUFFS toast
+            position = false,
+        },
 
         -- The Preview as selector window's place (modules/PreviewWindow.lua), written on drag stop.
         previewWindow = { point = "TOP", relPoint = "TOP", x = 0, y = -140 },

@@ -8,7 +8,11 @@
 -- full skin (LibKa0s v1.85.0, cause D7) adds a companion per color, shadow, texture and shine, and moves
 -- the Font rows' default to the Ka0s pick. QFE-F1 (LibKa0s v1.95.0) makes the skin.skin default the
 -- client's default skin, Ka0s Default on Retail and WoW Forever on Forever, read from the kit profile.
--- QFE-F4 adds the Role row.
+-- QFE-F4 adds the Role row. CA-M1-5 (combined actions, #17 and #18) adds callout.ping and
+-- callout.marker, a callout's ping and raid target marker actions, beside callout.emote.
+-- CA-M2-7 relabels the callout.channel gameEmote choice None (no chat line), D10: a pin holds a
+-- choice's value, not its label, so no pin moves.
+-- CA-M4-13 (auto-thank, #19) adds the thank.* rows, a content kind's row on both clients.
 local CLIENT_SKIN = dofile("tests/_kit/mock_client.lua").current() == "forever" and "forever" or "ka0s"
 return {
     ["enabled"] = "bool|true|nil|nil|nil|nil|false",
@@ -45,6 +49,8 @@ return {
     ["callout.text"] = "string|nil|nil|nil|nil|nil|false",
     ["callout.channel"] = "string|\"smartGroup\"|nil|nil|nil|[\"smartGroup\",\"smartLead\",\"party\",\"raid\",\"instance\",\"raidWarning\",\"say\",\"yell\",\"general\",\"emote\",\"gameEmote\"]|false",
     ["callout.emote"] = "string|false|nil|nil|nil|nil|false",
+    ["callout.ping"] = "string|false|nil|nil|nil|[\"none\",\"attack\",\"warning\",\"onmyway\",\"assist\"]|false",
+    ["callout.marker"] = "number|false|nil|nil|nil|[0,1,2,3,4,5,6,7,8]|false",
     ["callout.icon"] = "string|false|nil|nil|nil|nil|false",
     ["callout.iconColor"] = "string|false|nil|nil|nil|nil|false",
     ["group.name"] = "string|nil|nil|nil|nil|nil|false",
@@ -317,4 +323,19 @@ return {
     ["dial.page.dotColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
     ["dial.page.dotBackColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
     ["dial.page.dotBorderColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["thank.enabled"] = "bool|true|nil|nil|nil|nil|false",
+    ["thank.send"] = "string|\"emote\"|nil|nil|nil|[\"emote\",\"line\",\"both\"]|false",
+    ["thank.text"] = "string|\"Thanks for the {buff}, {name}!\"|nil|nil|nil|nil|false",
+    ["thank.mute"] = "string|\"none\"|nil|nil|nil|[\"none\",\"strangers\",\"known\"]|false",
+    ["thank.position"] = "point|false|nil|nil|nil|nil|false",
+    ["thank.raidBuffsOnly"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.openWorld"] = "bool|true|nil|nil|nil|nil|false",
+    ["thank.content.dungeon"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.raid"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.battleground"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.mythicPlus"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.delve"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.scenario"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.arena"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.housing"] = "bool|false|nil|nil|nil|nil|false",
 }

@@ -80,6 +80,11 @@ NS.MIGRATIONS = {
     -- 18 -> 19 (QFE-E3, QuickComms#15): the Emotes set comes to every stored profile once, after the
     -- World set on each pad and dial; a profile given it already, or whose player deleted it, gains nothing.
     { to = 19, perProfile = true, run = function(_, profile) NS.Library.MigrateEmotesSet(profile) end },
+    -- 19 -> 20 (combined actions §8, QuickComms#20): every shipped callout that now performs an emote
+    -- with its line gains it where the player left it unedited (same channel and text, no emote, ping
+    -- or marker; name, icon and icon color not compared, F4a), and the stored Dungeon and Raid sets
+    -- gain their Heal me callout after Kick order and Healthstones. Copies and deleted sets gain nothing.
+    { to = 20, perProfile = true, run = function(_, profile) NS.Library.MigrateComboCallouts(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

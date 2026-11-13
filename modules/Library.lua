@@ -439,16 +439,107 @@ function Lib.ValidEmote(v)
     return type(v) == "string" and v:find("^[%u%d_]+$") ~= nil
 end
 
+--- The ping types a callout may carry (spec §5): /ping's keywords 1 to 4.
+Lib.PING_TYPES = { "attack", "warning", "onmyway", "assist" }
+local PING_TYPE = {}
+for _, v in ipairs(Lib.PING_TYPES) do PING_TYPE[v] = true end
+
+--- Whether `v` is a ping as stored: none (nil or false), or one of Lib.PING_TYPES.
+function Lib.ValidPing(v)
+    if v == nil or v == false then return true end
+    return PING_TYPE[v] == true
+end
+
+--- Whether `v` is a raid target marker as stored: none (nil or false), or a whole number from 1 (star)
+--- to 8 (skull).
+function Lib.ValidMarker(v)
+    if v == nil or v == false then return true end
+    return type(v) == "number" and v >= 1 and v <= 8 and v == math.floor(v)
+end
+
+--- Whether callout fields `f` carry at least one action (spec §2: a Line, an Emote, a Ping, a
+--- Marker), and how many. Not part of validCallout: a legacy callout with none stays editable.
+--- @return boolean has, number count
+function Lib.HasAction(f)
+    if type(f) ~= "table" then return false, 0 end
+    local n = 0
+    if NS.Bake.HasLine(f) then n = n + 1 end
+    if f.emote then n = n + 1 end
+    if f.ping then n = n + 1 end
+    if f.marker then n = n + 1 end
+    return n > 0, n
+end
+
+--- The lines a refused action rule reads as (a /qc set error, the popup's check).
+Lib.ACTION_WHY = {
+    noAction = L["Set at least one action: a line, an emote, a ping or a marker."],
+}
+
+-- The action rule for a whole callout: at least one (up to four, one per slot, by construction).
+local function actionRule(f)
+    if not Lib.HasAction(f) then return false, "noAction" end
+    return true
+end
+
+-- Whether callout `m` may become `after` under the action rule (Lib.KeepsAction).
+local function keepsActions(m, after)
+    local _, before = Lib.HasAction(m)
+    if not Lib.HasAction(after) and before > 0 then return false, "noAction" end
+    return true
+end
+
+-- True while Lib.WriteActions runs: the whole edit was checked, so its field writes are not.
+local wholeEdit = false
+
+--- Whether writing `value` into user callout `id`'s `field` keeps the action rule: a write that would
+--- take away the last action of a callout that had one is refused ("noAction"). A legacy callout with no action, written as it is,
+--- passes, and so does a write with no such callout (the seam's own refusal names that).
+--- @return boolean ok, string|nil reason
+function Lib.KeepsAction(id, field, value)
+    local m = id ~= nil and P().callouts[id]
+    if wholeEdit or type(m) ~= "table" then return true end
+    local after = copyTable(m)
+    after[field] = value
+    return keepsActions(m, after)
+end
+
+--- Run `fn`, an edit that writes several of user callout `id`'s fields one by one through the seam,
+--- checked as one: `final` is the callout as the edit leaves it, judged by the action rule against
+--- the stored callout, so a field write on the way (a Line swapped for an Emote) is not refused on
+--- its own. A refused edit runs nothing.
+--- @return any fn's returns, or false and the reason ("noAction")
+function Lib.WriteActions(id, final, fn)
+    local m = P().callouts[id]
+    if type(m) == "table" then
+        local ok, why = keepsActions(m, final)
+        if not ok then return false, why end
+    end
+    if wholeEdit then return fn() end
+    wholeEdit = true
+    local r = pack(pcall(fn))
+    wholeEdit = false
+    if not r[1] then error(r[2], 0) end
+    return unpack(r, 2, r.n)
+end
+
 local function validCallout(f)
     if type(f) ~= "table" then return false, "badCallout" end
     if not Lib.ValidName(f.name) then return false, "badName" end
     if type(f.text) ~= "string" then return false, "badText" end
     if not NS.Channels.IsKind(f.channel) then return false, "badChannel" end
     if not Lib.ValidEmote(f.emote) then return false, "badEmote" end
+    if not Lib.ValidPing(f.ping) then return false, "badPing" end
+    if not Lib.ValidMarker(f.marker) then return false, "badMarker" end
     if not Lib.ValidIcon(f.icon) then return false, "badIcon" end
     if not Lib.ValidIconColor(f.iconColor) then return false, "badIconColor" end
     return true
 end
+
+--- Whether callout fields `f` pass the check every created callout passes (its name, text, channel,
+--- emote, ping, marker, icon and color), and the reason when not. Seeded data skips it, so the
+--- shipped sets' integrity test (tests/test_builtins.lua) reads it here.
+--- @return boolean ok, string|nil reason
+Lib.ValidCallout = validCallout
 
 -- The first `n` UTF-8 characters of `s`.
 local function firstChars(s, n)
@@ -474,9 +565,12 @@ end
 function Lib.CreateCallout(fields)
     local ok, why = validCallout(fields)
     if not ok then return nil, why end
+    ok, why = actionRule(fields)
+    if not ok then return nil, why end
     local id = Lib.NewId("c")
     P().callouts[id] = { name = fields.name, text = fields.text, channel = fields.channel, icon = fields.icon,
-        iconColor = glyphColor(fields.icon, fields.iconColor), emote = fields.emote or nil }
+        iconColor = glyphColor(fields.icon, fields.iconColor), emote = fields.emote or nil,
+        ping = fields.ping or nil, marker = fields.marker or nil }
     announce("callout", id)
     return id
 end
@@ -487,7 +581,7 @@ end
 -- lives in another group, or the player renames it), checked as any new callout is.
 local function copyCallout(src)
     return Lib.CreateCallout({ name = src.name, text = src.text, channel = src.channel, icon = src.icon,
-        iconColor = src.iconColor, emote = src.emote })
+        iconColor = src.iconColor, emote = src.emote, ping = src.ping, marker = src.marker })
 end
 
 -- Whether a new group's fields pass: its name, When, glyph color and parent.
@@ -642,6 +736,8 @@ function Lib.CreateCalloutIn(groupId, fields, index)
     if not g then return nil, "noGroup" end
     local ok, why = validCallout(fields)
     if not ok then return nil, why end
+    ok, why = actionRule(fields)
+    if not ok then return nil, why end
     return Lib.Batch(function() return insertAt(g, groupId, Lib.CreateCallout(fields), index) end)
 end
 
@@ -720,7 +816,7 @@ local function seedCallout(p, cid)
     local c = NS.BuiltIns.callouts[cid]
     local id = takeId(p, "c")
     p.callouts[id] = { name = c.name, text = c.text, channel = c.channel, icon = c.icon, iconColor = c.iconColor,
-        emote = c.emote, origin = cid }
+        emote = c.emote, ping = c.ping, marker = c.marker, origin = cid }
     return id
 end
 
@@ -950,7 +1046,8 @@ local SURFACE_DEFAULTS = {
 --- architecture-§5 boot check) and what a member row resets to. `icon`, `iconColor` and `point` are
 --- false, not nil, so the boot check can see the key: false is "none" and "the default place".
 Lib.TEMPLATES = {
-    callout = { name = "", text = "", channel = "smartGroup", icon = false, iconColor = false, emote = false },
+    callout = { name = "", text = "", channel = "smartGroup", icon = false, iconColor = false, emote = false,
+        ping = false, marker = false },
     group = { name = "", icon = false, iconColor = false, enabled = true, when = {},
         parent = false, inheritWhen = true },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,

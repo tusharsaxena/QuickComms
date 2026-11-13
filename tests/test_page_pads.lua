@@ -534,9 +534,17 @@ end)
 
 test("page pads: [polish] no user-facing string sends the player to a Comms Pad or Comms Dial page", function()
     -- red under: any L[...] key or value still naming "the Comms Pad page", "Comms Pad > ..." etc.
-    local fh = assert(io.open(T.root .. "/locales/enUS.lua", "rb"))
-    local src = fh:read("*a")
-    fh:close()
+    -- Over the union of the enUS files the TOC loads (localization-§6), not enUS.lua alone.
+    local parts = {}
+    for _, rel in ipairs(T.loadAddon.tocFiles) do
+        if rel:match("^locales/enUS[%w_]*%.lua$") then
+            local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
+            parts[#parts + 1] = fh:read("*a")
+            fh:close()
+        end
+    end
+    assertTrue(#parts >= 1, "the TOC loads a base locale")
+    local src = table.concat(parts, "\n")
     for line in src:gmatch("[^\n]+") do
         if line:find("^L%[") then
             for _, stale in ipairs({ "Comms Pad page", "Comms Dial page", "Comms Pad >", "Comms Dial >",

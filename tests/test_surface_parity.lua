@@ -153,6 +153,35 @@ test("parity: the Glow seam's stub carries the LibKa0s-Glow-1.0 surface", functi
     T.assertSurfaceParity(degraded.GlowLib, "LibKa0s-Glow-1.0")
 end)
 
+test("parity: the Toast seam's stub carries every member of a live LibKa0s-Toast-1.0 toast", function()
+    -- red under: drop Hold from core/ToastSetup.lua's stub (the host calls it at the combat edge)
+    T.assertSurfaceParity(degraded.ToastStub, "LibKa0s-Toast-1.0")
+end)
+
+test("parity: the Toast seam publishes the same NS members on both paths", function()
+    -- Members from: grep -nE '^\s*function NS\.[A-Za-z_]+|^\s*NS\.[A-Za-z_]+\s*=' core/ToastSetup.lua
+    assertSeamParity("core/ToastSetup.lua", "NewToast", "Toast seam (NS members)")
+end)
+
+test("toast: the seam owns the toast and answers the library's instance, or the stub when it is absent", function()
+    local NS, m = T.newAddon()
+    local d = { build = function() return 200, 40 end }
+    local toast = NS.NewToast(d)
+    -- red under: a seam that leaves d.owner unset (the toast would wear Core's skin, not this addon's)
+    assertTrue(d.owner == "QuickComms", "the toast wears this addon's skin")
+    assertTrue(toast ~= NS.ToastStub and type(toast.Show) == "function", "a live instance")
+    assertTrue(toast:Show({}) == true and toast:Visible()[1] == false, "it shows through the library")
+    assertTrue(m.LibStub("LibKa0s-Toast-1.0", true) ~= nil)
+    local bare = T.newAddon{ skip = NO_LIBKA0S }
+    local stub = bare.NewToast{ build = function() end }
+    assertTrue(stub == bare.ToastStub, "the stub, with the library absent")
+    for name, fn in pairs(stub) do
+        assertTrue(type(fn) == "function", "the stub's " .. name .. " is a function")
+        fn(stub)                                 -- a no-op: nothing raises
+    end
+    assertTrue(#stub:Visible() == 0 and stub:Stats().visible == 0, "it shows nothing")
+end)
+
 test("glow: modules/Glow.lua names no LibCustomGlow-1.0 member; the driver is the one mapping", function()
     -- red under: restore the START/STOP copy (anti-pattern #47; design-glow §8's review check)
     local fh = assert(io.open(T.root .. "/modules/Glow.lua", "rb"))
