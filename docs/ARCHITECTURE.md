@@ -34,7 +34,7 @@ through secure buttons, so they work during chat lockdown in Mythic+ keys, boss 
 matches ([`scope.md`](scope.md)). At the end of phase 5 the data layer feeds the secure send engine, the
 Comms Pads and the Comms Dials, and the player edits groups (with their When, their callouts, each group owning its own, and an
 optional parent group, one level deep), pads (with their Window, Header, Section titles, Buttons and Icons styling) and dials on the Groups, Comms Pad and Comms Dial
-pages. The shipped built-in sets are seed data: each
+pages, and auto-thank on the Auto-thank page. The shipped built-in sets are seed data: each
 profile is given them once as ordinary groups, a battleground's nodes as groups inside its set, and
 Restore built-in groups brings back any the player deleted; "Preview as…" draws the surfaces in another
 situation and "Why is this showing?" explains them. A dial opens on its
@@ -60,7 +60,7 @@ lists the toolchain):
 | Env | `core/EnvSetup.lua` | the addon's own TOC metadata and version |
 | Pool | `core/PoolSetup.lua` | the frame pool (one array pool per pad for its buttons; per dial, one for its ring containers and one per container for its wedges) |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver (`NS.GlowLib`): `modules/Glow.lua` starts and stops the icon and button glows through it under its two keys |
-| Widgets | `core/WidgetsSetup.lua` | the drag strip (`NS.MakeDragHandle`) above each pad, and the reorder lists on the editor pages (`ReorderList`) and the icon browser's Wowhead address window (`NS.MakeCopyWindow`, the library's `CopyWindow`) |
+| Widgets | `core/WidgetsSetup.lua` | the one file that leases the major: the drag strip (`NS.MakeDragHandle`) above each pad, the reorder lists on the editor pages (`NS.MakeReorderList`), the icon browser's Wowhead address window (`NS.MakeCopyWindow`, the library's `CopyWindow`), the Preview as window's dropdown (`NS.MakeDropdown`) and the callout popup's emote menu (`NS.OpenContextMenu`, `NS.CloseMenu`); `NS.HasWidget` asks whether one is there |
 | Bus | `core/Bus.lua` | the strict message catalog and the tracked receivers |
 | Lifecycle | `core/LifecycleSetup.lua` | the stand-down latch |
 | Perf | `core/PerfSetup.lua` | the performance harness |
@@ -73,7 +73,9 @@ lists the toolchain):
 
 `LibKa0s-Compat-1.0` is wired for its two secret guards only (`IsSecret`, `IsSafeKey`, assigned in
 `core/Compat.lua` with a library-absent body); `LibKa0s-Role-1.0` is wired in `core/Compat.lua` too (the role and the class's specializations, QFE-F4, each with a library-absent fallback); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
-`DragHandle`, `ReorderList` and `CopyWindow` are used. Each
+`DragHandle`, `ReorderList`, `CopyWindow`, `Dropdown`, `ContextMenu` (the callout popup's emote menu) and
+`CloseMenu` are used, every one through `core/WidgetsSetup.lua` (`tests/test_setup.lua` holds every other
+file off the major). Each
 setup file holds a descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every
 stub to the live surface.
 
@@ -92,13 +94,13 @@ file that creates `NS.L`), and its topic files `enUS_Settings.lua`, which holds 
 not a TOC line: the client reads it there, and the standard allows it (layout-§1, toc-file-§4
 (standard v2.80.0)).
 
-The modules come in a few kinds. Pure ones (`Tokens`, `Channels`, `Bake`, `Resolver`, `Pad_Layout`,
+The modules come in a few kinds. Pure ones (`Tokens`, `Channels`, `Emotes`, `Bake`, `Resolver`, `Pad_Layout`,
 `Dial_Layout`, `SendEngine_Guard`) take inputs and return answers. Edges read the client or the
 registry and announce a change: `Restrictions`, `Situation` and `Surfaces`, which plans every pad and
 dial and owns the one rebuild request. `Library` is the one registry writer. `SendEngine` is the one
 secure writer, and `Dial_Secure` holds the dial's restricted snippets as text and asks SendEngine for
 every write. The render modules (`Pad_Render`, `Dial_Render`, `Dial_Slices`, `IconStyle`, `Glow`,
-`Shine`) paint insecure visuals, and the frame modules (`Pad`, `Dial`, `PreviewWindow`) own the
+`Shine`) paint insecure visuals, the animation modules (`Anim_Pose`, `Anim_Ghost`, `Anim`) move them, and the frame modules (`Pad`, `Dial`, `PreviewWindow`) own the
 frames and pools. `AutoThank` (#19) decides which buffs from other players to thank, purely, and listens
 to the player's auras on a private unit-filter frame; `AutoThank_Toast` turns each candidate into a
 paced toast whose Thank button is a SendEngine send button. `Preview` holds test mode and the two previews as session state, and the settings
@@ -139,7 +141,7 @@ and the host verbs alike; the rows are `settings/Schema.lua`'s `Settings.Schema`
 Master controls rows (`enabled`, `visibility`, `scale`, `alpha` and `locked`, defaults `true`,
 `always`, 1, 1 and `false`; the session rows `state.debugConsole`, `state.testMode` and
 `state.previewAs`; the minimap row), then the Behavior rows (`behavior.*`, spliced in by
-`settings/SchemaRows.lua`, with the seven `skin.*` rows the Skin tab draws), then the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`,
+`settings/SchemaRows.lua`, with the eight `skin.*` rows the Skin tab draws), then the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`,
 `settings/SchemaMembers.lua`), each addressed through `Library.Member`. A callout's actions are its
 Line (`callout.channel` and `callout.text`), `callout.emote` (the game emote it performs, after its line
 if it has one), `callout.ping` (none, attack, warning, onmyway or assist) and `callout.marker` (none,
@@ -265,7 +267,7 @@ the settings pages and the library's own windows.
 
 - **The seam.** `core/SkinSetup.lua` registers the owner `"QuickComms"` (the folder name) at file load
   with its read and write seams, `NS.SkinChoice` and `NS.WriteSkinChoice` (both through
-  `NS.SchemaRuntime`), and ten owner tokens (`qc.veil`, `qc.hover`, `qc.hint`, ...): the colors
+  `NS.SchemaRuntime`), and thirty-two owner tokens (`qc.veil`, `qc.hover`, `qc.hint`, `qc.mark`, ...): the colors
   this addon draws under Ka0s Default that no library token holds exactly, kept at their pixels and
   each but the two veils following its nearest library role token (rollout X1, X2, X12). The icon
   browser's three (`qc.selStrong`, `qc.markGray`, `qc.note`) left with it for the library's own
@@ -400,10 +402,10 @@ is registered once, as a store, in the Tier 3 table; the documents under it get 
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | `NS.COMMANDS` carries eight or more commands (22 as measured on 2026-11-06) |
+| `slash-dispatch.md` | Present | `NS.COMMANDS` carries eight or more commands (23 as measured on 2026-11-15) |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
-| `midnight-quirks.md` | Present | Always, from standard v2.102.0: the vendored client-quirks catalog (client-quirks-§1); the addon's own section is empty |
+| `midnight-quirks.md` | Present | Always, from standard v2.102.0: the vendored client-quirks catalog (client-quirks-§1); the addon's own section holds the ping and marker quirk and the auto-thank quirk |
 | `compat-layer.md` | Present | `core/Compat.lua` publishes three or more shims (the count and its grep are in the page) |
 | `taint.md` | Present | The hub's Taint Notes passed ~60 lines (documentation-§3 spill) |
 | `known-limitations.md` | Present | The hub's Known Limitations passed ~60 lines (documentation-§3 spill) |
@@ -463,7 +465,7 @@ The layout-§1 census of authored `.lua` files over the 1500-line cap. Vendored 
 the repository has no generated data file.
 
 Nothing is over the cap today. `tests/test_page_groups.lua` reached it exactly and was split along its
-own section headings (`80a0fbb`, 2026-10-25): 1131 lines now, beside `tests/test_page_groups_nesting.lua`
+own section headings (`80a0fbb`, 2026-10-25): 1205 lines now, beside `tests/test_page_groups_nesting.lua`
 at 418. `tests/test_dial.lua` was split the same way at 1471 lines (2026-10-31): 764 now, beside
 `tests/test_dial_catcher.lua` at 288 and `tests/test_dial_look.lua` at 388, with their shared helpers in
 `tests/dial_helpers.lua`. `locales/enUS.lua` reached 1474 lines and was split along localization-§6
@@ -471,9 +473,9 @@ at 418. `tests/test_dial.lua` was split the same way at 1471 lines (2026-10-31):
 `locales/enUS_Settings.lua`, so `enUS.lua` was 693 lines then, beside `enUS_Settings.lua` at 826, and
 `tests/test_locale.lua` holds the union gates and the placement both ways; auto-thank added a third
 topic file, `locales/enUS_AutoThank.lua`, the strings only `modules/AutoThank*.lua` reads. Today
-`enUS.lua` is 729 lines, `enUS_Settings.lua` 889 and `enUS_AutoThank.lua` 21. Ten files sit in the
-1000-1500 band (`modules/Library.lua` 1455, `core/Compat.lua` 1014, `settings/SchemaMembers.lua` 1019,
-`tests/test_callout_popup.lua` 1318, `tests/test_library.lua` 1271, `tests/wow_mock.lua` 1208,
-`tests/test_page_groups.lua` 1182, `tests/test_autothank.lua` 1073, `tests/test_pad.lua` 1049,
-`tests/test_skin_flip.lua` 1064; recounted at the CA-M5-3 complexity pass, 2026-11-11); `modules/Library.lua` is the nearest the cap, and the
+`enUS.lua` is 731 lines, `enUS_Settings.lua` 891 and `enUS_AutoThank.lua` 21. Ten files sit in the
+1000-1500 band (`modules/Library.lua` 1455, `core/Compat.lua` 1022, `settings/SchemaMembers.lua` 1019,
+`tests/test_callout_popup.lua` 1323, `tests/test_library.lua` 1271, `tests/wow_mock.lua` 1208,
+`tests/test_page_groups.lua` 1205, `tests/test_autothank.lua` 1124, `tests/test_pad.lua` 1049,
+`tests/test_skin_flip.lua` 1064; recounted 2026-11-15); `modules/Library.lua` is the nearest the cap, and the
 automated-test record's watch list gives each its disposition.

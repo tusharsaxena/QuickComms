@@ -60,8 +60,8 @@ notes per iteration, never time:
 | `bracketCaptureOff` | the gated bracket shape, capture off, notes nothing and allocates nothing | 0 bytes, 0 notes | 0.0 B |
 | `dialPointerCaptureOff` | the hottest bracketed path, the open dial's pointer `OnUpdate`, capture off | 1 KiB, 0 notes | 224.0 B |
 | `dialPointerNoHarness` | the same path on an instance with no Perf library; the run fails if capture off allocates more (zero overhead, performance-§9) | 1 KiB, 0 notes | 224.0 B |
-| `padRebuild12` | a 12-button pad built from its plan and applied, capture on | 85 KiB, 3 notes (raised from 69 KiB for the combined actions' per-action lists, 2026-11-11) | 86205.6 B (2026-11-11) |
-| `dialOpenClose` | the default dial opened, one pointer frame (which lights a slice and shows its wedge's tooltip), closed | 52 KiB, 1 note | 50502.3 B (most of it the capture and the mock's tables, `tests/perf.lua`) |
+| `padRebuild12` | a 12-button pad built from its plan and applied, capture on | 85 KiB, 3 notes (raised from 69 KiB for the combined actions' per-action lists, 2026-11-11) | 86193.5 B (2026-11-15) |
+| `dialOpenClose` | the default dial opened, one pointer frame (which lights a slice and shows its wedge's tooltip), closed | 52 KiB, 1 note | 46214.0 B (2026-11-15; most of it the capture and the mock's tables, `tests/perf.lua`) |
 | `situationRefresh` | a situation read whose signature did not move | 2 KiB, 1 note | 2016.0 B |
 
 The ceilings are the headless mock's figures, rounded up to the next KiB; its catch-all methods allocate a closure per call, so compare runs with runs, never with the client.

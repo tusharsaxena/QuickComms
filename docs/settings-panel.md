@@ -185,8 +185,11 @@ Callouts  Add callout (the callout popup, blank; across the row), Reuse callout
           with Add at the right edge (both 2px short of it), then its callouts as a drag-to-reorder list, each row the handle,
           the icon (the callout default, a speech bubble, when none; the question mark only without LibKa0s), the name in gold, the channel's short label in
           its chat color (a smart kind resolved against the snapshot; PARTY's when solo) and the
-          text in muted white cut at 40 characters with "…", then an edit glyph and a remove glyph
-          at the right edge
+          text in the tooltip's subtle gray (gtip.subtle) cut at 40 characters with "…", then each
+          other action after a spaced "+" ("Kick + /point + ping + Mark" and the marker's icon):
+          the emote's command in the game's emote chat color, "ping" in sem.info and "Mark" in
+          qc.mark (a callout with no line leads with its emote), then an edit glyph and a remove
+          glyph at the right edge
 When      settings/Groups_When.lua: the active-now line, then Inherit when conditions (grayed out
           with no parent), then the drawers
 What it sends  the active-now line, then a table: a gold header row (Callout, What it sends here), then

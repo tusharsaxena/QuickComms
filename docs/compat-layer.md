@@ -6,9 +6,9 @@
 load, and is read inside functions only. There is one family file; no `core/Compat<Topic>.lua`
 exists.
 
-**Thirty-two shims**, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `32`, recounted
-2026-11-01), one row each below. The two
+**Sixty-six shims**, counted the way documentation-§3 counts them
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `66`, recounted
+2026-11-15), one row each below. The two
 secret guards, `IsSecret` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired by assignment
 with a library-absent body and not counted; their contract is LibKa0s
 `docs/api/Compat/version-1-docs.md`.
@@ -36,9 +36,20 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `PlayerIdentity()` | `UnitClass`, LibKa0s Role (`Spec`, `Resolve`), `CharacterKey()` below | classFile, specID, role, character, then the role's source and detail; each plain or `nil` | `nil` per field | `Situation` |
 | `RegionalNames()` | LibKa0s Compat `RegionalNames` (`RegionalUniqueNamesEnabled`) | none | `false` (Name-Realm forms) | `CharacterKey`, `SenderIsPlayer`, the When editor's Character row |
 | `CharacterKey()` | with regional names LibKa0s Compat `CharacterKey` ("First Surname"); otherwise `UnitFullName`, `GetNormalizedRealmName` ("Name-Realm", the form saved Whens hold) | plain or `nil` | `nil` | `PlayerIdentity` |
+| `RoleStore()` | none: `NS.db.char.role` (the override and the last answer), made on first use | none | `nil` (before the database exists) | `PlayerRole`, `AutomaticRole`, `RoleOverride`, `SetRoleOverride` |
 | `PlayerRole()` / `AutomaticRole()` | LibKa0s Role `Resolve` over `db.char.role` (`RoleStore()`); `AutomaticRole` sets the pick aside on a copy | role, source, detail | the pick, `UnitGroupRolesAssigned`, then the spec's role | `PlayerIdentity`, the Role row |
 | `RoleOverride()` / `SetRoleOverride(role)` | LibKa0s Role `SetOverride` | an unknown role is refused (`false`) | `store.override` written directly | the Role row (`settings/Schema.lua` `CHAR`) |
 | `SpecsForClass(classFile)` | LibKa0s Role `SpecsForClass` (`GetNumSpecializationsForClassID` / `GetSpecializationInfoForClassID`) | ids plain and positive | `{}` (the editor falls back to `GameIds.SPECS`) | the When editor's Specialization row |
+| `ProbeInstance()` | `IsInInstance`, `GetInstanceInfo` (every return, by name) | each field plain or `nil` | `{}`, or only the fields whose API exists | `/qc probe` (`settings/SlashVerbs.lua` `V.ProbeRecord`) |
+| `ProbeMapNames(max)` | `GetRealZoneText` over map ids 0..`max`, each call under `pcall` | a secret, empty or failed name is left out | `{}` | `/qc probe ids` (`V.ProbeIdsRecord`, to `V.PROBE_MAP_MAX`) |
+| `ProbeDungeonFinder()` | `GetLFDChoiceOrder`, `GetNumRandomDungeons`, `GetLFGRandomDungeonInfo`, `GetLFGDungeonInfo` (its 22nd return the map id), each under `pcall` | each field plain or `nil`; a secret id or list is skipped | `{}` (WoW Forever loads no file that calls these, so the list may be empty there) | `/qc probe ids` (`V.ProbeIdsRecord`) |
+| `ProbeBattlegrounds()` | `GetNumBattlegroundTypes`, `C_PvP.GetBattlegroundInfo` (at most 100), each under `pcall` | each field plain or `nil`; a secret entry is skipped | `{}` (may be empty on WoW Forever, which loads no PvP UI that walks them) | `/qc probe ids` (`V.ProbeIdsRecord`) |
+| `ProbeGroupFinder()` | `C_LFGList.GetAvailableCategories`, `GetAvailableActivities`, `GetActivityInfoTable` (as WoW Forever's Blizzard_GroupFinder_VanillaStyle walks them; at most 2000), each under `pcall` | each field plain or `nil`; a secret id or entry is skipped | `{}` (no `C_LFGList`) | `/qc probe ids` (`V.ProbeIdsRecord`) |
+| `ActiveSpec()` | LibKa0s Role `Spec` (else `C_SpecializationInfo.GetSpecialization` / `GetSpecializationInfo`, then the globals) | id and name plain or `nil` | `nil, nil` | `/qc probe` (`V.ProbeRecord`) |
+| `TalentGroups()` | LibKa0s Role `Groups` | `{ index, id, name, spent }` rows, plain copies | `{}` (no library or no trees; Retail answers none) | `/qc probe` (`V.ProbeRecord`) |
+| `EmoteTokens()` | `EMOTEn_TOKEN` globals, 1 to `MAXEMOTEINDEX` (else 1000) | a secret or empty token is left out | `{}` | `/qc probe` (`V.ProbeRecord`) |
+| `EmoteCommands()` | `EMOTEn_TOKEN`, `EMOTEn_CMDj`; `ChatTypeInfo`, `SlashCmdList`, `hash_ChatTypeInfoList` and `IsSecureCmd` (under `pcall`) to pass over a command the chat parser runs as something else first | a secret command is passed over; a token keeps its first index's first free "/word" (the client's localized command), a token with none is left out | `{}, {}` | `Emotes` (the emote picker's commands and order) |
+| `EmoteLists()` | `TextEmoteSpeechList`, `EmoteList` (byte-identical on Retail and WoW Forever) | copies with secret and empty entries left out | `{}, {}` per missing list | `Emotes` (the picker's speech and animated menus) |
 | `InHousing()` | `C_Housing.IsInsideHouseOrPlot` | a secret answer is `false` | `false` | `Situation` |
 | `InCombat()` | `InCombatLockdown` | none (a plain boolean) | `false` | `Situation`, `Restrictions`, `SendEngine`, `Preview`, `Pad`, `IconBrowser` (Choose is refused in combat) |
 | `InChatMessagingLockdown()` | `C_ChatInfo.InChatMessagingLockdown` | a secret answer reads as **locked** | `false` | `Restrictions` |
@@ -53,6 +64,8 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `DungeonName(mapID)` | `C_ChallengeMode.GetMapUIInfo` | plain or `nil` | `nil` | `Surfaces` (bakes `{dungeon}`), `Pad` (the situation chip) |
 | `SpellLink(id)` | `C_Spell.GetSpellLink` | plain or `nil` | `nil` | `Surfaces` (bakes `{spell:ID}`) |
 | `GeneralJoined()` | `C_ChatInfo.GetGeneralChannelLocalID` (true only when it answers a plain 1: the zone General channel is `/1`; never the channel's localized name) | a secret id is not General | `false` (no API or no `C_ChatInfo`; General not joined (nil) or not at `/1`) | `Situation` (the snapshot's `general`, which `Channels.Resolve` reads for the `general` kind) (QF-04) |
+| `ClientKey()` | LibKa0s Compat `ClientKey` (from `WOW_PROJECT_ID`, never an interface number) | none | `"retail"` (no library, or neither project constant) | `defaults/GameIds_Clients.lua` (`G.UseClient`, once at load), `/qc probe` and `/qc probe ids` (each record's `client`) |
+| `IsForever()` | `ClientKey()` | none | `false` | none in the addon today |
 | `FrameStrata(frame, fallback)` | `frame:GetFrameStrata()` | a secret strata (WoW Forever), a non-string or a frame with no reader is `fallback` | `fallback` | `AnimGhost` (the ghost takes the dial's strata, else `HUD_POPUP`), `ModalWindow` (`LiftConfirm` keeps the strata a confirm came in, else Blizzard's `DIALOG`) (QFE-F1) |
 | `PlayerMapPosition()` | `C_Map.GetBestMapForUnit("player")`, `C_Map.GetPlayerMapPosition(mapID, "player")`, its `GetXY` | every value plain; a secret map id, position or coordinate is `nil`; 0, 0 is `nil` | `nil` (no `C_Map`, no map, a restricted map such as an instance) | `Coordinates` |
 | `Coordinates()` | `PlayerMapPosition` | `"45.2, 61.8"` (x, y in percent, one decimal) or `nil`; reads only, so a click in combat may call it | `nil` | `Surfaces` (bakes `{coordinates}`, and its press-time re-bake), `Preview` (the echo, filled at the click) (QF-03) |
@@ -64,6 +77,7 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `ChatColor(chatType)` | `ChatTypeInfo` | an unsafe key, or a secret or missing color component, is `nil` | `nil` | `Pad_Render` (a button's channel in its tooltip; a callout row's channel) |
 | `HasTemplate(name)` | `C_XMLUtil.GetTemplateInfo` | `type()` only: a table answer is `true`, anything else (or a raise) `false` | `nil` (unknown: the caller tries `CreateFrame` under `pcall`) | `settings/ModalWindow.lua` (whether to build the callout popup's window from `SettingsFrameTemplate`; the icon browser's window is LibKa0s-IconBrowser-1.0's since v1.86.0, which asks the client itself) |
 | `VertexScaleAnimation(fs)` | `Enum.FontStringScaleAnimationMode.Vertex`, `FontString:SetScaleAnimationMode` (12.0), `CreateAnimationGroup`, a Scale animation's setters | none: it reads no game state and passes a plain Enum constant | `nil` when any piece is missing: the string fades in place | `AnimGhost` |
+| `StretchAnimation(frame)` | `CreateAnimationGroup`, a Scale animation's setters (about the frame's center; the only way to scale one axis alone, #13) | none: it reads no game state | `nil` when any piece is missing: the ghost's art scales both axes instead | `AnimGhost` |
 | `PingCommand()` | `C_Ping` (present), `SLASH_PING1` | a secret or non-string command is `nil` | `nil` (no `C_Ping`, or no command): the Ping action alone is dropped (`noPing`) | `Bake` (`B.BakeActions`: the localized `/ping`, "/aviso" on a Spanish client) |
 | `MarkerCommand()` | `SLASH_TARGET_MARKER1` | a secret or non-string command is `nil` | `nil`: the Raid marker action alone is dropped (`noMarker`) | `Bake` (`B.BakeActions`: the localized `/tm`) |
 | `PingState()` | `C_Ping.IsPingSystemEnabled`, the `enablePings` cvar (`C_CVar.GetCVarBool`, else `GetCVarBool`), `C_Ping.GetCooldownInfo` against `GetTime()*1000` (Blizzard_PingUI's clock base) | a secret flag is `nil` (unknown); a secret or unreadable cooldown is no known cooldown | `nil` (no `C_Ping`) | `SendEngine` (`SE.PressNotes`: "pings are turned off", "your ping is on cooldown") |

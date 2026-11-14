@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1765410)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2028%2F2028_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2030%2F2030_passing-green)
 
 Supports Retail and WoW Forever. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
@@ -97,13 +97,15 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
   `/point`, an Attack ping and a skull all go from one button. A callout can also skip the line
   (Channel None) and only emote, ping or mark. The whole press has to fit in 255 bytes; a line too
   long to fit beside the rest is left out, and the other actions still go.
-- The emote is picked from a searchable list in the callout editor, and voice emotes play their sound.
+- You pick the emote from a dropdown in the callout editor, where the game's emotes are sorted by
+  letter, and voice emotes play their sound.
   The built-in Emotes group, shown in the open world whatever your group, carries twenty of them: the
   voice calls first (`/incoming`, `/oom`, `/healme`...), then the social ones (`/wave`, `/thank`,
   `/dance`...).
-- Twelve of the built-in callouts perform a fitting emote with their line: Hello waves, Ready readies,
+- Thirteen of the built-in callouts perform a fitting emote with their line: Hello waves, Ready readies,
   GLHF cheers, the three thanks callouts `/thank`, ggnt says bye, Rare spotted points at the rare,
-  Elite help asks for help, Pulling charges, Need mana says you are out of mana and Wipe flees. Raid's
+  Elite help asks for help, Pulling charges, Need mana says you are out of mana, and Wipe, in Dungeon
+  and in Raid, flees. Raid's
   Heal me ("Need heals on me!") plays the `/healme` voice emote. An existing profile gets the emote
   only on the callouts you left as shipped, and Dungeon and Raid gain a Heal me callout once; arena and
   battleground callouts gain none, since the game locks emotes in a PvP match.

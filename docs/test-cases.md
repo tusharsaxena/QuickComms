@@ -103,13 +103,15 @@ Total.
 - glow: modules/Glow.lua names no LibCustomGlow-1.0 member; the driver is the one mapping
 - glow: with LibKa0s absent the seam answers false and the button still records its style
 
-### test_setup.lua (26)
+### test_setup.lua (28)
 
 - core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
 - core: the printer tags every line with the cyan [QC] prefix
 - core: the degraded printer says the library is missing once, then tags every line
 - core: the close-button wrapper passes the addon folder as the third argument
 - core: no file but the wrapper calls a close-button factory directly
+- widgets: only core/WidgetsSetup.lua leases LibKa0s-Widgets-1.0 (library-stack-§7)
+- widgets: the seams degrade to nil and a no-op when the library is absent
 - media: FONT_MONO is the shipped face live, and a real client font degraded
 - env: the version falls back to the in-code constant when the TOC cannot be read
 - bus: every catalog name is Ka0s_QuickComms_<Event>, and the copy is strict
@@ -2310,7 +2312,7 @@ Total.
 | test_mock_secure.lua | 34 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 21 |
-| test_setup.lua | 26 |
+| test_setup.lua | 28 |
 | test_database.lua | 32 |
 | test_profile.lua | 12 |
 | test_schema.lua | 29 |
@@ -2394,4 +2396,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2028** |
+| **Total** | **2030** |

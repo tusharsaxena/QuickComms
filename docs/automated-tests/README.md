@@ -9,7 +9,7 @@ edited; `RESULTS.md` is generated and never hand-edited except the watch list's 
 
 ```sh
 tests/_kit/run-automated-tests.sh                      # all four suites, writes a bundle
-tests/_kit/run-automated-tests.sh --release 0.1.0      # at a release, before the tag
+tests/_kit/run-automated-tests.sh --release <version>  # at a release, before the tag
 tests/_kit/run-automated-tests.sh --no-bundle          # print only, write nothing
 ```
 
@@ -18,7 +18,8 @@ The runner is the kit's (`tests/_kit/`), recorded `100755` in the git index, and
 
 ## What gates, and what only records
 
-- **`lint`** and **`tests`** gate the **commit**: `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` and `lua tests/run.lua` must be green.
+- **`lint`** and **`tests`** gate the **commit**: `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` and `lua tests/run.lua`, under both kit profiles
+(again with `KA0S_KIT_CLIENT=forever`), must be green.
 - **`perf`** and **`complexity`** never fail a **run** and never gate a **commit**: they are recorded
   and compared between runs.
 - The **release** (the tag) is gated on **all four** suites passing, plus zero functions above CCN 15
