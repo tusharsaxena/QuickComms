@@ -1,4 +1,4 @@
-local addonName, NS = ...
+local _, NS = ...
 -- modules/PreviewWindow.lua — the "Preview as…" selector window (design-qc-preview §2.2): a small
 -- library-styled window with a situation dropdown, an End preview button and the close mark, shown
 -- while a "Preview as…" preview is on, whichever way it started (the slash, the settings row, the
@@ -46,8 +46,6 @@ NS.PreviewWindow = NS.PreviewWindow or {}
 local PW = NS.PreviewWindow
 local L = NS.L
 local LAYERS = NS.Constants.LAYERS
-
-local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 
 local NAME = "QuickCommsPreviewWindow"
 local PAD, ROW_H, GAP = 8, 22, 6
@@ -162,8 +160,7 @@ local function makeButton(parent, label, onClick)
 end
 
 local function makeDropdown(parent)
-    local dd = W.Dropdown(parent, DROP_W, { chevron = NS.Icon("chevron-down"), check = NS.Icon("confirm"),
-        owner = addonName })
+    local dd = NS.MakeDropdown(parent, DROP_W, { chevron = NS.Icon("chevron-down"), check = NS.Icon("confirm") })
     -- One line: a long situation label truncates rather than wrapping out of the box.
     if dd.text and dd.text.SetWordWrap then dd.text:SetWordWrap(false) end
     dd.onSelect = function(v)
@@ -181,7 +178,7 @@ end
 -- Escape and a Hide call clear the frame's own flag; a hidden parent leaves it on. A Sync-driven hide
 -- finds every preview already off, so this never recurses.
 local function onHide(self)
-    if W.CloseMenu then W.CloseMenu() end
+    NS.CloseMenu()
     if self:IsShown() then return end
     local P = NS.Preview
     if P.EditGroup() ~= nil then
@@ -254,7 +251,7 @@ local function setLocked(f, on)
         c:SetAlpha(on and DIM or 1)
     end
     paintLabel(f.endButton, on and "locked" or "rest")
-    if on and W.CloseMenu then W.CloseMenu() end
+    if on then NS.CloseMenu() end
 end
 
 local function fill(f)
@@ -282,7 +279,7 @@ function PW.Sync()
         if frame then frame:Hide() end
         return
     end
-    if not (W and W.Dropdown and type(CreateFrame) == "function") then return end
+    if not (NS.HasWidget("Dropdown") and type(CreateFrame) == "function") then return end
     local f = ensure()
     fill(f)
     place()
@@ -310,7 +307,7 @@ NS.Skin.OnLooksChanged(function()
     layout(frame)
 end)
 
-if W and NS.Bus.tracked then
+if NS.HasWidget("Dropdown") and NS.Bus.tracked then
     local receiver = NS.Bus:NewTarget()
     if receiver then
         receiver:RegisterMessage(NS.MSG.PROFILE_CHANGED, function()

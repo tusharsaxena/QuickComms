@@ -216,8 +216,9 @@ test("skin seam: Core's window edge is handed the owner", function()
 end)
 
 test("skin seam: the drag strip, the Preview dropdown and the reorder list are handed the owner", function()
-    -- red under: drop `spec.owner` from core/WidgetsSetup.lua, `owner` from modules/PreviewWindow.lua's
-    -- W.Dropdown opts, or `owner` from settings/Editors.lua's W.ReorderList spec.
+    -- red under: drop `spec.owner` from core/WidgetsSetup.lua's NS.MakeDragHandle, `opts.owner` from its
+    -- NS.MakeDropdown (modules/PreviewWindow.lua's list) or `spec.owner` from its NS.MakeReorderList
+    -- (settings/Editors.lua's rows).
     local NS, m = setup()
     local W = m.LibStub("LibKa0s-Widgets-1.0")
     local seen = {}

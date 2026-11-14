@@ -526,9 +526,8 @@ end
 
 --- Open the emote menu under `anchor` (a second call closes it, as a dropdown's second click does).
 function Pop.OpenEmoteMenu(anchor)
-    local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
-    if not (W and W.ContextMenu and anchor) then return nil end
-    return W.ContextMenu(anchor, Pop.EmoteMenuRows(), { owner = addonName, panel = true })
+    if not anchor then return nil end
+    return NS.OpenContextMenu(anchor, Pop.EmoteMenuRows(), { panel = true })
 end
 
 -- The emote picker (THE ACTIONS): the stock Dropdown a member row draws, bound to the draft's emote,
@@ -623,9 +622,8 @@ local function close()
     errorRow = nil
     Pop.tokenGlyph, Pop.emoteBox = nil, nil
     -- The emote menu is the library's one shared menu, parented to UIParent: Escape and Cancel close it
-    -- here, or it would float on with no popup under it (W.CloseMenu).
-    local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
-    if W and W.CloseMenu then W.CloseMenu() end
+    -- here, or it would float on with no popup under it (NS.CloseMenu).
+    NS.CloseMenu()
     boxes, shown = {}, {}
     if ctx then
         H().ClearScroll(ctx)
