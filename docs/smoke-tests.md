@@ -31,16 +31,16 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
 | LOOK-1..7 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height; the pad's window repainting only when its look moves |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
-| ICONS-1..6 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0; no native icon edge on the HUD |
+| ICONS-1..7 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0; no native icon edge on the HUD |
 | ICON-1..5 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks; the popup and the browser over the preview dial; test mode's numbered groups and the default icons |
 | ART-1..2 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates; every texture loading from its folder |
 | SHINE-1..4 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
 | BG-1..9 | Battlegrounds | Node rings on the dial, one slice per node; the faction and location colors; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
-| ANIM-1..20 | [Animations](#animations) | The dial's open and close, every style by family, Slide's Direction, a send, combat, the stand-down, Alt-Z, a pad having none, text that neither shimmers nor truncates, the old defaults moved |
-| PLOOK-1..11 | [The pad's look per skin](#the-pads-look-per-skin) | The pad in each skin: edges, buttons and shine (the owner's findings of 2026-11-01) |
-| FSKIN-1..13 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost, a stored pick of the deleted Friz |
+| ANIM-1..22 | [Animations](#animations) | The dial's open and close, every style by family, Slide's Direction, a send, combat, the stand-down, Alt-Z, a pad having none, text that neither shimmers nor truncates, the old defaults moved |
+| PLOOK-1..12 | [The pad's look per skin](#the-pads-look-per-skin) | The pad in each skin: edges, buttons and shine (the owner's findings of 2026-11-01) |
+| FSKIN-1..14 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost, a stored pick of the deleted Friz |
 | ROLE-1..3 | [Role and character](#role-and-character) | The Role row on General → Behavior and its Automatic phrase, the group's assigned role winning over the spec, the Character and Specialization rows of the When editor (Retail; FOREVER-18 to FOREVER-21 re-run them on Forever) |
 | FOREVER-1..26 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, Forever's place ids against the client's own names and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone; `/qc probe ids`, the no-travel sweep of the client's map, dungeon finder and battleground names; the combined-actions core re-run |
 | EMOTE-1..10 | [Emotes](#emotes) | Retail, then Forever: a custom emote callout (`/e`) and its lock, a game emote callout, the emote picker's order and voice marks, preview, throttle and an unknown token, a game emote during an encounter, the Emotes set in the open world and an existing profile gaining it once, the shipped callouts that emote with their line and the two Heal me callouts, and an existing profile gaining them (step 20) |
@@ -48,7 +48,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | THANK-1..12 | [Auto-thank](#auto-thank) | Retail, then Forever: a stranger's buff toasted and thanked (#19), whether the caster reads, the whisper and the emote at a cross-realm caster, a buff mid-fight, a burst throttled, raid buffs only, where it stays quiet, combat with a toast up, a right-click, the spam guard, the mute modes |
 | PING-1..5 | [Pings](#pings) | Retail, then Forever: a callout's ping on the target (#17), solo and grouped, in combat, Forever's server delivery, an encounter lockdown, pings off and on cooldown |
 | MARK-1..7 | [Raid markers](#raid-markers) | Retail, then Forever: a callout's raid target marker on the target (#18), solo, in a party and in a raid with and without assist, a second press, no target and an unmarkable one, Forever's `/tm`, marking in combat and during an encounter |
-| SKIN-1..31 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker; no line under any window title |
+| SKIN-1..35 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker; no line under any window title |
 
 ## Before you start
 
@@ -2546,18 +2546,18 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
 - **EMOTE-9. Shipped callouts emote with their line (QuickComms#20, combined actions §8).** On a fresh
   profile (or after **Restore built-in groups**) → in the callout editor, each of these carries its
   emote: Solo's Rare spotted (POINT), Elite help (HELPME) and Thanks (THANK); In Group's Hello (WAVE), Ready
-  (READY), GLHF (CHEER), tyff and ggty (THANK) and ggnt (BYE); Dungeon's Pulling (CHARGE) and Need mana
-  (OOM); Raid's Wipe (FLEE). Dungeon lists **Heal me** (*Need heals!*, Smart group) last, and Raid
-  lists **Heal me** (*Need heals on me!*, Raid) right after Healthstones, before Pull in 10; both with
-  the green heart-plus icon and the HEALME emote. Each sends its line and then its emote on one press,
-  once each, with no drop note. In a key, outside a boss, Pulling and Heal me show no padlock and both
+  (READY), GLHF (CHEER), tyff and ggty (THANK) and ggnt (BYE); Dungeon's Pulling (CHARGE), Need mana
+  (OOM) and Wipe (FLEE); Raid's Wipe (FLEE). Raid lists **Heal me** (*Need heals on me!*, Raid) fourth,
+  after Brez, with the green heart-plus icon and the HEALME emote (a new profile's Dungeon no longer
+  ships one; an older profile's comes from step 20, EMOTE-10). Each sends its line and then its emote on one press,
+  once each, with no drop note. In a key, outside a boss, Pulling and Wipe show no padlock and both
   actions go; during a boss, the emote's lock note prints. Note any token that gives no emote line in
   chat without a target. Repeat on WoW Forever (no listed set is skipped there). Result: passed (owner, 2026-11-13)
 - **EMOTE-10. An existing profile gains them once (step 20).** On a profile saved before this build,
   with In Group's Ready text edited, Hello renamed, the Raid set deleted and Solo's Thanks deleted →
   after the update and a `/reload`: every unedited listed callout carries its emote, once; the edited
   Ready does not; the renamed Hello does; the Raid set stays deleted; Thanks does not come back; Dungeon
-  gains **Heal me** once, after Kick order. A second `/reload` changes nothing. Repeat on WoW Forever.
+  gains **Heal me** once, after its kick callout (Kick order, the name it shipped with then). A second `/reload` changes nothing. Repeat on WoW Forever.
   Result: passed (owner, 2026-11-13)
 
 ## Combined actions

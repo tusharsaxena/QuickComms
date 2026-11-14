@@ -56,6 +56,7 @@ combat; since 2026-10-21 also a dial applied at its place (ring count, the ring 
 radius) or released, each open and close, each ring the snippets show (an open, a group wedge, a page
 turn), and after each rebuild what every dial shows), `Pads` (`/qc toggle` and the Toggle Comms Pads
 key hiding or showing the pads, 2026-10-21: no chat line any more) and `Bind` (the diagnostics report's
-bindings section; the Dial page no longer sets a key, since the dial rework of 2026-10-21),. The libraries add their own: `Cmd`, `Cfg`, `Launcher`,
+bindings section; the Dial page no longer sets a key, since the dial rework of 2026-10-21), and auto-thank's `Thank` (#19: a toast's Thank button armed,
+its press, a toast move refused). The libraries add their own: `Cmd`, `Cfg`, `Launcher`,
 `Lifecycle`, `Perf`. The design's `Resolver` and `Bake` tags (spec §16) are not used: the resolve
 and the bake run inside a rebuild, which `Pad` logs.

@@ -234,7 +234,7 @@ so the block follows the Skin tab's Font outline; any other value (`THICKOUTLINE
 player's pick and stays, and a damaged surface is left as it is. A player who explicitly picked OUTLINE
 before the update cannot be told from the default and moves to From skin (Addendum 01 accepts that).
 The stamp makes it once: an OUTLINE picked afterwards stays.
-`NS.SCHEMA_VERSION` is 11.
+`NS.SCHEMA_VERSION` is 20.
 No schema step for the bg buttons (2026-10-20, owner ruling: the addon is unreleased, so a profile is
 reset rather than migrated): In Group and Silvershard Mines' and Temple of Kotmogu's groups reach a
 stored profile through `Library.Prepare`'s seeding as any newly shipped set or node (In Group at the
@@ -243,7 +243,7 @@ seeded with, Isle of Conquest's bases their two, and a stored Silvershard Mines 
 copy kept Open into off (a field the dial rework retired); a reset profile (or Restore built-in groups, which adds the four new rows beside the old)
 takes the Attack, Defend, INC and Clear rows.
 No schema step for the replaced prebuilts (2026-10-23, owner ruling: pre-release, no migration):
-Chain pull's yellow, Hello's sky blue, In Group's At Stone (`bi.group.stone`, 2nd), Solo on General (/1)
+Chain pull's yellow (Chain pull itself retired 2026-11-14), Hello's sky blue, In Group's At Stone (`bi.group.stone`, 2nd), Solo on General (/1)
 and Solo's `{coordinates}` lines reach only a new profile and Restore built-in groups; a stored
 profile keeps the callouts it was seeded with.
 No schema step for the owner's own Solo, In Group, Dungeon and Raid sets either (2026-11-14, taken from

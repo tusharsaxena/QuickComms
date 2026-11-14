@@ -65,6 +65,27 @@ test("core: no file but the wrapper calls a close-button factory directly", func
     end
 end)
 
+test("widgets: only core/WidgetsSetup.lua leases LibKa0s-Widgets-1.0 (library-stack-§7)", function()
+    for _, rel in ipairs(T.loadAddon.tocFiles) do
+        if rel:sub(1, 5) ~= "libs/" then
+            local src = read(rel):gsub("%-%-[^\r\n]*", "")   -- comments may name the major; only code is checked
+            -- red under: a `LibStub("LibKa0s-Widgets-1.0", true)` back in settings/CalloutPopup.lua,
+            -- settings/Editors.lua or modules/PreviewWindow.lua instead of the NS.Make* seams
+            local leases = src:find("LibKa0s%-Widgets%-1%.0") ~= nil
+            assertEqual(leases, rel == "core/WidgetsSetup.lua", rel)
+        end
+    end
+end)
+
+test("widgets: the seams degrade to nil and a no-op when the library is absent", function()
+    local NS = T.newAddon({ skip = NO_LIBKA0S })
+    assertFalse(NS.HasWidget("Dropdown"))
+    assertEqual(NS.MakeDropdown({}, 100, {}), nil)
+    assertEqual(NS.OpenContextMenu({}, {}), nil)
+    assertEqual(NS.MakeReorderList({}), nil)
+    NS.CloseMenu()   -- red under: a CloseMenu that indexes the absent library
+end)
+
 -- ── Media and the console font ──────────────────────────────────────────────────────────────
 
 test("media: FONT_MONO is the shipped face live, and a real client font degraded", function()

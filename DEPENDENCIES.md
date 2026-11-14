@@ -86,7 +86,8 @@ python3 -c 'import PIL; print(PIL.__version__)'
 The same Pillow regenerates the Comms Dial's slice textures: `tools/gen-dial-textures.py` writes
 `media/textures/dial/dial-sector-2.tga` … `dial-sector-12.tga` (one pie slice of an n-slice dial, white
 on transparent), `media/textures/dial/dial-disc.tga` (every filled circle the dial draws, and in halves
-the round caps of the page pill, the indicators' background and their borders) and
+the round caps of the page pill, the indicators' background and their borders),
+`media/textures/dial/dial-glow.tga` (the Flash style's bloom) and
 `media/textures/dial/dial-ring-1.tga` … `dial-ring-12.tga` (the hub's hollow rings and rims, a ladder of
 line widths from 1.25% to 50% of the diameter). Run it from the repo
 root after changing the shapes; never edit the TGAs by hand. It is not loaded by the client, and

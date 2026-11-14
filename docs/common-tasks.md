@@ -5,7 +5,9 @@
 1. Add its default to `defaults/Profile.lua` (`NS.C.PROFILE`).
 2. Declare the row in its page file under `settings/` with `path`, `type`, `default`, `page`,
    `group`, `label` and `desc` (or `tooltip`), and splice it in with `NS.SchemaRuntime.AddRows`.
-3. Add every new `label` and `desc` string to `locales/enUS.lua`, the value equal to the key.
+3. Add every new `label` and `desc` string to `locales/enUS_Settings.lua` (the strings only `settings/`
+   reads; `locales/enUS.lua` holds the rest, and `tests/test_locale.lua` pins the placement both
+   ways), the value equal to the key.
 4. React in the row's `onChange` (or in `Settings.REACTIONS` when other surfaces write the same
    path). Never write the profile directly; read the value back with `NS.Setting(path)`.
 5. Run `lua tests/run.lua`: `test_schema` validates the row against the defaults.
