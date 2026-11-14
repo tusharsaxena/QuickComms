@@ -246,6 +246,14 @@ No schema step for the replaced prebuilts (2026-10-23, owner ruling: pre-release
 Chain pull's yellow, Hello's sky blue, In Group's At Stone (`bi.group.stone`, 2nd), Solo on General (/1)
 and Solo's `{coordinates}` lines reach only a new profile and Restore built-in groups; a stored
 profile keeps the callouts it was seeded with.
+No schema step for the owner's own Solo, In Group, Dungeon and Raid sets either (2026-11-14, taken from
+their SavedVariables, both clients): Solo's asks on Say, In Group's Food please (`bi.group.food`),
+Dungeon's Brez, Soak, Spread, Stack, Offensive, Defensive, Kick Target and Wipe (`bi.mplus.soak`,
+`.spread`, `.stack`, `.offensive`, `.defensive`, `.wipe`; `bi.mplus.res` and `.kicks` keep their ids),
+Raid on Smart lead with Offensive, Defensive and Kick Target (`bi.raid.offensive`, `.defensive`,
+`.kick`), and the shipped color `amber` (`ff7c0a`). `bi.mplus.chain`, `bi.mplus.healme` and
+`bi.raid.stones` are retired and never reused; step 20's frozen rows still add `bi.mplus.healme` to a
+profile older than v20, as they always did.
 No schema step for nested groups (2026-10-18): a group without `parent` is top-level, and
 `Library.Prepare` drops a bad one.
 No schema step in phase 5: `Library.Prepare` fills a stored pad's missing layout and look fields from

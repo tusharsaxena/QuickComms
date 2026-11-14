@@ -16,7 +16,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SLASH-1..2 | Slash | `/qc` and `/quickcomms`, help, a slash collision |
 | PANEL-1..4 | Settings panel | Landing page, General → Master controls, the Defaults button, no Sim mode row |
 | PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
-| STATE-1..6 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload, a new profile's prebuilts |
+| STATE-1..7 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload, a new profile's prebuilts, the owner's Solo / In Group / Dungeon / Raid defaults |
 | COMBAT-1 | Combat | The settings panel in combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1..2 | Degraded | The install with LibKa0s missing, and its help rows |
@@ -147,6 +147,24 @@ ggty, ggnt; every Solo callout's channel reads General (/1; Say when not joined)
 {coordinates}`, World boss `World boss up: {target} @ {coordinates}`, Event here `World event
 starting @ {coordinates}, come join`. Switch back to the old profile → its callouts are as you left
 them (no migration). Delete the test profile. Result: 2026-10-24, pass (the owner's run; client build not recorded).
+
+**STATE-7. The owner's Solo, In Group, Dungeon and Raid are a new profile's (2026-11-14).** Profiles
+page → create a new profile and switch to it. Groups page:
+- **Solo** reads Rare spotted, Elite help, World boss, Event here (General), then Group quest, Invite
+  me, Thanks (Say).
+- **In Group** reads Hello, At Stone, Summon (both orange), Buffs please, **Food please** (a purple bowl,
+  `Food please!`), Healthstone, tyff, brb, Ready, GLHF, ggty, ggnt: twelve.
+- **Dungeon** reads Pulling (a yellow stopwatch), Lust, Need mana, Skipping, **Brez** (`Brez {target}` +
+  ping), Soak, Spread, Stack (`Soak!`, `Spread!`, `Stack!`), Offensive, Defensive, **Kick Target** (`Kick
+  {skull} {target}` + ping + Mark and the skull), Wipe (Smart lead, `Wipe it!` + `/flee`): twelve, and no
+  Chain pull or Heal me.
+- **Raid** reads Pull in 10, Lust (`Lust now!`), Battle rez, Heal me (Raid), Soak, Spread, Stack, Offensive,
+  Defensive, Kick Target, Wipe (`Wipe it!`), every one on Smart lead but Heal me: eleven, and no
+  Healthstones.
+
+In a dungeon party, press Kick Target on a target → the line, a Warning ping and the skull, on one
+press. Switch back to the old profile → its groups are as you left them (no migration). Delete the
+test profile. Repeat on WoW Forever (Dungeon shows in a dungeon, not a key). Result: owed
 
 ## Combat
 
