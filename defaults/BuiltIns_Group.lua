@@ -15,9 +15,10 @@ BI.Group(ID, {
     when = { group = { party = true, raid = true, instance = true } },
     callouts = BI.Callouts(ID, "smartGroup", {
         { "hello",  L["Hello"],        L["Hello!"],              "ph:hand-waving",   C.sky, { emote = "WAVE" } },
-        { "stone",  L["At Stone"],     L["At stone, WM off."],   "gi:tombstone-sbed", C.purple },
-        { "summon", L["Summon"],       L["Summon please!"],      "gi:magic-portal",  C.purple },
+        { "stone",  L["At Stone"],     L["At stone, WM off."],   "gi:tombstone-sbed", C.amber },
+        { "summon", L["Summon"],       L["Summon please!"],      "gi:magic-portal",  C.amber },
         { "buffs",  L["Buffs please"], L["Buffs please!"],       "gi:muscle-up",     C.purple },
+        { "food",   L["Food please"],  L["Food please!"],        "ph:bowl-food",     C.purple },
         { "hs",     L["Healthstone"],  L["Healthstone please!"], "gi:health-potion", C.purple },
         { "tyff",   L["tyff"],         L["tyff"],                "gi:hot-meal",      C.purple, { emote = "THANK" } },
         { "brb",    L["brb"],          L["brb"],                 "gi:coffee-cup",    C.crimson },

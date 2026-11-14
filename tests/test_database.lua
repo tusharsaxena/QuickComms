@@ -787,6 +787,10 @@ test("database: [CA-M3-4] step 20 inserts each Heal me row once, after its prede
     local NS = T.newAddon()
     local BI = NS.BuiltIns
     -- a later change to BuiltIns must not change what step 20 writes
+    -- Dungeon's Heal me is retired from the shipped set (owner, 2026-11-14): a decoy stands in for it,
+    -- so a step that read BuiltIns would still write the changed values
+    local planted = BI.callouts["bi.mplus.healme"] == nil
+    if planted then BI.callouts["bi.mplus.healme"] = { text = "Need heals!" } end
     local shipped = BI.callouts["bi.mplus.healme"]
     local fields = { "text", "channel", "emote", "icon", "iconColor" }
     local saved = {}
@@ -796,6 +800,7 @@ test("database: [CA-M3-4] step 20 inserts each Heal me row once, after its prede
     local p = preHealProfile()
     NS.Library.MigrateComboCallouts(p)
     for _, f in ipairs(fields) do shipped[f] = saved[f] end
+    if planted then BI.callouts["bi.mplus.healme"] = nil end
     -- red under: no part 2 in Lib.MigrateComboCallouts
     local d = p.groups.g1.callouts
     assertEqual(#d, 3, "Dungeon gains one")

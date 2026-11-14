@@ -1,8 +1,9 @@
 local _, NS = ...
 -- defaults/BuiltIns_World.lua — the solo open-world set (groups polish, 2026-10-19): out in the world
--- and in no group, where only the open channels reach anyone, so every callout goes to General (/1;
--- Say when channel 1 is not joined, owner 2026-10-23), and the lines about a place say where with
--- {coordinates}. A shipped id is stable once shipped.
+-- and in no group, where only the open channels reach anyone: the sightings go to General (/1; Say
+-- when channel 1 is not joined, owner 2026-10-23), the asks to the people nearby on Say (owner,
+-- 2026-11-14), and the lines about a place say where with {coordinates}. A shipped id is stable once
+-- shipped.
 
 local BI, L = NS.BuiltIns, NS.L
 local C = BI.COLOR
@@ -14,12 +15,14 @@ BI.Group(ID, {
     callouts = BI.Callouts(ID, "general", {
         { "rare",   L["Rare spotted"],  L["Rare spotted: {target} @ {coordinates}"], "gi:spyglass", C.gold, { emote = "POINT" } },
         { "elite",  L["Elite help"],    L["Can anyone help with this elite? {target} @ {coordinates}"], "gi:ogre", C.red, { emote = "HELPME" } },
-        { "quest",  L["Group quest"],   L["Anyone want to group up for this quest?"], "gi:scroll-unfurled", C.gold },
         { "boss",   L["World boss"],    L["World boss up: {target} @ {coordinates}"], "gi:crowned-skull", C.red },
         { "event",  L["Event here"],    L["World event starting @ {coordinates}, come join"], "gi:ringing-bell", C.orange },
-        { "invite", L["Invite me"],     L["Invite please"], "gi:envelope", C.blue },
-        { "thanks", L["Thanks"],        L["Thanks for the help!"], "gi:shaking-hands", C.green, { emote = "THANK" } },
     }),
 })
+for _, id in ipairs(BI.Callouts(ID, "say", {
+    { "quest",  L["Group quest"],   L["Anyone want to group up for this quest?"], "gi:scroll-unfurled", C.gold },
+    { "invite", L["Invite me"],     L["Invite please"], "gi:envelope", C.blue },
+    { "thanks", L["Thanks"],        L["Thanks for the help!"], "gi:shaking-hands", C.green, { emote = "THANK" } },
+})) do table.insert(BI.groups[ID].callouts, id) end
 
 BI.SNAPSHOTS[ID] = { content = "openWorld", group = "solo", instanceGroup = false, general = true, lockdown = {} }

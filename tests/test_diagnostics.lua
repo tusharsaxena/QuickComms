@@ -71,9 +71,9 @@ test("diagnostics: the surfaces and send sections name the pads, the armed butto
     NS.Situation.RefreshNow("test")
     local text = report(NS)
     assertTrue(text:find("p1 active=" .. T.seeded(NS, "bi.mplus") .. " stale=false", 1, true) ~= nil, text)
-    -- the pad's 8 buttons, and the default dial's 9 wedges (1 group wedge, then 8 callouts on one Auto
-    -- page) and its two rings' page arrows (2 each, never armed): 21 buttons, 16 armed
-    assertTrue(text:find("buttons=21 armed=16", 1, true) ~= nil, text)
+    -- the pad's 12 buttons, and the default dial's 13 wedges (1 group wedge, then 12 callouts on one Auto
+    -- page) and its two rings' page arrows (2 each, never armed): 29 buttons, 24 armed
+    assertTrue(text:find("buttons=29 armed=24", 1, true) ~= nil, text)
     assertTrue(text:find("p1:" .. T.seeded(NS, "bi.mplus.pull") .. " /p Pulling next pack", 1, true) ~= nil, text)
     assertTrue(text:find("pending -", 1, true) ~= nil, "no queued keys")
     assertTrue(text:find("window=1", 1, true) ~= nil, "the guard")

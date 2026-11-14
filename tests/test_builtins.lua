@@ -152,7 +152,7 @@ end)
 -- The white the glyphs draw when no color is set; a set must not be all of it.
 local WHITE = "ffffff"
 
-test("builtins: [polish] Solo is a solo open-world set of General (/1) callouts", function()
+test("builtins: [polish] Solo is a solo open-world set: sightings on General (/1), asks on Say", function()
     local NS, BI = bi()
     local g = BI.groups["bi.world"]
     -- red under: no defaults/BuiltIns_World.lua
@@ -160,18 +160,26 @@ test("builtins: [polish] Solo is a solo open-world set of General (/1) callouts"
     assertEqual(g.name, "Solo")
     assertTrue(g.when.content.openWorld and g.when.group.solo, "World, Solo")
     assertTrue(#g.callouts >= 7, "about seven callouts")
+    -- the sightings on General (owner, 2026-10-23), the asks on Say (owner, 2026-11-14)
+    local want = { rare = "general", elite = "general", boss = "general", event = "general",
+        quest = "say", invite = "say", thanks = "say" }
+    local order = {}
     for _, cid in ipairs(g.callouts) do
-        -- red under: Solo still on say (owner, 2026-10-23: General /1 instead of say)
-        assertEqual(BI.callouts[cid].channel, "general", cid)
+        local short = cid:match("^bi%.world%.(.+)$")
+        order[#order + 1] = short
+        assertEqual(BI.callouts[cid].channel, want[short], cid)
     end
+    assertEqual(table.concat(order, ","), "rare,elite,boss,event,quest,invite,thanks")
     assertEqual(BI.SNAPSHOTS["bi.world"].content, "openWorld", "the bake audit checks it solo")
     assertEqual(BI.SNAPSHOTS["bi.world"].group, "solo")
     assertTrue(BI.SNAPSHOTS["bi.world"].general, "the bake audit has channel 1 joined")
-    local line = NS.Bake.Bake(BI.callouts["bi.world.thanks"], BI.SNAPSHOTS["bi.world"], { ctx = {} })
-    assertEqual(line, "/1 Thanks for the help!")
+    local line = NS.Bake.Bake(BI.callouts["bi.world.boss"], BI.SNAPSHOTS["bi.world"], { ctx = {} })
+    assertTrue(line:find("^/1 World boss up: "), line)
     local off = { content = "openWorld", group = "solo", instanceGroup = false, lockdown = {} }
-    line = NS.Bake.Bake(BI.callouts["bi.world.thanks"], off, { ctx = {} })
-    assertEqual(line, "/s Thanks for the help!", "Say when channel 1 is not joined")
+    line = NS.Bake.Bake(BI.callouts["bi.world.boss"], off, { ctx = {} })
+    assertTrue(line:find("^/s World boss up: "), "Say when channel 1 is not joined: " .. line)
+    assertEqual(NS.Bake.Bake(BI.callouts["bi.world.thanks"], BI.SNAPSHOTS["bi.world"], { ctx = {} }),
+        "/s Thanks for the help!", "an ask is on Say")
 end)
 
 test("builtins: [QF-05] Solo's place lines carry {coordinates}", function()
@@ -186,10 +194,11 @@ end)
 
 test("builtins: [QF-05] the owner's edits are the shipped look, with no schema step", function()
     local NS, BI = bi()
-    -- red under: Chain pull still red, Hello still gold (owner's SavedVariables, 2026-10-23)
+    -- red under: Pulling not yellow, Hello still gold (owner's SavedVariables, 2026-10-23 and 2026-11-14)
     assertEqual(BI.COLOR.yellow, "fff468")
     assertEqual(BI.COLOR.sky, "3fc7eb")
-    assertEqual(BI.callouts["bi.mplus.chain"].iconColor, "fff468")
+    assertEqual(BI.COLOR.amber, "ff7c0a")
+    assertEqual(BI.callouts["bi.mplus.pull"].iconColor, "fff468")
     assertEqual(BI.callouts["bi.group.hello"].iconColor, "3fc7eb")
     assertEqual(BI.callouts["bi.group.hello"].text, "Hello!", "the owner's exception: not Hello there!")
     -- red under: no bi.group.stone in defaults/BuiltIns_Group.lua
@@ -197,7 +206,7 @@ test("builtins: [QF-05] the owner's edits are the shipped look, with no schema s
     assertTrue(stone ~= nil, "At Stone is shipped")
     assertEqual(stone.channel, "smartGroup")
     assertEqual(stone.glyph, "gi:tombstone-sbed")
-    assertEqual(stone.iconColor, "b07cff")
+    assertEqual(stone.iconColor, "ff7c0a")
     assertEqual(BI.groups["bi.group"].callouts[2], "bi.group.stone", "2nd in In Group")
     -- red under: a migration step added for these prebuilt changes (D4c: no migration). Step 10 is
     -- QC-03's reset onto the skin and step 11 the Font flags' move to From skin (LibKa0s v1.82.0);
@@ -235,8 +244,8 @@ test("builtins: [polish] every callout icon has a color, and no group is white o
             assertTrue(not (n == 1 and colors[WHITE]), gid .. " is not white only")
         end
     end
-    assertEqual(BI.callouts["bi.mplus.pull"].iconColor, BI.COLOR.orange, "a pull is an alarm")
-    assertEqual(BI.callouts["bi.raid.stack"].iconColor, WHITE, "white is one of the colors")
+    assertEqual(BI.callouts["bi.mplus.pull"].iconColor, BI.COLOR.yellow, "the owner's pull (2026-11-14)")
+    assertEqual(BI.callouts["bi.raid.stack"].iconColor, BI.COLOR.cyan, "the owner's stack (2026-11-14)")
 end)
 
 test("builtins: [polish] every group has a colored catalog glyph for its icon", function()
@@ -423,7 +432,7 @@ test("builtins: [bg buttons] In Group is a party, raid and instance group set of
     assertNil(g.when.group.solo)
     assertNil(g.when.content, "no content condition")
     assertEqual(rows(BI, "bi.group"), "Hello=Hello!|At Stone=At stone, WM off.|Summon=Summon please!|Buffs please=Buffs please!|"
-        .. "Healthstone=Healthstone please!|tyff=tyff|brb=brb|Ready=Ready|GLHF=GLHF!|ggty=ggty|ggnt=ggnt")
+        .. "Food please=Food please!|Healthstone=Healthstone please!|tyff=tyff|brb=brb|Ready=Ready|GLHF=GLHF!|ggty=ggty|ggnt=ggnt")
     for _, cid in ipairs(g.callouts) do assertEqual(BI.callouts[cid].channel, "smartGroup", cid) end
     assertEqual(g.glyph, "ph:users-three")
     local snap = BI.SNAPSHOTS["bi.group"]
@@ -648,15 +657,16 @@ end)
 
 -- ── #20: shipped callouts gain an emote (CA-M3-1, spec §8) ──────────────────────────────────────
 
--- The 12 additions, exactly the spec's §8 table.
+-- The 12 additions, exactly the spec's §8 table, and Dungeon's Wipe (owner, 2026-11-14).
 local COMBO = {
     ["bi.world.rare"] = "POINT", ["bi.world.elite"] = "HELPME", ["bi.world.thanks"] = "THANK",
     ["bi.group.hello"] = "WAVE", ["bi.group.ready"] = "READY", ["bi.group.glhf"] = "CHEER",
     ["bi.group.tyff"] = "THANK", ["bi.group.ggty"] = "THANK", ["bi.group.ggnt"] = "BYE",
     ["bi.mplus.pull"] = "CHARGE", ["bi.mplus.mana"] = "OOM", ["bi.raid.wipe"] = "FLEE",
+    ["bi.mplus.wipe"] = "FLEE",
 }
 
-test("builtins: [CA-M3-1] twelve shipped callouts carry an emote beside their line, exactly the spec's list", function()
+test("builtins: [CA-M3-1] thirteen shipped callouts carry an emote beside their line, exactly the list", function()
     local _, BI = bi()
     local got = {}
     for cid, c in pairs(BI.callouts) do
@@ -677,6 +687,7 @@ test("builtins: [CA-M3-1] twelve shipped callouts carry an emote beside their li
     end
     assertEqual(BI.callouts["bi.group.hello"].text, "Hello!", "no shipped line changes")
     assertEqual(BI.callouts["bi.raid.wipe"].channel, "smartLead")
+    assertEqual(BI.callouts["bi.mplus.wipe"].channel, "smartLead")
 end)
 
 test("builtins: [CA-M3-1] Arena and every battleground set carry no emote (F4b: pvpMatch padlocks one)", function()
@@ -704,39 +715,63 @@ test("builtins: [CA-M3-1] #20: Hello in a party sends its line, then its wave, o
     assertEqual(lines[2], EMOTES.commands[EMOTES[CLIENT].WAVE])
 end)
 
-test("builtins: [CA-M3-2] Dungeon and Raid gain a Heal me callout with the HEALME emote, in place", function()
-    local _, BI = bi()
-    local C = BI.COLOR
-    local want = { ["bi.mplus.healme"] = { "Need heals!", "smartGroup", "bi.mplus.kicks", 8 },
-        ["bi.raid.healme"] = { "Need heals on me!", "raid", "bi.raid.stones", 7 } }
-    for cid, w in pairs(want) do
+-- The owner's own Dungeon and Raid sets (2026-11-14, from their SavedVariables): name=text, channel,
+-- emote, ping and marker per callout, in order.
+local function actions(BI, gid)
+    local out = {}
+    for _, cid in ipairs(BI.groups[gid].callouts) do
         local c = BI.callouts[cid]
-        -- red under: no healme row in defaults/BuiltIns_MythicPlus.lua or defaults/BuiltIns_Raid.lua
-        assertTrue(c ~= nil, cid .. " is shipped")
-        assertEqual(c.name, "Heal me", cid)
-        assertEqual(c.text, w[1], cid)
-        assertEqual(c.channel, w[2], cid)
-        assertEqual(c.emote, "HEALME", cid)
-        assertEqual(c.glyph, "gi:heart-plus", cid)
-        assertEqual(c.iconColor, C.green, cid)
-        assertNil(c.ping, cid) assertNil(c.marker, cid)
-        local list = BI.groups[cid:match("^(.*)%.healme$")].callouts
-        assertEqual(list[w[4]], cid, cid .. " in place")
-        assertEqual(list[w[4] - 1], w[3], cid .. " right after its predecessor")
+        out[#out + 1] = table.concat({ cid:match("([^.]+)$"), c.name .. "=" .. c.text, c.channel,
+            tostring(c.emote or "-"), tostring(c.ping or "-"), tostring(c.marker or "-") }, " ")
     end
-    assertEqual(BI.groups["bi.raid"].callouts[8], "bi.raid.pull10", "the lead list after the raid list")
+    return table.concat(out, " | ")
+end
+
+test("builtins: [owner 2026-11-14] Dungeon and Raid are the owner's own sets, in their order", function()
+    local _, BI = bi()
+    -- red under: the sets as they shipped before (Chain pull, Heal me, Kick order; Healthstones)
+    assertEqual(actions(BI, "bi.mplus"), table.concat({
+        "pull Pulling=Pulling next pack smartGroup CHARGE - -",
+        "lust Lust=Lust on this pack smartGroup - - -",
+        "mana Need mana=Wait, need mana smartGroup OOM - -",
+        "skip Skipping=Skipping with invis/shroud smartGroup - - -",
+        "res Brez=Brez {target} smartGroup - assist -",
+        "soak Soak=Soak! smartGroup - - -",
+        "spread Spread=Spread! smartGroup - - -",
+        "stack Stack=Stack! smartGroup - - -",
+        "offensive Offensive=Use offensive cooldowns! smartGroup - - -",
+        "defensive Defensive=Use personal defensives! smartGroup - - -",
+        "kicks Kick Target=Kick {skull} {target} smartGroup - warning 8",
+        "wipe Wipe=Wipe it! smartLead FLEE - -" }, " | "))
+    assertEqual(actions(BI, "bi.raid"), table.concat({
+        "pull10 Pull in 10=Pull in 10 smartLead - - -",
+        "lust Lust=Lust now! smartLead - - -",
+        "brez Battle rez=Battle rez used on {target} smartLead - - -",
+        "healme Heal me=Need heals on me! raid HEALME - -",
+        "soak Soak=Soak! smartLead - - -",
+        "spread Spread=Spread! smartLead - - -",
+        "stack Stack=Stack! smartLead - - -",
+        "offensive Offensive=Use offensive cooldowns! smartLead - - -",
+        "defensive Defensive=Use personal defensives! smartLead - - -",
+        "kick Kick Target=Kick {skull} {target} smartLead - warning 8",
+        "wipe Wipe=Wipe it! smartLead FLEE - -" }, " | "))
+    -- the retired ids are gone, never reused
+    for _, cid in ipairs({ "bi.mplus.chain", "bi.mplus.healme", "bi.raid.stones" }) do
+        assertNil(BI.callouts[cid], cid .. " is retired")
+    end
+    assertEqual(BI.callouts["bi.mplus.defensive"].glyph, "shield", "the owner's open-iconic shield")
 end)
 
-test("builtins: [CA-M3-2] set sizes: Solo 7, In Group 11, Dungeon 8, Raid 9; none over a dial's slices", function()
+test("builtins: [CA-M3-2] set sizes: Solo 7, In Group 12, Dungeon 12, Raid 11; none over a dial's slices", function()
     local NS, BI = bi()
-    local sizes = { ["bi.world"] = 7, ["bi.group"] = 11, ["bi.mplus"] = 8, ["bi.raid"] = 9 }
+    local sizes = { ["bi.world"] = 7, ["bi.group"] = 12, ["bi.mplus"] = 12, ["bi.raid"] = 11 }
     for gid, n in pairs(sizes) do assertEqual(#BI.groups[gid].callouts, n, gid) end
     for gid in pairs(sizes) do
         assertTrue(#BI.groups[gid].callouts <= NS.DialLayout.MAX_SLICES, gid .. " fits one Auto page")
     end
 end)
 
-test("builtins: [CA-M3-2] a fresh profile seeds both Heal me callouts; no Auto dial gains a page", function()
+test("builtins: [CA-M3-2] a fresh profile seeds Raid's Heal me in place; no Auto dial gains a page", function()
     local NS = T.enableAddon()
     local p, Lib = NS.db.profile, NS.Library
     local snap = NS.Situation.Current()
@@ -749,15 +784,16 @@ test("builtins: [CA-M3-2] a fresh profile seeds both Heal me callouts; no Auto d
         local rings, open = NS.DialLayout.Rings({ group }, { slices = NS.DialLayout.AUTO, title = "Comms Dial" })
         assertEqual(rings[open].pages, 1, set .. " on one Auto page")
     end
-    for _, set in ipairs({ "bi.mplus", "bi.raid" }) do
-        local id = T.seeded(NS, set .. ".healme")
-        -- red under: Heal me shipped but not seeded into its set
-        assertTrue(id ~= nil, set .. ".healme seeded")
-        local c = p.callouts[id]
-        assertEqual(c.emote, "HEALME")
-        assertEqual(c.icon, NS.Icon("gi:heart-plus"))
-        assertNil(c.glyph)
-    end
+    local id = T.seeded(NS, "bi.raid.healme")
+    assertTrue(id ~= nil, "bi.raid.healme seeded")
+    local c = p.callouts[id]
+    assertEqual(c.emote, "HEALME")
+    assertEqual(c.icon, NS.Icon("gi:heart-plus"))
+    assertNil(c.glyph)
+    assertNil(T.seeded(NS, "bi.mplus.healme"), "Dungeon's Heal me is retired")
     local list = p.groups[T.seeded(NS, "bi.raid")].callouts
-    assertEqual(p.callouts[list[7]].origin, "bi.raid.healme", "seeded in shipped order")
+    assertEqual(p.callouts[list[4]].origin, "bi.raid.healme", "seeded in shipped order")
+    local kick = p.callouts[T.seeded(NS, "bi.mplus.kicks")]
+    assertEqual(kick.ping, "warning")
+    assertEqual(kick.marker, 8)
 end)

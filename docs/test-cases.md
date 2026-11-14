@@ -517,7 +517,7 @@ Total.
 - builtins: [phase 5] the node sets, Deepwind Gorge's five nodes included; no node carries a wind
 - builtins: [B7] every callout ships a catalog glyph, with a color only where it is a glyph
 - builtins: [B7] the generic dungeon set is Dungeon, active in a dungeon and in M+
-- builtins: [polish] Solo is a solo open-world set of General (/1) callouts
+- builtins: [polish] Solo is a solo open-world set: sightings on General (/1), asks on Say
 - builtins: [QF-05] Solo's place lines carry {coordinates}
 - builtins: [QF-05] the owner's edits are the shipped look, with no schema step
 - builtins: [polish] every battleground node set has map-wide callouts of its own
@@ -542,12 +542,12 @@ Total.
 - builtins: [CA-M1-6] the Emotes set's data is as it shipped
 - builtins: [CA-M1-6] every shipped callout passes the callout check and holds an action
 - builtins: [CA-M1-6] no seeded callout keeps the catalog glyph name
-- builtins: [CA-M3-1] twelve shipped callouts carry an emote beside their line, exactly the spec's list
+- builtins: [CA-M3-1] thirteen shipped callouts carry an emote beside their line, exactly the list
 - builtins: [CA-M3-1] Arena and every battleground set carry no emote (F4b: pvpMatch padlocks one)
 - builtins: [CA-M3-1] #20: Hello in a party sends its line, then its wave, on one press
-- builtins: [CA-M3-2] Dungeon and Raid gain a Heal me callout with the HEALME emote, in place
-- builtins: [CA-M3-2] set sizes: Solo 7, In Group 11, Dungeon 8, Raid 9; none over a dial's slices
-- builtins: [CA-M3-2] a fresh profile seeds both Heal me callouts; no Auto dial gains a page
+- builtins: [owner 2026-11-14] Dungeon and Raid are the owner's own sets, in their order
+- builtins: [CA-M3-2] set sizes: Solo 7, In Group 12, Dungeon 12, Raid 11; none over a dial's slices
+- builtins: [CA-M3-2] a fresh profile seeds Raid's Heal me in place; no Auto dial gains a page
 
 ### test_gameids.lua (6)
 

@@ -205,7 +205,8 @@ test("dial: [exit] on a raid boss the dial opens and a click on a wedge sends, w
     assertEqual(ringTitle(NS), "Raid")
     local w = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1]
     m.__click(w)
-    assertEqual(m.sentMacros[#m.sentMacros].text, "/raid Bloodlust now")
+    -- Pull in 10 leads the owner's Raid set (2026-11-14); Smart lead is raid chat without lead or assist
+    assertEqual(m.sentMacros[#m.sentMacros].text, "/raid Pull in 10")
     assertFalse(NS.Dial.IsOpen("d2"))
     assertEqual(#m.blocked, 0)
 end)
