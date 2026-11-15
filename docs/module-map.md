@@ -101,7 +101,9 @@ dials' labels are set in `modules/Dial.lua`, Toggle Comms Pads' and the category
 `settings/SlashVerbs.lua`.
 
 `tools/` holds the dev-only generators (`derive-gameids.py` and its
-`client_tables.py`, `gen-dial-textures.py`, `gen-shine-textures.py`) and the shine preview renderer
+`client_tables.py`, `gen-dial-textures.py`, `gen-shine-textures.py`), the seed-validation tool
+(`seeds/seeds.py`, its rulings `seeds/retail_rulings.json` and `seeds/forever_rulings.json`, and its
+offline tests `seeds/test_seeds.py`; the contract is [`validate-seeds.md`](validate-seeds.md)) and the shine preview renderer
 (`render-shine-preview.lua`, which loads the addon headless through the test harness and dumps what it
 painted, and `render-shine-preview.py`, which composites the dump): never loaded by the client or the
 TOC, `.pkgmeta`-ignored (layout-§1).

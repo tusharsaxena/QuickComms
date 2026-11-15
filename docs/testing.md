@@ -154,6 +154,13 @@ first in-game screenshots of the old recipes look for look, so it is the check t
 to `tools/gen-shine-textures.py`, `modules/Shine.lua` or the shine half of `modules/Dial_Slices.lua`,
 before SHINE-1 and SHINE-2. It is not a suite and gates nothing (`DEPENDENCIES.md` has how to run it).
 
+## The seed-validation tool's tests
+
+`tools/seeds/test_seeds.py` tests `tools/seeds/seeds.py` offline, on tiny fixture tables and seed
+files in a temporary folder: `python3 -m pytest -q tools/seeds`. It is not part of the Lua suite;
+it runs with the commit gate whenever `tools/seeds/` or a seed file it reads changes, and it is in
+the seed-validation contract's `## Gate` ([`validate-seeds.md`](validate-seeds.md)).
+
 ## In game
 
 [`smoke-tests.md`](smoke-tests.md) — the checks the headless suite cannot make. They are the owner's

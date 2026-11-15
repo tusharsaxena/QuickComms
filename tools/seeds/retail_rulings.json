@@ -1,0 +1,74 @@
+{
+  "arenas:559": {
+    "reason": "header exclusion (defaults/GameIds_Instances.lua): a legacy copy the current Nagrand Arena map 1505 replaced; owner precedent, DROPPED_ARENAS in tools/derive-gameids.py",
+    "ruling": "reject"
+  },
+  "arenas:562": {
+    "reason": "header exclusion (defaults/GameIds_Instances.lua): the zz-prefixed legacy copy the current Blade's Edge Arena map 1672 replaced; owner precedent, DROPPED_ARENAS in tools/derive-gameids.py",
+    "ruling": "reject"
+  },
+  "classes:Adventurer": {
+    "reason": "not a playable class: ChrClasses 14 has a mixed-case Filename unlike every classFile token, and its only ChrSpecialization row is the placeholder 1478 (OrderIndex 4); CLASSES holds the 13 playable classes (header)",
+    "ruling": "reject"
+  },
+  "classes:TRAVELER": {
+    "reason": "not a playable class: ChrClasses 15 has no ChrSpecialization row at all; CLASSES holds the 13 playable classes (header)",
+    "ruling": "reject"
+  },
+  "shipped:unlisted:instances:3029": {
+    "reason": "JournalInstance 1319 'Keystone Dungeons' on a party map is what the header's rule admits (every journal dungeon and raid, world bosses skipped, 2026-10-19 plan B6); LFGDungeons has no row because it is the journal's Mythic+ overview, not a queued dungeon. Re-check with the owner whether the When editor should suggest it",
+    "ruling": "keep"
+  },
+  "specs:1444": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  },
+  "specs:1446": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  },
+  "specs:1447": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  },
+  "specs:1448": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  },
+  "specs:1449": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  },
+  "specs:1450": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  },
+  "specs:1451": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  },
+  "specs:1452": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  },
+  "specs:1453": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  },
+  "specs:1454": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  },
+  "specs:1455": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  },
+  "specs:1456": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  },
+  "specs:1465": {
+    "reason": "the class's pre-specialization 'Initial' row (ChrSpecialization OrderIndex 4, the same for all 13 classes), not a specialization a player picks; SPECS lists the chosen specs per class (defaults/GameIds.lua header), and the spec row reads the client's own list first",
+    "ruling": "reject"
+  }
+}

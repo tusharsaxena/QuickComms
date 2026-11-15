@@ -29,6 +29,8 @@ local _, NS = ...
 -- re-derives and checks them (docs/common-tasks.md). The in-game check is `/qc probe ids`. Darkspear
 -- Islands, a battleground the group finder lists, gets no built-in set (the battleground kind still
 -- matches it). Forever has no arena map, so no arena list (D4).
+-- RE-VALIDATED against Forever's build 1.60.1.70938 on 2026-11-15 by tools/seeds/seeds.py
+-- (docs/validate-seeds.md; bundle docs/seed-research/2026-11-15-forever/): no list changed.
 
 NS.GameIds = NS.GameIds or {}
 local G = NS.GameIds
@@ -75,7 +77,7 @@ local FOREVER_RAIDS = {
     469,  -- Blackwing Lair
     309,  -- Zul'Gurub (D1)
     509,  -- Ruins of Ahn'Qiraj
-    531,  -- Temple of Ahn'Qiraj
+    531,  -- Ahn'Qiraj Temple
     533,  -- Naxxramas
     -- the other raid maps the group finder lists (D3-R), in its order
     2791, -- Storm Cliffs

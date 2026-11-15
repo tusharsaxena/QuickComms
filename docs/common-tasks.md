@@ -144,3 +144,11 @@ The id source is Forever's group finder (the forever-ids design's D5): GroupFind
 
 The generators leave a `__pycache__/` beside them; `.gitignore` keeps it out of the repository.
 
+## Re-validate the seed lists against a new build
+
+`/dev-copilot:validate-seeds QuickComms retail` (or `forever`) runs the loop in
+[`validate-seeds.md`](validate-seeds.md): `tools/seeds/seeds.py status` says whether wago.tools has a
+newer build than the last bundle, `derive` freezes the tables into `docs/seed-research/<date>-<flavor>/`
+and proposes candidates and flags, every one is ruled through `rule`, then `report` and `apply`. A run
+that changes a list is followed by `tools/derive-gameids.py` above, for the test's map rows.
+

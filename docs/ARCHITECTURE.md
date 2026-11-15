@@ -383,8 +383,9 @@ Each, with why: [`known-limitations.md`](known-limitations.md).
 Every `.md` under `docs/` appears in exactly one table below. Out of scope and named once each as
 directories, never row by row: `docs/audits/`, `docs/reviews/`, `docs/automated-tests/<run>/`,
 `docs/perf-analysis/<run>/`, `docs/revendor/<date>-v<tag>/`, `docs/superpowers/` (the design spec and
-the implementation plan) and `docs/investigations/`. This addon's own frozen store, `docs/brainstorm/`,
-is registered once, as a store, in the Tier 3 table; the documents under it get no row each.
+the implementation plan) and `docs/investigations/`. This addon's own frozen stores, `docs/brainstorm/` and
+`docs/seed-research/`, are registered once each, as a store, in the Tier 3 table; the documents under
+them get no row each.
 
 ### Required (documentation-§3, Tier 1)
 
@@ -427,6 +428,8 @@ is registered once, as a store, in the Tier 3 table; the documents under it get 
 | Doc | Covers |
 |---|---|
 | `brainstorm/` | The pre-scaffold record, kept as history: the research notes, the brainstorm and its decisions D1–D12, the clickable UX mockup and the in-game go/no-go test with its harness and screenshots |
+| `validate-seeds.md` | The seed-validation contract `/dev-copilot:validate-seeds` runs: the game-id lists per client (`retail`, `forever`), re-validated against each client's own DB2 on wago.tools by `tools/seeds/seeds.py` (clients-§10) |
+| `seed-research/` | The frozen seed-validation bundles, one per run and flavor (`<date>-<flavor>/`: the raw tables, `SOURCES.md`, `candidates.json`, `RULINGS.md`, `ANALYSIS.md`), registered once as a store; the documents under it get no row each |
 
 ## The open and close animations
 
