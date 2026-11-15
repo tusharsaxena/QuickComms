@@ -18,6 +18,8 @@ local _, NS = ...
 -- Not listed: the raids the client gates behind a later season (The Tidebound Grotto, The Venomous
 -- Abyss, The Unbinding of Kith'ix) and Sporefall (1592; owner ruling R4): the When editor still
 -- offers each through INSTANCES, which lists every journal dungeon and raid.
+-- RE-VALIDATED against Retail's build 12.1.5.70783 on 2026-11-15 by tools/seeds/seeds.py
+-- (docs/validate-seeds.md; bundle docs/seed-research/2026-11-15-retail/): no list changed.
 
 NS.GameIds = NS.GameIds or {}
 local G = NS.GameIds

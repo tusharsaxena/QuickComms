@@ -145,6 +145,15 @@ python3 -I tools/render-shine-preview.py --radius 100,150,180 --out /tmp/shine  
 repository against them; neither is loaded by the client, and `.pkgmeta` ignores `tools/`. How to run
 them: `docs/common-tasks.md` → "Re-derive the client-data extractions".
 
+**Python 3.8+ (standard library only), network access to wago.tools, and pytest for its tests**, and
+only for **re-validating the game-id seed lists** (`/dev-copilot:validate-seeds QuickComms retail` or
+`forever`): `tools/seeds/seeds.py` reads the builds API (`https://wago.tools/api/builds`) and each table
+at a pinned build (`https://wago.tools/db2/<Table>/csv?build=<version>`, product `wow` for Retail and
+`wowf` for WoW Forever), sending the User-Agent `ka0s-seed-validation`; downloads are cached in the
+git-ignored `tools/seeds/.cache/`, and `derive --replay` re-runs a bundle offline. Its tests
+(`python3 -m pytest -q tools/seeds`, or `python3 -m unittest` in that folder) need no network. The
+contract is `docs/validate-seeds.md`.
+
 **None of this group is required to build, run or test the addon.**
 
 ## Am I set up correctly?

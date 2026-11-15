@@ -20,3 +20,6 @@ release/
 
 # Python bytecode (the tools/ generators)
 __pycache__/
+
+# The seed tool's per-build wago.tools download cache (clients-§10)
+tools/seeds/.cache/

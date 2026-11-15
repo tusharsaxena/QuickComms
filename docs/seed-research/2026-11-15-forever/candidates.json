@@ -1,0 +1,62 @@
+{
+ "build": "1.60.1.70938",
+ "buildCreated": "2026-11-13 01:36:09",
+ "candidates": [],
+ "checked": 55,
+ "counts": {
+  "classes": 13,
+  "dungeons": 30,
+  "raids": 12
+ },
+ "date": "2026-11-15",
+ "flags": [
+  {
+   "comment": "Temple of Ahn'Qiraj",
+   "id": 531,
+   "key": "shipped:renamed:raids:531",
+   "kind": "renamed",
+   "list": "raids",
+   "name": "Ahn'Qiraj Temple",
+   "why": "Map names it \"Ahn'Qiraj Temple\", the comment \"Temple of Ahn'Qiraj\""
+  },
+  {
+   "comment": "DEATHKNIGHT",
+   "id": "DEATHKNIGHT",
+   "key": "shipped:gone:classes:DEATHKNIGHT",
+   "kind": "gone",
+   "list": "classes",
+   "name": "",
+   "why": "ChrClasses has no Filename DEATHKNIGHT"
+  },
+  {
+   "comment": "DEMONHUNTER",
+   "id": "DEMONHUNTER",
+   "key": "shipped:gone:classes:DEMONHUNTER",
+   "kind": "gone",
+   "list": "classes",
+   "name": "",
+   "why": "ChrClasses has no Filename DEMONHUNTER"
+  },
+  {
+   "comment": "EVOKER",
+   "id": "EVOKER",
+   "key": "shipped:gone:classes:EVOKER",
+   "kind": "gone",
+   "list": "classes",
+   "name": "",
+   "why": "ChrClasses has no Filename EVOKER"
+  },
+  {
+   "comment": "MONK",
+   "id": "MONK",
+   "key": "shipped:gone:classes:MONK",
+   "kind": "gone",
+   "list": "classes",
+   "name": "",
+   "why": "ChrClasses has no Filename MONK"
+  }
+ ],
+ "flavor": "forever",
+ "product": "wowf",
+ "tool": "tools/seeds/seeds.py derive"
+}

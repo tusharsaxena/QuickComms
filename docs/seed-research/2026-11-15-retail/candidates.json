@@ -1,0 +1,213 @@
+{
+ "build": "12.1.5.70783",
+ "buildCreated": "2026-11-04 00:38:01",
+ "candidates": [
+  {
+   "id": 559,
+   "key": "arenas:559",
+   "list": "arenas",
+   "name": "Nagrand Arena (old)",
+   "notes": [
+    "instance type 4"
+   ],
+   "source": "map"
+  },
+  {
+   "id": 562,
+   "key": "arenas:562",
+   "list": "arenas",
+   "name": "zzOldBlade's Edge Arena",
+   "notes": [
+    "instance type 4"
+   ],
+   "source": "map"
+  },
+  {
+   "id": "Adventurer",
+   "key": "classes:Adventurer",
+   "list": "classes",
+   "name": "Adventurer",
+   "notes": [
+    "class id 14"
+   ],
+   "source": "chrclasses"
+  },
+  {
+   "id": "TRAVELER",
+   "key": "classes:TRAVELER",
+   "list": "classes",
+   "name": "Traveler",
+   "notes": [
+    "class id 15"
+   ],
+   "source": "chrclasses"
+  },
+  {
+   "id": 1444,
+   "key": "specs:1444",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 7 (SHAMAN)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  },
+  {
+   "id": 1446,
+   "key": "specs:1446",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 1 (WARRIOR)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  },
+  {
+   "id": 1447,
+   "key": "specs:1447",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 11 (DRUID)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  },
+  {
+   "id": 1448,
+   "key": "specs:1448",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 3 (HUNTER)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  },
+  {
+   "id": 1449,
+   "key": "specs:1449",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 8 (MAGE)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  },
+  {
+   "id": 1450,
+   "key": "specs:1450",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 10 (MONK)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  },
+  {
+   "id": 1451,
+   "key": "specs:1451",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 2 (PALADIN)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  },
+  {
+   "id": 1452,
+   "key": "specs:1452",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 5 (PRIEST)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  },
+  {
+   "id": 1453,
+   "key": "specs:1453",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 4 (ROGUE)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  },
+  {
+   "id": 1454,
+   "key": "specs:1454",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 9 (WARLOCK)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  },
+  {
+   "id": 1455,
+   "key": "specs:1455",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 6 (DEATHKNIGHT)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  },
+  {
+   "id": 1456,
+   "key": "specs:1456",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 12 (DEMONHUNTER)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  },
+  {
+   "id": 1465,
+   "key": "specs:1465",
+   "list": "specs",
+   "name": "Initial",
+   "notes": [
+    "class 13 (EVOKER)",
+    "OrderIndex 4"
+   ],
+   "source": "chrspec"
+  }
+ ],
+ "checked": 281,
+ "counts": {
+  "arenas": 16,
+  "classes": 13,
+  "dungeons": 8,
+  "instances": 201,
+  "raids": 3,
+  "specs": 40
+ },
+ "date": "2026-11-15",
+ "flags": [
+  {
+   "comment": "Keystone Dungeons",
+   "id": 3029,
+   "key": "shipped:unlisted:instances:3029",
+   "kind": "unlisted",
+   "list": "instances",
+   "name": "Keystone Dungeons",
+   "why": "no LFGDungeons row is on the map"
+  }
+ ],
+ "flavor": "retail",
+ "product": "wow",
+ "tool": "tools/seeds/seeds.py derive"
+}

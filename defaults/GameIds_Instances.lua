@@ -13,6 +13,8 @@ local _, NS = ...
 -- instance type 1 or 2, world-boss entries skipped), ARENAS from Map (instance type 4).
 -- tools/derive-gameids.py re-derives both and fails on any difference; tests/test_gameids.lua holds
 -- each id's CLIENT_MAPS row. The names beside the ids are the client's, for review only.
+-- RE-VALIDATED against Retail's build 12.1.5.70783 on 2026-11-15 by tools/seeds/seeds.py
+-- (docs/validate-seeds.md; bundle docs/seed-research/2026-11-15-retail/): no list changed.
 
 NS.GameIds = NS.GameIds or {}
 local G = NS.GameIds
