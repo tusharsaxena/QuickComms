@@ -457,6 +457,9 @@ L["World"] = "World"
 L["LOCKDOWN"] = "LOCKDOWN"
 L["TEST MODE"] = "TEST MODE"
 L["updates after combat"] = "updates after combat"
+-- the header's collapse toggle, its title-bar tooltip (SR-QC, smoke round 1 ruling 3)
+L["Collapse"] = "Collapse"
+L["Expand"] = "Expand"
 
 -- Comms Pad (modules/Pad.lua)
 L["Drag to move. Right-click for settings."] = "Drag to move. Right-click for settings."

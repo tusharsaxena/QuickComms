@@ -285,6 +285,7 @@ Kit.run{
         "test_skinsetup",
         "test_launcher_skin_entry",
         "test_skin_windows",
+        "test_title_bars",
         "test_skin_hud",
         "test_skin_flip",
         "test_skin_picker",

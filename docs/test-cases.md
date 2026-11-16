@@ -2004,6 +2004,16 @@ Total.
 - skin windows: the modal window's title and close X sit on the band's middle, the page under it, every skin (R5-WIN)
 - skin windows: the modal fallback wears the band too, its title and close mark on it (R5-WIN)
 
+### test_title_bars.lua (7)
+
+- title bars: the Preview window's close shows its tooltip
+- title bars: the Preview window's close rests in icon.tint and hovers in close.hot
+- title bars: the modal window's template close shows its tooltip
+- title bars: the modal window's template close rests in icon.tint and hovers in close.hot
+- title bars: the modal window's fallback close shows its tooltip and wears the close colors
+- title bars: a pad header's collapse toggle shows its tooltip, Collapse or Expand
+- title bars: a pad header's collapse toggle rests in icon.tint and hovers in text.link
+
 ### test_skin_hud.lua (20)
 
 - skin hud: every HUD font and border block follows the skin by default, through a schema row
@@ -2377,6 +2387,7 @@ Total.
 | test_skinsetup.lua | 25 |
 | test_launcher_skin_entry.lua | 1 |
 | test_skin_windows.lua | 24 |
+| test_title_bars.lua | 7 |
 | test_skin_hud.lua | 20 |
 | test_skin_flip.lua | 61 |
 | test_skin_picker.lua | 28 |
@@ -2396,4 +2407,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2030** |
+| **Total** | **2037** |
