@@ -2801,8 +2801,12 @@ Dial in the screen's middle → hover each wedge in turn: every tooltip opens ri
 its top level with that wedge (so it moves down as you go from N round to S), and stays put while the pointer
 moves inside one wedge. Hover the hub and a page arrow → the same side. Set Open at to At the cursor and open the
 dial with the pointer near the screen's right edge → the tooltips open on the left. Labels → Tooltip side
-Beside, prefer left → on the left in the middle of the screen. Fail: a tooltip over a slice, a label or the
-ring's title, or one that follows the pointer.
+Beside, prefer left → on the left in the middle of the screen. Then the wide cases (review fix, 2026-11-18):
+rename a group shown as a ring to a long name (wider than the dial and its labels) and untick Show slice
+labels → the tooltip opens clear of the ring's title; on a paged ring at the smallest Ring radius, set Paging
+→ Arrow spacing 60 and Current page width 60 → the tooltip opens clear of the outer page arrow, its top level
+with the hovered wedge. Fail: a tooltip over a slice, a label, the ring's title or the page row, or one that
+follows the pointer.
 Result: owed
 
 **TIP-4. The Preview as window's tooltips (2026-11-18, AD-92-QC).** `/qc preview arena` → hover the

@@ -811,7 +811,9 @@ General page > Keybindings, with no key box and no readout (QUI-L29).
   retired by AD-92-QC, migration step 21) and Tooltip offset `dial.label.tooltipOffset` (0 to 80 pixels,
   default 0; 8 until step 21): every dial tooltip (a wedge's, a page arrow's, the hub's Why is this
   showing?) opens beside the whole dial, its top level with the hovered element, the standard 2 pixels
-  plus the offset past the disc or its widest label (standalone-windows, *Tooltip placement*).
+  plus the offset past the drawn dial: the disc, its widest label, its ring title or its page row, whichever
+  reaches furthest (standalone-windows, *Tooltip placement*). The offset is a player's nudge, as Multi
+  Meters keeps its tooltip offset (owner ruling of wave C, 2026-11-17, applied here by inference).
 - **Labels > Group labels** (dial polish, 2026-10-21; its own tab until item 020): Show group labels is `dial.title.show` (on by default):
   the ring's title above the dial ("Solo", "Comms Dial"). Its Font block is composed as the
   slice labels' (`dial.title.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow`;

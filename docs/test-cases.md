@@ -1,4 +1,3 @@
-ka0s-bounded: all 7 slot(s) are in use by other bounded runs; waiting for a slot
 # Test Cases
 
 The full inventory of every headless test case in this repo, grouped by the suite file it
@@ -1547,7 +1546,7 @@ Total.
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
 
-### test_tooltips.lua (16)
+### test_tooltips.lua (18)
 
 - tooltips: only core/TooltipSetup.lua leases LibKa0s-Tooltip-1.0 (library-stack-§7)
 - tooltips: no own tooltip is owned on the cursor or at a corner; every SetOwner is ANCHOR_NONE
@@ -1561,10 +1560,12 @@ Total.
 - tooltips: [dial] a wedge's tooltip opens right of the whole dial, top level with the wedge, 2 px off
 - tooltips: [dial] the hub's and a page arrow's tooltips open beside the dial too
 - tooltips: [dial] Beside, prefer left tries the left first; Tooltip offset widens the span
+- tooltips: [dial] a ring title or a page row wider than the labels widens the span
 - tooltips: [preview window] the dropdown's and End preview's tooltips open beside the window
 - tooltips: [preview window] locked, a title mark's tooltip is attached above it (chrome)
 - tooltips: [callout popup] the token glyph's tooltip opens beside the popup, not beside its catcher
 - tooltips: [migration 21] a dial's retired Above or Below side becomes Beside; the old default offset 0
+- tooltips: [migration 21] the runner moves a stored schemaVersion 20 profile's Above to Beside
 
 ### test_anim.lua (46)
 
@@ -2403,7 +2404,7 @@ Total.
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
-| test_tooltips.lua | 16 |
+| test_tooltips.lua | 18 |
 | test_anim.lua | 46 |
 | test_anim_styles.lua | 140 |
 | test_anim_surfaces.lua | 42 |
@@ -2438,4 +2439,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2063** |
+| **Total** | **2065** |

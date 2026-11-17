@@ -400,7 +400,7 @@ and holds every `SetOwner` in the source at `ANCHOR_NONE`, the out-of-scope file
 | A Comms Pad button (`modules/Pad_Render.lua` `R.ShowTooltip`) | body | beside the whole pad and its drag strip while it shows (`inst.tipGroup`, carried as `qcTipGroup`), right then left, top level with the button |
 | A pad's section title (`modules/Pad.lua` `newTitleHit`) | body | the same, top level with the title |
 | A pad's header row: Why is this showing? and the combat refusal of a tab switch (`Pad.ShowWhy`, `Pad.Wheel`) | chrome | attached above the header row, below it only without room above |
-| A Comms Dial wedge, page arrow or hub (`modules/Dial_Render.lua` `R.ShowTip`) | body | beside the whole drawn dial (`qcTipSpan`: the disc and its widest label at either side, widened by the Labels tab's Tooltip offset), right then left, or left first under Beside, prefer left; top level with the hovered element |
+| A Comms Dial wedge, page arrow or hub (`modules/Dial_Render.lua` `R.ShowTip`) | body | beside the whole drawn dial (`qcTipSpan`: at either side the widest of the disc, its widest label, half the widest ring title and half the widest page row, arrows included; widened by the Labels tab's Tooltip offset), right then left, or left first under Beside, prefer left; top level with the hovered element |
 | The Preview as window's dropdown and End preview (`modules/PreviewWindow.lua`) | body | beside the window, top level with the control (its content is controls, a body element) |
 | The Preview as window's settings and close marks, locked over the edit preview | chrome | attached above the mark (unlocked, the library's `AttachTitleTip` shows them above too) |
 | The callout popup's token glyph (`settings/CalloutPopup.lua` `showTokenHelp`) | body | beside the popup window (`Pop.frame`, named: its outermost ancestor is the full-screen catcher), top level with the glyph, clear of the fields being typed into |
@@ -411,7 +411,17 @@ secure header's geometry; the per-frame `GetCursorPosition` read in `R.PointerUp
 and picks the hovered slice, and never moves a tooltip. The Labels tab's Tooltip side is Beside the
 dial (`right`, the default) or Beside, prefer left (`left`); Above and Below are retired by migration
 step 21, which also moves the old default offset 8 to 0 (`modules/Library_Migrate.lua`
-`MigrateDialTipSide`).
+`MigrateDialTipSide`). The span's width is measured at each rebuild (`modules/Dial.lua` `drawnWidths`:
+the widest wedge label, ring title and page row across every loaded ring), so a title or a page row wider
+than the labels widens it too.
+
+**The Tooltip offset is a nudge (an inference, not a ruling).** A non-zero offset widens the span, so the
+tooltip then sits the 2-pixel gap plus the offset from the drawn dial, and standalone-windows *Tooltip
+placement* lists "a gap other than 2 px" as anti-pattern #119. The default is 0 and step 21 keeps only an
+offset the player chose (8, the old default, becomes 0), so out of the box the dial complies. Keeping the
+offset as a player's nudge follows the owner's wave C ruling for Multi Meters' `window.tooltip.anchor`
+(2026-11-17, "the offset X/Y settings stay as a nudge"); the owner has not ruled on the Quick Comms dial's
+offset itself, and the wave's execution record carries the question.
 
 Placed by the library, not here: the drag strip's and every title mark's tooltip (`W.DragHandle`,
 `W.HeaderButtons`, `AttachTitleTip`), the reorder handle, the Preview as window's open dropdown menu and

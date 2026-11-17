@@ -18,7 +18,7 @@ local _, NS = ...
 -- dialRender). Every tooltip the dial shows is a body element's (AD-92-QC, standalone-windows *Tooltip
 -- placement*): beside the whole drawn dial, right then left (the Labels tab's Tooltip side: Beside, prefer
 -- left tries the left first), its top level with the hovered wedge, arrow or hub, TIP_GAP and the Tooltip
--- offset clear of the widest label (R.PlaceTips, R.ShowTip). The Icons tab (B9) styles each wedge's icon through modules/IconStyle.lua and
+-- offset clear of the drawn dial: its labels, ring titles and page rows (R.PlaceTips, R.ShowTip). The Icons tab (B9) styles each wedge's icon through modules/IconStyle.lua and
 -- modules/Glow.lua (the glow, whose On hover trigger the tracker drives: R.HoverWedge). A wedge takes
 -- no mouse (dial polish, 2026-10-21): the slice the cursor points into is hovered (its wedge's
 -- tooltip and glow) from the per-frame update, and clicked through the ring's secure catcher.
@@ -394,13 +394,18 @@ local function newSpan(header)
     return span
 end
 
---- Where the dial's tooltips go: beside the whole drawn dial, so the group is the disc and its labels
---- at either side (`labelWidth`, the widest label the rebuild drew, 0 with none), widened by the Labels
---- tab's Tooltip offset (a nudge outward; the library adds TIP_GAP), from the ring title above to the
---- page row below. Kept on the header (`qcTipSpan`, `qcTipPrefer`) for R.ShowTip.
-function R.PlaceTips(header, look, labelWidth)
+--- Where the dial's tooltips go: beside the whole drawn dial, so the group's half-width is the widest
+--- of the disc, its labels at either side (`widths.label`, the widest label the rebuild drew), half the
+--- widest ring title (`widths.title`) and half the widest page row, arrows included (`widths.row`), each
+--- 0 with none; widened by the Labels tab's Tooltip offset (a player's nudge outward, default 0, kept as
+--- Multi Meters keeps its offset: owner ruling of wave C, 2026-11-17; the library adds TIP_GAP), from the
+--- ring title above to the page row below. Kept on the header (`qcTipSpan`, `qcTipPrefer`) for R.ShowTip.
+function R.PlaceTips(header, look, widths)
+    widths = widths or {}
     local g = DL.Geometry(look.radius, look.line, look.labelReach, look.title.line)
-    local e = { half = math.max(g.disc / 2, look.show and g.reach + labelWidth or 0) + look.tipOffset,
+    local label = look.show and g.reach + (tonumber(widths.label) or 0) or 0
+    local title = look.title.show and (tonumber(widths.title) or 0) / 2 or 0
+    local e = { half = math.max(g.disc / 2, label, title, tonumber(widths.row) or 0) + look.tipOffset,
         up = g.top, down = -DL.Nav(1, 1, g, look.paging).bottom }
     header.qcTipSpan = header.qcTipSpan or newSpan(header)
     header.qcTipSpan.qcExtent = e

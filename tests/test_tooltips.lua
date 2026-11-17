@@ -292,6 +292,42 @@ test("tooltips: [dial] Beside, prefer left tries the left first; Tooltip offset 
     assertFalse(NS.SchemaRuntime.Set("dial.label.tooltipSide", "top", "d2"))
 end)
 
+-- Review fix (AD-92-QC): the group is the whole drawn dial, so a ring title or a page row wider than
+-- the disc and its labels widens the span too; the tooltip never sits over either.
+test("tooltips: [dial] a ring title or a page row wider than the labels widens the span", function()
+    local NS = live()
+    assertTrue(NS.Dial.Apply(1, "d2", D.planOf(NS, { n = 8, slices = 4 })))
+    local inst = NS.Dial.Instance("d2")
+    local h = inst.header
+    local base = h.qcTipSpan.qcExtent.half
+    -- The kit's FontString measures 0 wide; the rebuild re-reads the pooled rings' titles.
+    for _, ring in ipairs(inst.rings.active) do
+        rawset(ring.qcTitle, "GetStringWidth", function() return 4 * base + 100 end)
+    end
+    assertTrue(NS.Dial.Apply(1, "d2", D.planOf(NS, { n = 8, slices = 4 })))
+    -- red under: a span of the disc and the labels alone
+    assertEqual(h.qcTipSpan.qcExtent.half, 2 * base + 50, "half the widest ring title")
+    for _, ring in ipairs(inst.rings.active) do rawset(ring.qcTitle, "GetStringWidth", nil) end
+    -- A wide page row on the smallest disc, its labels off: the arrows' outer edge, past the disc.
+    assertTrue(NS.SchemaRuntime.Set("dial.label.show", false, "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.page.arrowGap", 60, "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.page.arrowSize", 48, "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.page.pillWidth", 60, "d2"))
+    local plan = D.planOf(NS, { n = 8, slices = 4 })
+    plan.radius = NS.DialLayout.RADIUS_MIN
+    assertTrue(NS.Dial.Apply(1, "d2", plan))
+    base = NS.DialLayout.Geometry(plan.radius).disc / 2
+    local paged
+    for _, ring in ipairs(inst.rings.active) do
+        if (ring.qcSpec.pages or 1) > 1 then paged = ring end
+    end
+    assertTrue(paged ~= nil, "a paged ring")
+    local _, _, _, ax = paged.qcNext:GetPoint(1)
+    local edge = ax + 48 / 2   -- the arrow's center plus half its Arrow size
+    assertTrue(edge > base, "the row reaches past the disc")
+    assertEqual(h.qcTipSpan.qcExtent.half, edge, "the page row's outer arrow edge")
+end)
+
 -- ── the Preview as window ───────────────────────────────────────────────────────────────────
 
 test("tooltips: [preview window] the dropdown's and End preview's tooltips open beside the window", function()
@@ -380,4 +416,23 @@ test("tooltips: [migration 21] a dial's retired Above or Below side becomes Besi
     NS.Library.MigrateDialTipSide(profile)
     assertEqual(l.b.label.tooltipOffset, 30, "idempotent")
     assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 21)
+end)
+
+-- Review fix (AD-92-QC): step 21 through the runner, not only called directly.
+test("tooltips: [migration 21] the runner moves a stored schemaVersion 20 profile's Above to Beside", function()
+    local NS = T.enableAddon()
+    local db = NS.addon.db
+    local l = db.profile.dials.d2.label
+    l.tooltipSide, l.tooltipOffset = "top", 8
+    db.sv.profiles.other = { dials = { x = { label = { tooltipSide = "bottom", tooltipOffset = 30 } } } }
+    db.global.schemaVersion = 20
+    NS.addon:RunMigrations()
+    assertEqual(db.global.schemaVersion, 21)
+    assertEqual(l.tooltipSide .. "," .. l.tooltipOffset, "right,0", "the active profile")
+    local o = db.sv.profiles.other.dials.x.label
+    assertEqual(o.tooltipSide .. "," .. o.tooltipOffset, "right,30", "every stored profile, a chosen offset kept")
+    assertEqual(NS.SchemaRuntime.Get("dial.label.tooltipSide", "d2"), "right")
+    l.tooltipSide = "left"
+    NS.addon:RunMigrations()
+    assertEqual(l.tooltipSide, "left", "the stamp holds a later pick")
 end)
