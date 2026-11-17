@@ -116,6 +116,9 @@ local function skinTemplate(chrome)
         S.TitleBar(chrome.nineSlice, { text = chrome.nineSlice.Text, noBg = true })
     end
     S.CloseButton(chrome.close)
+    -- The template's X is the one close the library does not build, so its title-bar tooltip is
+    -- hooked here: "Close", above it, as Core.MakeCloseButton's (smoke round 1 ruling 3).
+    NS.AttachTitleTip(chrome.close, NS.CloseTip)
     -- The template's title and close X on the band (THE HEADER above), off Blizzard's own anchors.
     S.Header(f, { title = chrome.nineSlice.Text, right = { chrome.close } })
 end

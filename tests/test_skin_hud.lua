@@ -325,14 +325,31 @@ test("skin hud: a pad window's 1px inner rule is win.inner, none where the skin 
     Skin:SetChoice(OWNER, "ka0s", OTHER)
     assertTrue(type(Skin:ResolveSkin(OTHER)["win.inner"]) ~= "table", OTHER .. " has no inner line")
     assertColor(R.SkinFor(flat).innerBorder, { 0, 0, 0, 0 }, "no line under " .. OTHER)
-    local colored
-    for _, def in ipairs(Skin:Skins()) do
-        if type(Skin:ResolveSkin(def.key)["win.inner"]) == "table" and def.key ~= "ka0s" then colored = def.key; break end
-    end
-    assertTrue(colored ~= nil, "a skin with an inner line of its own")
+    -- No shipped skin but Ka0s Default draws an inner line since LibKa0s v1.105.0 (smoke round 2), so
+    -- the "a skin with a line of its own" branch is a test-local skin through the public RegisterSkin.
+    local colored = "qcinner"
+    Skin:RegisterSkin({ key = colored, label = "QC inner", tokens = { ["win.inner"] = { 0.2, 0.4, 0.6, 1 } } })
+    assertColor(Skin:ResolveSkin(colored)["win.inner"], { 0.2, 0.4, 0.6, 1 }, "a skin with an inner line of its own")
     Skin:SetChoice(OWNER, "ka0s", colored)
     assertColor(R.SkinFor(flat).innerBorder, now(NS, "win.inner"), "the line under " .. colored)
     assertColor(R.SkinFor(flat, true).innerBorder, { 0, 0, 0, 0 }, "a plain block never takes it")
+end)
+
+test("skin hud: every shipped skin but Ka0s Default draws no inner rule, and a flat window edge is 1px", function()
+    local _, _, Skin = live()
+    local n = 0
+    for _, def in ipairs(Skin:Skins()) do
+        if def.key ~= "ka0s" then
+            n = n + 1
+            local t = Skin:ResolveSkin(def.key)
+            -- red under: a shipped skin with a win.inner of its own (Midnight's, Azeroth's and Ember's before v1.105.0 smoke round 2)
+            assertTrue(type(t["win.inner"]) ~= "table", def.key .. " draws no inner rule")
+            if t["win.borderStyle"] == "flat" then
+                assertEqual(t["win.borderSize"], 1, def.key .. "'s flat window edge")
+            end
+        end
+    end
+    assertEqual(n, 8, "the eight shipped skins besides Ka0s Default")
 end)
 
 test("skin hud: a pad's window is repainted when its look or the skin moved, and at no other rebuild", function()

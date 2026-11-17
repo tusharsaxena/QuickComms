@@ -76,6 +76,8 @@ if not lib then
     H.SelectTab            = function() end
     H.NavRail              = function() end
     H.Drawer               = function() end
+    -- LibKa0s v1.100.0 (OptionsNav minor 7): side tabs. The stub draws no page, so it draws nothing.
+    H.SideTabs             = function() end
     H.SetRenderer          = function() end
     H.RegisterOptionsPage  = function() end
     H.RefreshAllPanels     = function() end

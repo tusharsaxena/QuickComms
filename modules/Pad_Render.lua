@@ -85,6 +85,7 @@ function R.Chrome()
     chrome = { gen = looksGen, lock = rgba("text.accent"), veil = veilOf("qc.veil"), veilCool = veilOf("qc.veilCool"),
         hover = rgba("qc.hover"), lockdown = rgba("qc.lockdown"), stale = rgba("text.disabled"),
         preview = rgba("qc.preview"), arrowDim = rgba("qc.arrowDim"), title = rgba("title.text"),
+        iconTint = rgba("icon.tint"), link = rgba("text.link"),
         body = rgba("btn.bg"), tip = rgba("gtip.value"), tipTitle = rgba("gtip.title"),
         flash = { sent = rgba("text.accent"), dropped = rgba("qc.dropped"), guarded = rgba("sem.warn") } }
     return chrome
@@ -730,7 +731,9 @@ function R.ApplyHeaderLook(header, hl)
     local ch = R.Chrome()
     R.ApplyFont(header.qcLockdown, recolor(hl.font, ch.lockdown))
     R.ApplyFont(header.qcStale, recolor(hl.font, ch.stale))
-    if header.qcCollapse then R.ApplyFont(header.qcCollapse.qcText, recolor(hl.font, nil, 2)) end
+    -- The collapse toggle is a title-bar control (smoke round 1 ruling 4): the header's face, two points
+    -- up, in the skin's icon.tint at rest; its hover pair (R.DressHeader) paints text.link.
+    if header.qcCollapse then R.ApplyFont(header.qcCollapse.qcText, recolor(hl.font, ch.iconTint, 2)) end
 end
 
 --- The section headers' look, from the pad's `section` table: { height (0 automatic), font, skin (the
@@ -872,6 +875,11 @@ function R.DressHeader(header, onCollapse)
     collapse.qcText = collapse:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     collapse.qcText:SetAllPoints(collapse)
     collapse:SetScript("OnClick", function() onCollapse() end)
+    -- A title-bar control (smoke round 1 rulings 3 and 4): text.link under the pointer, icon.tint at
+    -- rest, and one line above it saying what a click does ("Collapse", or "Expand" while collapsed).
+    collapse:SetScript("OnEnter", function(self) self.qcText:SetTextColor(unpack(R.Chrome().link)) end)
+    collapse:SetScript("OnLeave", function(self) self.qcText:SetTextColor(unpack(R.Chrome().iconTint)) end)
+    NS.AttachTitleTip(collapse, function(self) return self.qcCollapsed and L["Expand"] or L["Collapse"] end)
     header.qcCollapse = collapse
     -- A left click anywhere on the row collapses or expands it too (the button is a child, so its own
     -- click never reaches the row twice).
@@ -914,5 +922,6 @@ function R.PaintHeader(header, state)
     header.qcSituation:SetText(state.situation or "")
     header.qcLockdown:SetShown(state.lockdown == true)
     header.qcStale:SetShown(state.stale == true)
+    header.qcCollapse.qcCollapsed = state.collapsed == true
     header.qcCollapse.qcText:SetText(state.collapsed and "+" or "-")
 end

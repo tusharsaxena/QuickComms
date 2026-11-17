@@ -70,6 +70,19 @@ if not lib then
             end
             return 0
         end,
+        -- LibKa0s v1.105.0 (DebugLog minor 23, DebugLogDiagnostics minor 11): the report seam.
+        -- With no console, a report streams to chat with no pointer line; Serialize renders a
+        -- value as one line and never walks a table.
+        Report          = function(_, _, _, fn)
+            local n = 0
+            if type(fn) == "function" then
+                fn(function(line) n = n + 1; NS.Print(NS.SafeToString(line)) end)
+            end
+            return n
+        end,
+        Serialize       = function(_, v)
+            return { NS.SafeToString(type(v) == "table" and "<table>" or v) }, false
+        end,
         -- Host routing, not a copy of the library's formatters (debug-logging-§7, §14): the verbs
         -- still reach their stub members; anything else answers false and the console toggles.
         DebugVerb       = function(self, rest)
