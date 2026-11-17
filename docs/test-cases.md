@@ -2014,7 +2014,7 @@ Total.
 - title bars: a pad header's collapse toggle shows its tooltip, Collapse or Expand
 - title bars: a pad header's collapse toggle rests in icon.tint and hovers in text.link
 
-### test_skin_hud.lua (20)
+### test_skin_hud.lua (21)
 
 - skin hud: every HUD font and border block follows the skin by default, through a schema row
 - skin hud: a following picker is grayed out and shows the skin's value; off, it is the player's
@@ -2031,6 +2031,7 @@ Total.
 - skin hud: a dial's chrome is today's pixels under Ka0s Default, each from a token
 - skin hud: a skin switch repaints the chrome and the faces, and leaves a color whose companion is off
 - skin hud: a pad window's 1px inner rule is win.inner, none where the skin has none
+- skin hud: every shipped skin but Ka0s Default draws no inner rule, and a flat window edge is 1px
 - skin hud: a pad's window is repainted when its look or the skin moved, and at no other rebuild
 - skin hud: the dial's per-frame update reads no token
 - skin hud: step 10 turns every stored pad's and dial's companions on, keeping every pick
@@ -2388,7 +2389,7 @@ Total.
 | test_launcher_skin_entry.lua | 1 |
 | test_skin_windows.lua | 24 |
 | test_title_bars.lua | 7 |
-| test_skin_hud.lua | 20 |
+| test_skin_hud.lua | 21 |
 | test_skin_flip.lua | 61 |
 | test_skin_picker.lua | 28 |
 | test_skin_outline.lua | 10 |
@@ -2407,4 +2408,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2037** |
+| **Total** | **2038** |
