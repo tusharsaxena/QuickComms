@@ -25,6 +25,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | PAD-1..19 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text, the header strip's collapse toggle and the drag strip's settings mark |
 | EDIT-1..35 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its look on the skin and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion, the callout popup's close on the header strip |
 | PREVIEW-1..13 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick; the window's settings mark |
+| TIP-1..6 | [Tooltip placement](#tooltip-placement) | AD-92-QC (LibKa0s#92): a pad button's and a section title's tooltip beside the whole pad, the header row's above it, a wedge's beside the whole dial near each screen edge, the Preview as window's controls beside it and its locked marks above, the callout popup's token tooltip beside the popup, an existing profile's dial moved off Above |
 | DIAL-1..43 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | LAYOUT-1..6 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
 | LAYER-1..9 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before; #14: the pads and the dial over other addons' windows, QuickComms' own stack, a click outside the dial, the skin picker over a pad |
@@ -1029,12 +1030,16 @@ in the hub is bigger and sits further out so it never covers the hub's circle; P
 Use class color → your class color. Untick Show pointer → no pointer while the dial is open, and its
 size and color are grayed out. Defaults → the gold 20-pixel chevron. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
-**DIAL-21. The tooltip outside the dial (dial slices, 2026-10-21).** Hover a wedge → its tooltip
-(name, line, channel) shows above the dial, over the ring's title, never over the slices or a label;
-hover the hub → Why is this showing? shows there too. Slice labels → Tooltip side Below → under the page
-arrows (or under the bottom label on a one-page ring); Left → left of the disc, clear of the longest
-label on that side; Right → mirrored. Tooltip offset 40 → each 40 pixels further out. Ring radius
-160 → the tooltip still clears the bigger dial. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+**DIAL-21. The tooltip outside the dial (dial slices, 2026-10-21; rewritten 2026-11-18 by AD-92-QC,
+LibKa0s#92: beside the dial, never above or below it).** Hover a wedge → its tooltip (name, line, channel)
+opens beside the dial, right of the disc and its widest label, its top level with the hovered wedge, never
+over the slices, a label or the ring's title; hover the hub → Why is this showing? opens there too, its top
+level with the hub. Labels → Tooltip offers Beside the dial (the default) and Beside, prefer left, and no
+longer Above or Below; Beside, prefer left → each tooltip opens left of the dial, clear of the longest label
+on that side. Tooltip offset 40 → each 40 pixels further out. Ring radius 160 → the tooltip still clears the
+bigger dial. Fail: a tooltip over the dial, above or below it, or following the pointer as it moves round
+the disc.
+Result: owed (rewritten by AD-92-QC; the 2026-10-21 pass was of Above, the old default)
 
 **DIAL-22. The hub draws over the slices (2026-10-21).** Open the dial with the default Slices look,
 then Background alpha 100% → the hub's backdrop and circle stay bright on top; the pointer is drawn over
@@ -2768,6 +2773,60 @@ character or a stranger who can cast a long buff on you.
   stranger's does. This confirms `C_FriendList.IsFriend(guid)` and `IsGuildMember(guid)` answer for a
   GUID. Result: passed (owner, 2026-11-13)
 
+## Tooltip placement
+
+AD-92-QC (LibKa0s#92, WowAddonStandards standalone-windows *Tooltip placement*, 2026-11-18). A body
+element's tooltip opens beside its window group, outside its outer edge (right when it fits, else left), its
+top level with the hovered element and 2 pixels off; a chrome element's is centered 2 pixels above its
+control, below it only at the screen's top. No tooltip follows the pointer or sits off a corner of its
+control. Run each with the window near the screen's right edge and again near its left edge.
+
+**TIP-1. A pad button's tooltip opens beside the pad (2026-11-18, AD-92-QC).** Hover a Comms Pad button →
+its tooltip (name, line, channel) opens right of the whole pad, its top level with the button's top, a hair
+off the pad's edge, covering no other button. Move the pad to the screen's right edge → the tooltip opens
+left of the pad instead. Hover a section title → its "Right-click to edit this group." opens the same way,
+level with the title. `/qc unlock` → with the drag strip shown, a tooltip still sits outside the pad and the
+strip. Fail: a tooltip over the pad, above a button, or on the pointer.
+Result: owed
+
+**TIP-2. The pad header's tooltips open above it (2026-11-18, AD-92-QC).** Hover a pad's header row (the
+situation text) → Why is this showing? opens centered above the header row, a hair off it; with the pad at
+the screen's top it opens below the row instead. With Groups as Tabs, enter combat and roll the mouse wheel
+over the header → "Tabs switch after combat." opens in the same place. Fail: either at a corner of the row
+or on the pointer.
+Result: owed
+
+**TIP-3. A dial's tooltips open beside the dial, near each edge (2026-11-18, AD-92-QC).** Open the Comms
+Dial in the screen's middle → hover each wedge in turn: every tooltip opens right of the dial and its labels,
+its top level with that wedge (so it moves down as you go from N round to S), and stays put while the pointer
+moves inside one wedge. Hover the hub and a page arrow → the same side. Set Open at to At the cursor and open the
+dial with the pointer near the screen's right edge → the tooltips open on the left. Labels → Tooltip side
+Beside, prefer left → on the left in the middle of the screen. Fail: a tooltip over a slice, a label or the
+ring's title, or one that follows the pointer.
+Result: owed
+
+**TIP-4. The Preview as window's tooltips (2026-11-18, AD-92-QC).** `/qc preview arena` → hover the
+situation dropdown → its tooltip opens beside the window (right, or left at the screen's right edge), its
+top level with the dropdown; End preview → the same. The settings and close marks → their one-line tooltips
+centered above each mark. Turn on Preview while editing on the Groups page (the window locks) → hover the
+dropdown → the locked tooltip opens beside the window; hover the close mark → the locked tooltip opens above
+the mark. Fail: any of them on a corner of its control or on the pointer.
+Result: owed
+
+**TIP-5. The callout popup's token tooltip opens beside the popup (2026-11-18, AD-92-QC).** Groups → Edit
+callout → hover the info glyph beside Text → the Tokens tooltip opens right of the popup window (left of it
+when the popup is near the screen's right edge), its top level with the glyph, covering none of the popup's
+fields. Fail: the tooltip off the glyph's top-right corner over the Text box, or over the dimmed screen
+in the popup's middle.
+Result: owed
+
+**TIP-6. An existing dial moves off Above once (2026-11-18, AD-92-QC, schema step 21).** On a profile saved
+before this build with a dial on Tooltip side Above and the default offset → after login, Dials → Labels →
+Tooltip reads Beside the dial and Tooltip offset 0; a dial on Left reads Beside, prefer left; an offset other
+than 8 is kept. `/qc diag` shows `tooltip=right/0` for the first. Fail: an empty Tooltip side, or Above still
+offered.
+Result: owed
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -2854,3 +2913,5 @@ Owed from combined actions M3 (QuickComms#20, CA-M3-1 to CA-M3-5, the same desig
 Owed from combined actions M4 (QuickComms#19, CA-M4-1 to CA-M4-14, the same design §9 and §13): THANK-1 to THANK-12 and FOREVER-26, new, each owed.
 
 Owed from the LibKa0s v1.105.0 adoption, wave B (AD-86-QC, LibKa0s#86, Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`): PAD-18, PAD-19, EDIT-35 and PREVIEW-13, new, each owed.
+
+Owed from the LibKa0s v1.105.0 adoption, wave C (AD-92-QC, LibKa0s#92, Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`): TIP-1 to TIP-6, new, each owed; DIAL-21 (rewritten for the tooltip beside the dial, so it lost its pass mark).

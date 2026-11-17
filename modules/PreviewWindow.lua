@@ -102,12 +102,20 @@ local function endPreview()
     NS.Preview.EndPreview()
 end
 
+-- Where a tooltip opens (AD-92-QC, standalone-windows *Tooltip placement*): a title mark is CHROME,
+-- attached above it; the dropdown and End preview are the window's content (BODY), beside the window,
+-- its top level with the control.
+local function placeTip(owner, chrome)
+    if chrome then NS.Tip.Attached(GameTooltip, owner) else NS.Tip.Beside(GameTooltip, owner, frame) end
+end
+
 -- The locked window's tooltip, on every control: why it is off and where it is driven from.
-local function lockedTip(owner)
-    GameTooltip:SetOwner(owner, "ANCHOR_TOP")
+local function lockedTip(owner, chrome)
+    NS.Tip.Own(GameTooltip, owner)
     GameTooltip:SetText(L["Preview as"], NS.SkinColor("gtip.title"))
     tipLine(L["This window is disabled while you edit a group with Preview while editing on: it follows that group. Pick another group on the Groups page to see a preview of it, or untick Preview while editing to end the preview."], "gtip.value", true)
     GameTooltip:Show()
+    placeTip(owner, chrome)
 end
 
 -- The stored point, or the default one (`TOP, UIParent, TOP, 0, -140`) when the profile has none.
@@ -129,13 +137,14 @@ local function remember(self)
     NS.db.profile.previewWindow = { point = point, relPoint = relPoint or point, x = x or 0, y = y or 0 }
 end
 
--- A tooltip: a title, the body, then the typed command.
+-- A body control's tooltip: a title, the body, then the typed command; beside the window.
 local function tip(owner, title, body, typed)
-    GameTooltip:SetOwner(owner, "ANCHOR_TOP")
+    NS.Tip.Own(GameTooltip, owner)
     GameTooltip:SetText(title, NS.SkinColor("gtip.title"))
     tipLine(body, "gtip.value", true)
     tipLine(typed, TYPED)
     GameTooltip:Show()
+    placeTip(owner)
 end
 
 local function hideTip()
@@ -233,7 +242,7 @@ local function ensure()
             if not locked() then return end
             local rest = self:GetScript("OnLeave")
             if rest then rest(self) end
-            lockedTip(self)
+            lockedTip(self, true)   -- a title mark: chrome
         end)
         mark:HookScript("OnLeave", hideTip)
     end

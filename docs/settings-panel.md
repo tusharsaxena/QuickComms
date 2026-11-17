@@ -806,10 +806,12 @@ General page > Keybindings, with no key box and no readout (QUI-L29).
   library as the Buttons tab's (`dial.label.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow`;
   defaults white Ka0s Prototype 12 with its shadow, `PadDefaults.DialLabel`), grayed out while Show
   slice labels is off. A bigger font lifts the ring's title and drops the page row to clear the labels.
-  Under the tab's last heading, Tooltip, Tooltip side is `dial.label.tooltipSide` (Above, the default; Below,
-  Left, Right) and Tooltip offset `dial.label.tooltipOffset` (0 to 80 pixels, default 8): every
-  dial tooltip (a wedge's, a page arrow's, the hub's Why is this showing?) sits outside the dial,
-  that far above the ring's title, below the page row, or beside the disc past its widest label.
+  Under the tab's last heading, Tooltip, Tooltip side is `dial.label.tooltipSide` (Beside the dial,
+  `right`, the default: right when it fits, else left; Beside, prefer left, `left`; Above and Below were
+  retired by AD-92-QC, migration step 21) and Tooltip offset `dial.label.tooltipOffset` (0 to 80 pixels,
+  default 0; 8 until step 21): every dial tooltip (a wedge's, a page arrow's, the hub's Why is this
+  showing?) opens beside the whole dial, its top level with the hovered element, the standard 2 pixels
+  plus the offset past the disc or its widest label (standalone-windows, *Tooltip placement*).
 - **Labels > Group labels** (dial polish, 2026-10-21; its own tab until item 020): Show group labels is `dial.title.show` (on by default):
   the ring's title above the dial ("Solo", "Comms Dial"). Its Font block is composed as the
   slice labels' (`dial.title.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow`;

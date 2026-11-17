@@ -304,10 +304,12 @@ function R.Veiled(slot)
     return slot.line == nil and slot.selfText == nil
 end
 
+--- A button's tooltip (a body element of a HUD display, AD-92-QC): beside the whole pad, its top level
+--- with the button (NS.Tip.Beside; the group is the pad and its drag strip, Pad.lua's `qcTipGroup`).
 function R.ShowTooltip(btn)
     local slot = btn.qcSlot
     if not slot then return end
-    GameTooltip:SetOwner(btn, "ANCHOR_TOP")
+    NS.Tip.Own(GameTooltip, btn)
     local ch = R.Chrome()
     local tip, title = ch.tip, ch.tipTitle
     for i, line in ipairs(R.TooltipLines(slot)) do
@@ -318,16 +320,20 @@ function R.ShowTooltip(btn)
         end
     end
     GameTooltip:Show()
+    NS.Tip.Beside(GameTooltip, btn, btn.qcTipGroup)
 end
 
---- A titled tooltip of plain lines over `owner` (the pad header's "Why is this showing?").
-function R.ShowLines(owner, title, lines)
-    GameTooltip:SetOwner(owner, "ANCHOR_TOP")
+--- A titled tooltip of plain lines for `owner`: a CHROME element's (`attached` true: the pad header's "Why
+--- is this showing?"), attached above it; else a BODY element's (a section title), beside the pad
+--- (`owner.qcTipGroup`; without one, the library's GroupOf).
+function R.ShowLines(owner, title, lines, attached)
+    NS.Tip.Own(GameTooltip, owner)
     local ch = R.Chrome()
     local tip, top = ch.tip, ch.tipTitle
     GameTooltip:SetText(title, top[1], top[2], top[3])
     for _, line in ipairs(lines or {}) do GameTooltip:AddLine(line, tip[1], tip[2], tip[3], true) end
     GameTooltip:Show()
+    if attached then NS.Tip.Attached(GameTooltip, owner) else NS.Tip.Beside(GameTooltip, owner, owner.qcTipGroup) end
 end
 
 --- A button's or a wedge's overlay frame (frame-layering-§3, QUI-Z03/Z04): a plain, mouse-off child at

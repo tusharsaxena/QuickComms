@@ -127,6 +127,7 @@ end
 
 local function newButton(inst)
     local btn = NS.SendEngine.NewButton(inst.root, function(_, _, window) Pad.Cooldown(window) end)
+    btn.qcTipGroup = inst.tipGroup
     R.Dress(btn, function() Pad.SetHover(inst.id, true) end, function() Pad.SetHover(inst.id, false) end)
     -- An insecure hook, as Dress hooks OnEnter: it never touches the secure click path.
     btn:EnableMouseWheel(true)
@@ -155,6 +156,7 @@ end
 -- title did. It keeps the pad's hover (the fade) and hands the wheel on, as a button does.
 local function newTitleHit(inst)
     local hit = CreateFrame("Button", nil, inst.root)
+    hit.qcTipGroup = inst.tipGroup
     hit:RegisterForClicks("RightButtonUp")
     hit:EnableMouseWheel(true)
     hit:SetScript("OnClick", function(self, button)
@@ -354,6 +356,10 @@ local function build(id)
             return isLocked() and L["Right-click for settings."] or L["Drag to move. Right-click for settings."]
         end } },
     })
+    -- The pad's window group (AD-92-QC, standalone-windows *Tooltip placement*): the whole display and
+    -- its drag strip while it shows, so a body tooltip opens outside both, never beside one button.
+    -- Each button and section title carries it (`qcTipGroup`) for PadRender's placement.
+    inst.tipGroup = { main = root, panels = { inst.handle } }
     pads[id] = inst
     applyPoint(inst)
     NS.Debug(TAG, "built %s", id)
@@ -570,7 +576,7 @@ end
 --- Insecure: a tooltip, shown in combat too.
 function Pad.ShowWhy(id, owner)
     if NS.Setting("behavior.whyTooltips") == false then return false end
-    R.ShowLines(owner, L["Why is this showing?"], NS.Surfaces.WhyLines(id))
+    R.ShowLines(owner, L["Why is this showing?"], NS.Surfaces.WhyLines(id), true)   -- the header: chrome
     return true
 end
 
@@ -581,10 +587,11 @@ function Pad.Wheel(id, delta)
     local inst, pad = pads[id], profilePad(id)
     if not (inst and inst.plan and pad and pad.groupsAs == "tabs") then return false end
     if inCombat() then
-        GameTooltip:SetOwner(inst.header, "ANCHOR_TOP")
+        NS.Tip.Own(GameTooltip, inst.header)
         local tr, tg, tb = NS.SkinColor("gtip.title")
         GameTooltip:SetText(L["Tabs switch after combat."], tr, tg, tb)
         GameTooltip:Show()
+        NS.Tip.Attached(GameTooltip, inst.header)   -- the header row is chrome: above it
         return false
     end
     local tabs = session("padTab")

@@ -15,8 +15,10 @@ local _, NS = ...
 -- The hub carries the stale hint, the lockdown chip and the test or preview label. The pointer is a plain (unprotected) child of the header that turns toward the
 -- cursor, the Slices tab's glyph, size, color and offset: its OnUpdate is set when the header shows and
 -- cleared when it hides, so a closed or stood-down dial runs nothing per frame (perf bucket
--- dialRender). Every tooltip the dial shows sits outside it, on the Labels tab's Tooltip side, at its offset
--- (R.ShowTip). The Icons tab (B9) styles each wedge's icon through modules/IconStyle.lua and
+-- dialRender). Every tooltip the dial shows is a body element's (AD-92-QC, standalone-windows *Tooltip
+-- placement*): beside the whole drawn dial, right then left (the Labels tab's Tooltip side: Beside, prefer
+-- left tries the left first), its top level with the hovered wedge, arrow or hub, TIP_GAP and the Tooltip
+-- offset clear of the widest label (R.PlaceTips, R.ShowTip). The Icons tab (B9) styles each wedge's icon through modules/IconStyle.lua and
 -- modules/Glow.lua (the glow, whose On hover trigger the tracker drives: R.HoverWedge). A wedge takes
 -- no mouse (dial polish, 2026-10-21): the slice the cursor points into is hovered (its wedge's
 -- tooltip and glow) from the per-frame update, and clicked through the ring's secure catcher.
@@ -305,7 +307,7 @@ function R.Look(radius, label, slice, dial)
     local font = NS.PadRender.LabelFont(label)
     local show = label.show ~= false
     return { radius = DL.ClampRadius(radius), font = font, show = show, line = show and font.size + 2 or 0,
-        tipSide = label.tooltipSide or "top", tipOffset = tonumber(label.tooltipOffset) or 8,
+        tipSide = label.tooltipSide == "left" and "left" or "right", tipOffset = tonumber(label.tooltipOffset) or 0,
         labelReach = math.max(0, tonumber(label.offset) or 0),
         fill = color(slice, "background", "qc.sliceBg", slice.useClassColorBackground, D.background),
         gap = math.max(0, tonumber(slice.gap) or D.gap),
@@ -371,38 +373,53 @@ function R.PaintHubLook(header, look)
     NS.PadRender.ApplyFont(header.qcTest, Tag(base, ch.preview, HUB_LABEL))
 end
 
---- Where the dial's tooltips go (the Labels tab's Tooltip side and offset): outside the dial, clear of
---- the ring title above it (its own line height, or none while Group labels are off), the page row below it, or the widest label at either side. `labelWidth` is
---- the widest label the rebuild drew (0 with none). Kept on the header for R.ShowTip.
-function R.PlaceTips(header, look, labelWidth)
-    local g = DL.Geometry(look.radius, look.line, look.labelReach, look.title.line)
-    local off, side = look.tipOffset, look.tipSide
-    local at
-    if side == "bottom" then
-        at = { "TOP", 0, DL.Nav(1, 1, g, look.paging).bottom - off }
-    elseif side == "left" or side == "right" then
-        local x = math.max(g.disc / 2, look.show and g.reach + labelWidth or 0) + off
-        at = side == "left" and { "RIGHT", -x, 0 } or { "LEFT", x, 0 }
-    else
-        at = { "BOTTOM", 0, g.top + off }
-    end
-    header.qcTipAt = at
+-- The header's center as plain numbers, or nil (an unplaced header).
+local function centerOf(header)
+    local x, y = header:GetCenter()
+    if type(x) == "number" and type(y) == "number" then return x, y end
+    return nil
 end
 
---- A dial tooltip for `owner` (a wedge, an arrow or the hub), at the place R.PlaceTips keeps on its
---- header; above the owner when there is none yet.
+-- The drawn dial as one frame-like box for LibKa0s-Tooltip-1.0's group: the header's center plus its
+-- `qcExtent` (header units: `half` either side, `up` and `down`), at the header's effective scale.
+-- No frame is made or moved, so nothing here touches the secure header's geometry (combat-safe).
+local function newSpan(header)
+    local span = {}
+    function span.GetLeft() local x = centerOf(header) return x and x - span.qcExtent.half end
+    function span.GetRight() local x = centerOf(header) return x and x + span.qcExtent.half end
+    function span.GetTop() local _, y = centerOf(header) return y and y + span.qcExtent.up end
+    function span.GetBottom() local _, y = centerOf(header) return y and y - span.qcExtent.down end
+    function span.GetEffectiveScale() return header:GetEffectiveScale() end
+    function span.IsShown() return true end
+    return span
+end
+
+--- Where the dial's tooltips go: beside the whole drawn dial, so the group is the disc and its labels
+--- at either side (`labelWidth`, the widest label the rebuild drew, 0 with none), widened by the Labels
+--- tab's Tooltip offset (a nudge outward; the library adds TIP_GAP), from the ring title above to the
+--- page row below. Kept on the header (`qcTipSpan`, `qcTipPrefer`) for R.ShowTip.
+function R.PlaceTips(header, look, labelWidth)
+    local g = DL.Geometry(look.radius, look.line, look.labelReach, look.title.line)
+    local e = { half = math.max(g.disc / 2, look.show and g.reach + labelWidth or 0) + look.tipOffset,
+        up = g.top, down = -DL.Nav(1, 1, g, look.paging).bottom }
+    header.qcTipSpan = header.qcTipSpan or newSpan(header)
+    header.qcTipSpan.qcExtent = e
+    header.qcTipPrefer = look.tipSide == "left" and "left" or nil
+end
+
+--- A dial tooltip for `owner` (a wedge, an arrow or the hub: body elements), beside the drawn dial R.PlaceTips
+--- keeps on its header, top level with `owner`; beside the owner's own display when there is none yet.
 function R.ShowTip(owner, title, lines)
     local header = owner.qcHeader
-    local at = header and header.qcTipAt
-    if not at then return NS.PadRender.ShowLines(owner, title, lines) end
-    GameTooltip:SetOwner(owner, "ANCHOR_NONE")
-    GameTooltip:ClearAllPoints()
-    GameTooltip:SetPoint(at[1], header, "CENTER", at[2], at[3])
+    local span = header and header.qcTipSpan
+    if not span then return NS.PadRender.ShowLines(owner, title, lines) end
+    NS.Tip.Own(GameTooltip, owner)
     local ch = NS.PadRender.Chrome()
     local tip, top = ch.tip, ch.tipTitle
     GameTooltip:SetText(title, top[1], top[2], top[3])
     for _, line in ipairs(lines or {}) do GameTooltip:AddLine(line, tip[1], tip[2], tip[3], true) end
     GameTooltip:Show()
+    NS.Tip.Beside(GameTooltip, owner, span, { prefer = header.qcTipPrefer })
 end
 
 --- The hub's labels: the lockdown chip, the stale hint, and TEST MODE or PREVIEW.

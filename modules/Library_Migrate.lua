@@ -209,6 +209,22 @@ function Lib.MigrateSliceBorder(profile)
     end
 end
 
+-- Step 21 (AD-92-QC): a dial's tooltip opens beside the dial (standalone-windows *Tooltip placement*).
+-- The retired Above and Below sides (and any unknown side) become "right", Beside the dial; Left and
+-- Right keep theirs. The old default offset, 8 pixels from the title or labels, becomes 0, so the
+-- tooltip sits the standard 2 pixels off; any other offset is the player's and is kept. Idempotent.
+local TIP_SIDES = { left = true, right = true }
+function Lib.MigrateDialTipSide(profile)
+    if type(profile) ~= "table" or type(profile.dials) ~= "table" then return end
+    for _, d in pairs(profile.dials) do
+        local l = type(d) == "table" and d.label
+        if type(l) == "table" then
+            if l.tooltipSide ~= nil and not TIP_SIDES[l.tooltipSide] then l.tooltipSide = "right" end
+            if l.tooltipOffset == 8 then l.tooltipOffset = 0 end
+        end
+    end
+end
+
 -- The HUD style pickers that follow the skin through their "Use the skin's ..." companion (QC-03,
 -- DECISIONS X4: only the faces and the border styles; colors, sizes and flags stay the player's), by
 -- surface kind, as `<block>.<picker>`: each one's companion is `<block>.<picker>FromSkin`.

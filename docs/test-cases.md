@@ -1,3 +1,4 @@
+ka0s-bounded: all 7 slot(s) are in use by other bounded runs; waiting for a slot
 # Test Cases
 
 The full inventory of every headless test case in this repo, grouped by the suite file it
@@ -1532,7 +1533,7 @@ Total.
 - dial: [paging] the indicators sit on a rounded background sized to the row; off hides it
 - dial: [paging] every dot and the pill has a border, its size plus twice the Dot border; 0 draws none
 - dial: [front] the hub, its circle and the pointer draw over the slices
-- dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side
+- dial: [tooltip] a wedge's tooltip sits outside the dial: beside it, the span the disc, labels and offset
 - dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off
 - dial: [labels] the Label offset moves every label out from the center; the title and the page row follow
 - dial: [polish] default hub is a solid gold circle of 24 on a 32 backdrop with a 1 px rim, no red X
@@ -1545,6 +1546,25 @@ Total.
 - dial: [art] RingTexture picks the nearest step
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
+
+### test_tooltips.lua (16)
+
+- tooltips: only core/TooltipSetup.lua leases LibKa0s-Tooltip-1.0 (library-stack-§7)
+- tooltips: no own tooltip is owned on the cursor or at a corner; every SetOwner is ANCHOR_NONE
+- tooltips: with the geometry unreadable, the seam attaches above the element
+- tooltips: with LibKa0s absent the seam owns at ANCHOR_NONE and attaches above, with no error
+- tooltips: [pad] a button's tooltip opens beside the whole pad (PlaceBeside, the pad's group)
+- tooltips: [pad] the drag strip is in the pad's group while it shows
+- tooltips: [pad] a section title's tooltip opens beside the pad (a body element)
+- tooltips: [pad] the header row's Why is this showing? is chrome: attached above the header
+- tooltips: [pad] the wheel's combat refusal is attached above the header
+- tooltips: [dial] a wedge's tooltip opens right of the whole dial, top level with the wedge, 2 px off
+- tooltips: [dial] the hub's and a page arrow's tooltips open beside the dial too
+- tooltips: [dial] Beside, prefer left tries the left first; Tooltip offset widens the span
+- tooltips: [preview window] the dropdown's and End preview's tooltips open beside the window
+- tooltips: [preview window] locked, a title mark's tooltip is attached above it (chrome)
+- tooltips: [callout popup] the token glyph's tooltip opens beside the popup, not beside its catcher
+- tooltips: [migration 21] a dial's retired Above or Below side becomes Beside; the old default offset 0
 
 ### test_anim.lua (46)
 
@@ -2383,6 +2403,7 @@ Total.
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
+| test_tooltips.lua | 16 |
 | test_anim.lua | 46 |
 | test_anim_styles.lua | 140 |
 | test_anim_surfaces.lua | 42 |
@@ -2417,4 +2438,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2047** |
+| **Total** | **2063** |

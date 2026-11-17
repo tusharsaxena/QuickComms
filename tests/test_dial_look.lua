@@ -89,7 +89,10 @@ test("dial: [front] the hub, its circle and the pointer draw over the slices", f
     end
 end)
 
-test("dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side", function()
+-- Re-pinned by AD-92-QC (LibKa0s#92, standalone-windows *Tooltip placement*): a wedge is a body
+-- element, so its tooltip opens beside the whole dial (tests/test_tooltips.lua drives the fake screen);
+-- the Labels tab's Above and Below sides are retired, and the offset is a nudge on the dial's span.
+test("dial: [tooltip] a wedge's tooltip sits outside the dial: beside it, the span the disc, labels and offset", function()
     local NS, m = live()
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
     local h = NS.Dial.Instance("d2").header
@@ -98,17 +101,15 @@ test("dial: [tooltip] a wedge's tooltip sits outside the dial: above by default,
     local tip = m.GameTooltip
     -- red under: R.ShowTooltip through PadRender.ShowLines (ANCHOR_TOP, over the dial)
     assertEqual(tip.__anchor, "ANCHOR_NONE")
-    local p, rel, _, x, y = tip:GetPoint(1)
     local g = NS.DialLayout.Geometry(NS.DialLayout.RADIUS)
-    assertEqual(p .. "," .. tostring(rel == h) .. "," .. x, "BOTTOM,true,0")
-    assertTrue(y >= g.title + 8, "above the ring title, by the offset")
+    local e = h.qcTipSpan.qcExtent
+    assertTrue(e.half >= g.disc / 2, "the span holds the disc")
+    assertNil(h.qcTipPrefer, "Beside the dial: right first")
     assertTrue(NS.SchemaRuntime.Set("dial.label.tooltipSide", "left", "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.label.tooltipOffset", 20, "d2"))
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
-    NS.DialRender.EnterWedge(w)
-    p, _, _, x = tip:GetPoint(1)
-    assertEqual(p, "RIGHT")
-    assertTrue(x <= -(g.disc / 2 + 20), "left of the disc and its labels, by the offset")
+    assertEqual(h.qcTipPrefer, "left", "Beside, prefer left")
+    assertEqual(h.qcTipSpan.qcExtent.half, e.half + 20, "the offset widens the span")
 end)
 
 test("dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off", function()
@@ -278,7 +279,9 @@ test("dial: [polish] group labels take their font and hide when off", function()
     assertTrue(title:IsShown())
     local g = NS.DialLayout.Geometry(NS.DialLayout.RADIUS)
     local header = NS.Dial.Instance("d2").header
-    assertEqual(header.qcTipAt[3], g.title + 18 + 8, "the tooltip clears an 18-pixel title")
+    -- Re-pinned by AD-92-QC (LibKa0s#92): the tooltip opens beside the dial, and its group spans the
+    -- title (qcTipSpan's extent); it no longer sits above the title at the Tooltip offset.
+    assertEqual(header.qcTipSpan.qcExtent.up, g.title + 18, "the dial's span holds an 18-pixel title")
     assertTrue(NS.SchemaRuntime.Set("dial.title.fontSize", 20, "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.title.fontColor", { r = 0, g = 1, b = 0, a = 1 }, "d2"))
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
@@ -286,13 +289,13 @@ test("dial: [polish] group labels take their font and hide when off", function()
     assertEqual(title.__color[2], 1, "its own color")
     -- red under: DL.Geometry without the title's own line height (titleLine)
     assertEqual(NS.DialLayout.Geometry(NS.DialLayout.RADIUS, nil, nil, 22).top, g.title + 22)
-    assertEqual(header.qcTipAt[3], g.title + 22 + 8, "the tooltip clears the bigger title")
+    assertEqual(header.qcTipSpan.qcExtent.up, g.title + 22, "the span holds the bigger title")
     assertEqual(NS.Dial.RingWedges("d2", 1)[1].qcLabel.__font[2], 12, "the slice labels keep theirs")
     assertTrue(NS.SchemaRuntime.Set("dial.title.show", false, "d2"))
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
     -- red under: R.PaintRing leaving the title shown while Show group labels is off
     assertFalse(title:IsShown(), "off: no title")
-    assertEqual(header.qcTipAt[3], g.title + 8, "and the tooltip takes its place")
+    assertEqual(header.qcTipSpan.qcExtent.up, g.title, "and the span ends at the labels")
 end)
 
 -- ── crisp dial art (shine T1, 2026-10-21): the disc, the ring ladder, the three-piece pill ──────

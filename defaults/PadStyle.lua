@@ -98,15 +98,16 @@ end
 
 --- The Dial page's Labels tab (`dial.label.*`, dial rework 2026-10-21): each wedge's name outside
 --- the disc, white 12 points with its shadow, as the dial always drew it; `show` off
---- draws none. The tooltip shows outside the dial too: above it by default, `tooltipOffset` pixels
---- clear of the title (or the labels, the page row on the other sides).
+--- draws none. The tooltip opens beside the dial (AD-92-QC): `tooltipSide` "right" (Beside the dial:
+--- right when it fits, else left) or "left" (Beside, prefer left), `tooltipOffset` pixels of extra room
+--- past the labels on top of the standard 2-pixel gap (0 by default; 8 and Above until step 21).
 function D.DialLabel()
     return {
         show = true,
         font = "Ka0s Prototype", fontSize = 12, fontColor = { r = 1, g = 1, b = 1, a = 1 },
         useClassColorFont = false, fontColorFromSkin = true, fontFlags = "@skin", fontShadow = true,
         fontShadowFromSkin = true, fontFromSkin = true,
-        tooltipSide = "top", tooltipOffset = 8,
+        tooltipSide = "right", tooltipOffset = 0,
         offset = 0,   -- the labels' distance from the dial's center; 0 is just past the disc
     }
 end

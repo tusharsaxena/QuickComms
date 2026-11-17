@@ -271,6 +271,7 @@ Kit.run{
         "test_dial",
         "test_dial_catcher",
         "test_dial_look",
+        "test_tooltips",
         "test_anim",
         "test_anim_styles",
         "test_anim_surfaces",

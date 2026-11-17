@@ -213,7 +213,8 @@ test("builtins: [QF-05] the owner's edits are the shipped look, with no schema s
     -- neither touches a prebuilt, nor does step 18, the Friz move (R3-FRIZ), nor step 19, which only
     -- adds the new Emotes set (QFE-E3). Step 20 does touch prebuilts (combined actions §8): it gives
     -- unedited shipped callouts their emote and adds the two Heal me rows, not these colors or At Stone.
-    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 20)
+    -- Step 21 (AD-92-QC) moves only a dial's tooltip side and offset. Re-pinned 20 -> 21.
+    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 21)
 end)
 
 test("builtins: [polish] every battleground node set has map-wide callouts of its own", function()

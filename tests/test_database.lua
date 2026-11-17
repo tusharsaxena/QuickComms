@@ -902,7 +902,7 @@ test("database: [CA-M3-5] the runner from 19 runs step 20 on every stored profil
     db.global.schemaVersion = 19
     NS.addon:RunMigrations()
     -- red under: no step 20 in core/Database.lua NS.MIGRATIONS
-    assertEqual(db.global.schemaVersion, 20)
+    assertEqual(db.global.schemaVersion, 21)   -- re-pinned 20 -> 21 by AD-92-QC (step 21)
     local old, heal = db.sv.profiles.Old, db.sv.profiles.Heal
     assertEqual(old.callouts.c1.emote, "WAVE", "part 1 on a stored profile")
     assertEqual(heal.callouts.c1.emote, "CHARGE", "Pulling next pack gains CHARGE")

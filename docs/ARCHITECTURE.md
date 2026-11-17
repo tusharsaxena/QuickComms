@@ -61,6 +61,7 @@ lists the toolchain):
 | Pool | `core/PoolSetup.lua` | the frame pool (one array pool per pad for its buttons; per dial, one for its ring containers and one per container for its wedges) |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver (`NS.GlowLib`): `modules/Glow.lua` starts and stops the icon and button glows through it under its two keys |
 | Widgets | `core/WidgetsSetup.lua` | the one file that leases the major: the drag strip (`NS.MakeDragHandle`) above each pad, every own window's title-bar marks (`NS.HeaderButtons`, `W.HeaderButtons` with this owner, and `NS.HEADER`, the strip's figures), the reorder lists on the editor pages (`NS.MakeReorderList`), the icon browser's Wowhead address window (`NS.MakeCopyWindow`, the library's `CopyWindow`), the Preview as window's dropdown (`NS.MakeDropdown`) and the callout popup's emote menu (`NS.OpenContextMenu`, `NS.CloseMenu`); `NS.HasWidget` asks whether one is there |
+| Tooltip | `core/TooltipSetup.lua` | the one file that leases `LibKa0s-Tooltip-1.0` (AD-92-QC, LibKa0s#92): where every tooltip the addon places itself opens, `NS.Tip.Beside` for a body element and `NS.Tip.Attached` for a chrome element ([Tooltip placement](#tooltip-placement)); no stub, since each seam degrades inline to a plain attach above the element (`tests/test_tooltips.lua` holds every other file off the major) |
 | Bus | `core/Bus.lua` | the strict message catalog and the tracked receivers |
 | Lifecycle | `core/LifecycleSetup.lua` | the stand-down latch |
 | Perf | `core/PerfSetup.lua` | the performance harness |
@@ -384,6 +385,49 @@ the settings pages and the library's own windows.
   `tests/test_skinsetup.lua` holds the copy to the live library. `test_skin_windows.lua` (with the
   color-literal gate over the window, HUD and settings files), `test_skin_hud.lua`,
   `test_skin_picker.lua` and `test_skin_tools.lua` pin the rest.
+
+## Tooltip placement
+
+Every tooltip this addon places itself goes through `core/TooltipSetup.lua` onto `LibKa0s-Tooltip-1.0`
+(AD-92-QC, LibKa0s#92; WowAddonStandards standalone-windows, *Tooltip placement*). It is owned at
+`ANCHOR_NONE`, filled, shown, then placed; none is on the cursor, none at a corner of its control. With
+the library absent, or a geometry read that is not a plain number, it is attached centered 2 pixels
+above its element. `tests/test_tooltips.lua` pins each surface (the placer, the element and the group)
+and holds every `SetOwner` in the source at `ANCHOR_NONE`, the out-of-scope file below excepted.
+
+| Element | Kind | Where its tooltip opens |
+|---|---|---|
+| A Comms Pad button (`modules/Pad_Render.lua` `R.ShowTooltip`) | body | beside the whole pad and its drag strip while it shows (`inst.tipGroup`, carried as `qcTipGroup`), right then left, top level with the button |
+| A pad's section title (`modules/Pad.lua` `newTitleHit`) | body | the same, top level with the title |
+| A pad's header row: Why is this showing? and the combat refusal of a tab switch (`Pad.ShowWhy`, `Pad.Wheel`) | chrome | attached above the header row, below it only without room above |
+| A Comms Dial wedge, page arrow or hub (`modules/Dial_Render.lua` `R.ShowTip`) | body | beside the whole drawn dial (`qcTipSpan`: the disc and its widest label at either side, widened by the Labels tab's Tooltip offset), right then left, or left first under Beside, prefer left; top level with the hovered element |
+| The Preview as window's dropdown and End preview (`modules/PreviewWindow.lua`) | body | beside the window, top level with the control (its content is controls, a body element) |
+| The Preview as window's settings and close marks, locked over the edit preview | chrome | attached above the mark (unlocked, the library's `AttachTitleTip` shows them above too) |
+| The callout popup's token glyph (`settings/CalloutPopup.lua` `showTokenHelp`) | body | beside the popup window (`Pop.frame`, named: its outermost ancestor is the full-screen catcher), top level with the glyph, clear of the fields being typed into |
+
+The dial is a HUD display, so its group is the whole display and never the hovered wedge. Its span is a
+frame-like box on the header's center (`newSpan`), so no frame is made or moved and nothing touches the
+secure header's geometry; the per-frame `GetCursorPosition` read in `R.PointerUpdate` aims the pointer
+and picks the hovered slice, and never moves a tooltip. The Labels tab's Tooltip side is Beside the
+dial (`right`, the default) or Beside, prefer left (`left`); Above and Below are retired by migration
+step 21, which also moves the old default offset 8 to 0 (`modules/Library_Migrate.lua`
+`MigrateDialTipSide`).
+
+Placed by the library, not here: the drag strip's and every title mark's tooltip (`W.DragHandle`,
+`W.HeaderButtons`, `AttachTitleTip`), the reorder handle, the Preview as window's open dropdown menu and
+the callout popup's emote menu (`LibKa0s-Widgets-1.0`), the icon browser (`LibKa0s-IconBrowser-1.0`)
+and the minimap button's tooltip (`LibKa0s-Launcher-1.0`'s `PlaceLauncher`; the broker plugin's
+`OnTooltipShow` only fills it).
+
+Left where they are, out of the rule's scope (standalone-windows, *What it does not bind*):
+
+- **The settings pages in Blizzard's Settings canvas.** `settings/Groups_When.lua`'s When-drawer
+  checkbox tooltips (`GameTooltip:SetOwner(w.frame, "ANCHOR_RIGHT")`, on the Groups page's When tab)
+  and every row tooltip the options library draws (`H.AttachTooltip`, on every page and in the callout
+  popup's rows) are options-ui's.
+- **A broker display's bar** (Titan Panel and the like): the display places the launcher's tooltip.
+- **Blizzard's own frames and the client's menus.** The addon writes no lines onto a unit or item
+  tooltip and draws no menu through the client's menu system.
 
 ## Known Limitations
 
