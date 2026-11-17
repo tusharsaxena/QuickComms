@@ -381,8 +381,11 @@ Header tab's face, on the row's middle. At rest it is the skin's icon color; und
 skin's link color (orange under Ka0s Default) and a one-line tooltip above it says **Collapse**. A click
 collapses the pad and the mark reads "+", its tooltip **Expand**; a click on the row still collapses too.
 The row carries no settings mark (a pad is a HUD display: its settings mark is on the drag strip, PAD-19).
-Repeat under Obsidian. Fail: the "-" in the gold header color at rest, no tooltip or one under the pointer,
-a settings or close mark on the row, or the "-" running past the row's edge at Header height 14.
+Repeat under Obsidian. Set Header height to 14: the "-" and its hover area stay inside the row. In
+combat (a target dummy), switch the skin on the Skin tab: the "-" keeps the same face as the situation text
+beside it until and after combat ends. Fail: the "-" in the gold header color at rest, no tooltip or one
+under the pointer, a settings or close mark on the row, the "-" or its hover area running past the row's
+edge at Header height 14, or the "-" changing face on its own during the in-combat skin switch.
 Result: owed
 
 **PAD-19. The drag strip's settings mark (2026-11-17, AD-86-QC, LibKa0s#86).** `/qc unlock` → each pad's

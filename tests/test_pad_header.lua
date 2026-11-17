@@ -169,6 +169,38 @@ test("pad header: the text stays left, the collapse button right, each on the ba
     assertAt(h.qcCollapse, "RIGHT", h, -6, 0, "the collapse button at the right, on the middle")
 end)
 
+test("pad header: the collapse mark never stands taller than the row, down to Header height 14", function()
+    local NS, _, _, _, inst = live()
+    local c = inst.header.qcCollapse
+    assertEqual(c.__h, NS.HEADER.SIZE, "the strip's 18 px slot on the default 24 px row")
+    NS.db.profile.pads.p1.header.height = 14
+    inst = applyPad(NS)
+    -- red under: the strip's mark kept at W.HEADER.SIZE (18), overhanging a 14 px row by 2 px each side
+    assertEqual(inst.header.__h, 14, "the row at its minimum")
+    assertEqual(inst.header.qcCollapse.__h, 14, "the mark no taller than the row")
+    assertEqual(inst.header.qcCollapse.__w, NS.HEADER.SIZE, "its width the strip's slot still")
+    NS.db.profile.pads.p1.header.height = 30
+    inst = applyPad(NS)
+    assertEqual(inst.header.qcCollapse.__h, NS.HEADER.SIZE, "back to the slot on a taller row")
+end)
+
+test("pad header: a skin switch in combat leaves the collapse word in the Header tab's face", function()
+    local NS, _, Skin, _, inst = live()
+    local h = inst.header
+    local word = h.qcCollapse.qcText
+    -- red under: the strip's word mark left on the library's recorded body-face Font paint
+    -- (WidgetsHeader `dress`), which a switch replays over R.ApplyHeaderLook's unrecorded S.HudFont
+    assertTrue(Skin.painted[word] == nil, "the collapse word carries no recorded skin font")
+    local face = word:GetFont()
+    assertEqual(face, (h.qcSituation:GetFont()), "dressed in the header's face, as the situation text")
+    -- In combat the pads' rebuild waits (Surfaces.Request), so only the library's replay runs.
+    NS.Compat.InCombat = function() return true end
+    for _, key in ipairs(skinKeys(Skin)) do
+        Skin:SetChoice(OWNER, "ka0s", key)
+        assertEqual((word:GetFont()), face, key .. ": the replay leaves the Header tab's face on the word")
+    end
+end)
+
 -- ── the section bands ─────────────────────────────────────────────────────────────────────────────
 
 test("pad header: a section band draws no band in any skin, so the header is the only band", function()

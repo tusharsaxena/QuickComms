@@ -335,7 +335,12 @@ the settings pages and the library's own windows.
     in the Header tab's face, its tooltip Collapse / Expand (`__tip`, set by `PaintHeader`). No close.
     Settings opted out (`PadRender.HEADER_SETTINGS_OPT_OUT`): a pad is a HUD display and its settings
     mark rides the drag strip. The toggle sits at the strip's 18 px and 6 px inset (`NS.HEADER`), so
-    `HeaderMinWidth` grew by 6 px over the hand-built 16 at 2.
+    `HeaderMinWidth` grew by 6 px over the hand-built 16 at 2. Its height is the slot's, or the row's
+    where the row is shorter (`PadRender.FitCollapse`, from `sizeRoot`), so at Header height 14 the
+    mark never overhangs the row. The library fonts the word on a recorded skin paint (the body face);
+    `buildCollapse` drops that record (`NS.SkinUntrack`), so a skin switch in combat, whose pad
+    rebuild waits, leaves the word in the Header tab's face (`R.ApplyHeaderLook`) as the rest of the
+    header. Its rest and hover colors still follow the skin.
   - **A Comms Pad's drag strip** carries the drag handle's settings mark (DragHandle minor 14,
     `spec.settings`), opening the settings as the strip's right-click does, its tooltip Open settings. The callout popup and the icon browser are built from Blizzard's
   `SettingsFrameTemplate` and wear the skin's window under every skin, Ka0s Default included: LibKa0s

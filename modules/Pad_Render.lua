@@ -873,6 +873,10 @@ end
 --- The collapse toggle, a word mark on the header strip (LibKa0s#86): the strip's one size, inset,
 --- paint path (icon.tint at rest, text.link under the pointer, both through the owner's skin) and
 --- tooltip above it. `qcText` is its word, which the Header tab's face dresses (R.ApplyHeaderLook).
+--- The library fonts the word with the skin's body face on a recorded paint, which a skin switch
+--- replays at once while the Header tab's face (S.HudFont, unrecorded) returns only with the pads'
+--- rebuild, held to the end of combat; so that record is dropped here and the word keeps the
+--- header's face throughout, as the situation text does. Its colors still follow the skin.
 local function buildCollapse(header, onCollapse)
     local hb = NS.HeaderButtons and NS.HeaderButtons(header, { close = false, settings = false,
         settingsOptOut = R.HEADER_SETTINGS_OPT_OUT, extras = { { key = "collapse", label = "-",
@@ -880,6 +884,7 @@ local function buildCollapse(header, onCollapse)
     local collapse = hb and hb.extras.collapse
     if collapse then
         collapse.qcText = collapse.label
+        if NS.SkinUntrack then NS.SkinUntrack(collapse.label) end
         return collapse
     end
     -- The library absent: a plain toggle at the same place, so the row still collapses.
@@ -941,6 +946,15 @@ end
 function R.StripLabel(name, mark)
     if not mark then return name end
     return name .. "  " .. (NS.SkinEscape("qc.preview") or "") .. mark .. "|r"
+end
+
+--- Fit the collapse mark to a row `h` px tall: the strip's slot (COLLAPSE_W) where the row holds it,
+--- else the row's height, so a row at the Header tab's minimum (14) has no mark overhanging it.
+--- The width stays the slot's, and R.HeaderMinWidth measures with it.
+function R.FitCollapse(header, h)
+    local collapse = header.qcCollapse
+    if not collapse then return end
+    collapse:SetHeight(math.min(COLLAPSE_W, tonumber(h) or COLLAPSE_W))
 end
 
 function R.PaintHeader(header, state)

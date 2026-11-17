@@ -428,6 +428,7 @@ local function sizeRoot(inst, layout, box)
     inst.width, inst.height = box.width, box.height
     anchorEdge(inst, box.up, box.edge)
     inst.header:SetHeight(box.headerH)
+    R.FitCollapse(inst.header, box.headerH)
 end
 
 -- After the buttons: the strip's label and marker, the lock, the visibility driver and the alpha.

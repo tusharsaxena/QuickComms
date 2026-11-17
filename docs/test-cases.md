@@ -1406,13 +1406,15 @@ Total.
 - pad looks: a stored Strength with no strength token is as stored
 - pad looks: with the library absent a button stays flat and its stored Strength draws
 
-### test_pad_header.lua (9)
+### test_pad_header.lua (11)
 
 - pad header: the header is the library's title band in every skin, borderless, the header itself clear
 - pad header: the band and the header sit over the root, never level with its backdrop
 - pad header: the header sits flush inside the window edge, down growth and up, in every skin
 - pad header: the rows start under the band, and a collapsed pad is the band and its edges
 - pad header: the text stays left, the collapse button right, each on the band's middle
+- pad header: the collapse mark never stands taller than the row, down to Header height 14
+- pad header: a skin switch in combat leaves the collapse word in the Header tab's face
 - pad header: a section band draws no band in any skin, so the header is the only band
 - pad header: a section band the player dresses still draws what was stored
 - pad header: the band stands down when the header's background stops following the skin, and comes back
@@ -2376,7 +2378,7 @@ Total.
 | test_surfaces.lua | 36 |
 | test_pad_render.lua | 28 |
 | test_pad_looks.lua | 21 |
-| test_pad_header.lua | 9 |
+| test_pad_header.lua | 11 |
 | test_pad.lua | 47 |
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
@@ -2415,4 +2417,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2045** |
+| **Total** | **2047** |

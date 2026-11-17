@@ -1,8 +1,9 @@
 local addonName, NS = ...
 -- core/WidgetsSetup.lua — every LibKa0s-Widgets-1.0 widget the addon draws: NS.MakeDragHandle (the
 -- Comms Pad's drag strip), NS.HeaderButtons and NS.HEADER (every own window's title-bar marks,
--- LibKa0s#86), NS.MakeCopyWindow (the icon browser's Wowhead link window), NS.MakeDropdown (the Preview as window's situation list), NS.OpenContextMenu and NS.CloseMenu (the
--- callout popup's emote menu, the library's one shared menu) and NS.MakeReorderList (an editor page's
+-- LibKa0s#86), NS.MakeCopyWindow (the icon browser's Wowhead link window), NS.MakeDropdown (the
+-- Preview as window's situation list), NS.OpenContextMenu and NS.CloseMenu (the callout popup's
+-- emote menu, the library's one shared menu) and NS.MakeReorderList (an editor page's
 -- drag-to-reorder rows). NS.HasWidget says whether the library offers one.
 --
 -- A seam, nothing else (library-stack-§7), shaped like DropWatcher core/WidgetsSetup.lua: one file
