@@ -22,9 +22,9 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DEGRADED-1..2 | Degraded | The install with LibKa0s missing, and its help rows |
 | SEND-1..7 | Send | Secure sends in keys and on bosses, the spam guard, General (/1) with its Say fallback, the lockdown lift after an encounter or a key |
 | TOKEN-1 | Tokens | `{coordinates}`: your map position, read at the press, in a preview echo and in combat |
-| PAD-1..17 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
-| EDIT-1..34 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its look on the skin and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion |
-| PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
+| PAD-1..19 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text, the header strip's collapse toggle and the drag strip's settings mark |
+| EDIT-1..35 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its look on the skin and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion, the callout popup's close on the header strip |
+| PREVIEW-1..13 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick; the window's settings mark |
 | DIAL-1..43 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | LAYOUT-1..6 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
 | LAYER-1..9 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before; #14: the pads and the dial over other addons' windows, QuickComms' own stack, a click outside the dial, the skin picker over a pad |
@@ -374,6 +374,24 @@ Result: 2026-10-25, pass (the owner's run; client build not recorded).
 **PAD-17. A rebuild that moved no line still sends (2026-10-25, F-006).** Change the pad's spacing
 (or any setting that changes no line) and press a button → it still sends its line.
 Result: 2026-10-25, pass (the owner's run; client build not recorded).
+
+**PAD-18. The collapse toggle is the header strip's (2026-11-17, AD-86-QC, LibKa0s#86).** On any pad, the
+header row's "-" sits 6 pixels in from the row's right edge (it sat 2 in) in an 18-pixel slot, still in the
+Header tab's face, on the row's middle. At rest it is the skin's icon color; under the pointer it lights the
+skin's link color (orange under Ka0s Default) and a one-line tooltip above it says **Collapse**. A click
+collapses the pad and the mark reads "+", its tooltip **Expand**; a click on the row still collapses too.
+The row carries no settings mark (a pad is a HUD display: its settings mark is on the drag strip, PAD-19).
+Repeat under Obsidian. Fail: the "-" in the gold header color at rest, no tooltip or one under the pointer,
+a settings or close mark on the row, or the "-" running past the row's edge at Header height 14.
+Result: owed
+
+**PAD-19. The drag strip's settings mark (2026-11-17, AD-86-QC, LibKa0s#86).** `/qc unlock` → each pad's
+drag strip shows a settings mark left of its "?" mark, the same size and tint as it; under the pointer it
+lights and a one-line tooltip says **Open settings**. A left click opens the Quick Comms settings (as a
+right-click on the strip does); dragging from the mark still moves the pad; a right-click on it still opens
+settings. The pad's name on the strip is not cut off by the extra mark. `/qc lock` → the strip and its
+marks are gone. Fail: no settings mark, a click that opens nothing, or the pad's tooltip on the mark.
+Result: owed
 
 ## Editors
 
@@ -738,6 +756,14 @@ and Dials pages' General tabs, each delete button ends in an ellipsis (Delete gr
 Delete dial…) and opens its confirm; the Groups page's copy button reads Duplicate group.
 Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
+**EDIT-35. The callout popup's close is the header strip's (2026-11-17, AD-86-QC, LibKa0s#86).** Groups →
+pick a group → Edit callout (or New callout) → the popup's close X sits on the title band's middle at its
+right, rests in the skin's icon color, lights red under the pointer with a **Close** tooltip above it, and
+cancels the popup. The popup has no settings mark (it is a modal opened from the settings panel, which is
+already beneath it). Repeat under Obsidian and WoW Default. Fail: a settings mark, a tooltip missing or
+under the pointer, or a close that does not cancel.
+Result: owed
+
 ## Preview window
 
 The "Preview as…" selector window (`modules/PreviewWindow.lua`, 2026-10-23): a small window titled
@@ -839,6 +865,16 @@ slice prints its line and the dial stays open. On the Groups page with Preview w
 slice of the edited group prints and the dial stays open. `/qc preview off`, open the dial with its
 key, click a slice → it sends and the dial closes, as before; the same in combat.
 Result: 2026-10-24, pass (the owner's run; client build not recorded).
+
+**PREVIEW-13. The window's settings mark (2026-11-17, AD-86-QC, LibKa0s#86).** `/qc preview arena` → the
+window's title band carries, at its right, a settings mark then the close X, 6 pixels apart, both on the
+band's middle, the title clear of both. The settings mark rests in the skin's icon color and lights the
+skin's link color under the pointer, with an **Open settings** tooltip above it; a click opens the Quick
+Comms settings and the preview and the window stay up. Over the edit preview (PREVIEW-11) the settings
+mark is dimmed and off with the rest, and hovering it shows the locked tooltip. Repeat under Obsidian.
+Fail: no settings mark, the order close · settings, the title running under a mark, or a click that ends
+the preview.
+Result: owed
 
 ## Dial
 
@@ -2813,3 +2849,5 @@ Owed from combined actions M2 (QuickComms#16, CA-M2-1 to CA-M2-11, the same desi
 Owed from combined actions M3 (QuickComms#20, CA-M3-1 to CA-M3-5, the same design §8 and §10): EMOTE-9 and EMOTE-10, new, each owed.
 
 Owed from combined actions M4 (QuickComms#19, CA-M4-1 to CA-M4-14, the same design §9 and §13): THANK-1 to THANK-12 and FOREVER-26, new, each owed.
+
+Owed from the LibKa0s v1.105.0 adoption, wave B (AD-86-QC, LibKa0s#86, Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`): PAD-18, PAD-19, EDIT-35 and PREVIEW-13, new, each owed.

@@ -60,7 +60,7 @@ lists the toolchain):
 | Env | `core/EnvSetup.lua` | the addon's own TOC metadata and version |
 | Pool | `core/PoolSetup.lua` | the frame pool (one array pool per pad for its buttons; per dial, one for its ring containers and one per container for its wedges) |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver (`NS.GlowLib`): `modules/Glow.lua` starts and stops the icon and button glows through it under its two keys |
-| Widgets | `core/WidgetsSetup.lua` | the one file that leases the major: the drag strip (`NS.MakeDragHandle`) above each pad, the reorder lists on the editor pages (`NS.MakeReorderList`), the icon browser's Wowhead address window (`NS.MakeCopyWindow`, the library's `CopyWindow`), the Preview as window's dropdown (`NS.MakeDropdown`) and the callout popup's emote menu (`NS.OpenContextMenu`, `NS.CloseMenu`); `NS.HasWidget` asks whether one is there |
+| Widgets | `core/WidgetsSetup.lua` | the one file that leases the major: the drag strip (`NS.MakeDragHandle`) above each pad, every own window's title-bar marks (`NS.HeaderButtons`, `W.HeaderButtons` with this owner, and `NS.HEADER`, the strip's figures), the reorder lists on the editor pages (`NS.MakeReorderList`), the icon browser's Wowhead address window (`NS.MakeCopyWindow`, the library's `CopyWindow`), the Preview as window's dropdown (`NS.MakeDropdown`) and the callout popup's emote menu (`NS.OpenContextMenu`, `NS.CloseMenu`); `NS.HasWidget` asks whether one is there |
 | Bus | `core/Bus.lua` | the strict message catalog and the tracked receivers |
 | Lifecycle | `core/LifecycleSetup.lua` | the stand-down latch |
 | Perf | `core/PerfSetup.lua` | the performance harness |
@@ -73,7 +73,7 @@ lists the toolchain):
 
 `LibKa0s-Compat-1.0` is wired for its two secret guards only (`IsSecret`, `IsSafeKey`, assigned in
 `core/Compat.lua` with a library-absent body); `LibKa0s-Role-1.0` is wired in `core/Compat.lua` too (the role and the class's specializations, QFE-F4, each with a library-absent fallback); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
-`DragHandle`, `ReorderList`, `CopyWindow`, `Dropdown`, `ContextMenu` (the callout popup's emote menu) and
+`DragHandle`, `HeaderButtons`, `ReorderList`, `CopyWindow`, `Dropdown`, `ContextMenu` (the callout popup's emote menu) and
 `CloseMenu` are used, every one through `core/WidgetsSetup.lua` (`tests/test_setup.lua` holds every other
 file off the major). Each
 setup file holds a descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every
@@ -316,8 +316,28 @@ the settings pages and the library's own windows.
   (`skin.outline`) decides; a picked flag wins. Schema step 11 (`Library.MigrateFontFlags`) moved
   every stored OUTLINE, the old default, to From skin once. A block that follows the skin's face
   draws at `NS.Skin.HudFontSize(stored)`, and the pad's cells grow with the drawn size.
-- **The windows.** The Preview as window is the owner's `Shell`, its title and close mark in the
-  skin's top bar (D9). The callout popup and the icon browser are built from Blizzard's
+- **The windows.** The Preview as window is the owner's `Shell`, its title and marks in the
+  skin's top bar (D9).
+- **The header strip** (AD-86-QC, LibKa0s#86, standalone-windows *Title-bar controls*, v2.113.0). Every
+  title-bar mark the addon builds is `W.HeaderButtons`' (through `NS.HeaderButtons`, owner `QuickComms`,
+  the launcher descriptor's `name`), right-aligned, extras · settings · close, placed on the band by
+  `S.Header` from the strip's `right` list:
+  - **The Preview as window:** settings · close. The close is built through `NS.MakeCloseButton` (the
+    strip's `makeClose`) and ends the preview; the settings mark opens the settings through the
+    launcher's registered opener. No `hideOnSettings`: the window is small, sits clear of the
+    settings panel, and hiding it ends the preview (the edit preview runs with the panel open). Over
+    the edit preview both marks lock with the rest of the window and show its locked tooltip.
+  - **The callout popup's modal window** (`settings/ModalWindow.lua`): close alone, the template's X
+    adopted (`closeButton`) or the fallback's built through the wrapper. Settings opted out
+    (`MW.SETTINGS_OPT_OUT`): a modal opened from a settings row with the settings panel already
+    beneath it, under its catcher.
+  - **A Comms Pad's header row:** the collapse toggle as the strip's one extra, a word mark ("-" / "+")
+    in the Header tab's face, its tooltip Collapse / Expand (`__tip`, set by `PaintHeader`). No close.
+    Settings opted out (`PadRender.HEADER_SETTINGS_OPT_OUT`): a pad is a HUD display and its settings
+    mark rides the drag strip. The toggle sits at the strip's 18 px and 6 px inset (`NS.HEADER`), so
+    `HeaderMinWidth` grew by 6 px over the hand-built 16 at 2.
+  - **A Comms Pad's drag strip** carries the drag handle's settings mark (DragHandle minor 14,
+    `spec.settings`), opening the settings as the strip's right-click does, its tooltip Open settings. The callout popup and the icon browser are built from Blizzard's
   `SettingsFrameTemplate` and wear the skin's window under every skin, Ka0s Default included: LibKa0s
   v1.81.0 retired the stock look (R-2, Ka0sAddonsCommonTasks D-06), so the WoW Default skin is the way
   to Blizzard's settings window ([Documented deviations](#documented-deviations)); the browser's

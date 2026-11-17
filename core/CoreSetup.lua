@@ -18,23 +18,6 @@ NS.rejectedEvents = NS.rejectedEvents or {}
 
 local lib = LibStub and LibStub("LibKa0s-Core-1.0", true)
 
--- A TITLE-BAR TOOLTIP, TO SAY WHO IS ASKING (LibKa0s-Tooltip-1.0, smoke round 1 ruling 3 of
--- Ka0sAddonsCommonTasks docs/2026-11-16-LIBKA0S_ISSUES_75_PLUS). Every title-bar control the addon
--- draws itself, and the template close the library does not build, shows one line above it on
--- hover, in this owner's gtip.title. `words` is a string or a function(btn) read on each hover.
--- Resolved apart from Core, as its own major; without it a control simply shows no tooltip.
-local Tip = LibStub and LibStub("LibKa0s-Tooltip-1.0", true)
-NS.AttachTitleTip = function(btn, words)
-    if not (Tip and Tip.AttachTitleTip) then return nil end
-    return Tip.AttachTitleTip(btn, words, addonName)
-end
---- What this owner's close controls say: the library's "Close" (or the owner's SetCloseTip words);
---- nil without the major, where no tooltip is hooked to say it.
-NS.CloseTip = function()
-    if Tip and Tip.CloseTip then return Tip.CloseTip(addonName) end
-    return nil
-end
-
 if not lib then
     -- Degrade, never error. The printer works (a short pre-library fallback) and says "not
     -- installed" ONCE, on the first line printed.

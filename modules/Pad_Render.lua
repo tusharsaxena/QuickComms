@@ -854,9 +854,43 @@ function R.SetCooling(btn, on)
     btn.qcCool:SetShown(on and true or false)
 end
 
--- The header row's collapse button (square) and its inset from the row's right edge, the gap
--- before it, and the lockdown chip's gap after the situation text (R.HeaderMinWidth measures with them).
-local COLLAPSE_W, COLLAPSE_INSET, HEADER_GAP, LOCKDOWN_GAP = 16, 2, 4, 6
+-- The header row's collapse button and its inset from the row's right edge: the header strip's mark
+-- size and corner inset (NS.HEADER, the library's W.HEADER, 18 and 6; AD-86-QC), then the gap before
+-- it and the lockdown chip's gap after the situation text (R.HeaderMinWidth measures with them).
+local COLLAPSE_W, COLLAPSE_INSET, HEADER_GAP, LOCKDOWN_GAP = NS.HEADER.SIZE, NS.HEADER.PAD, 4, 6
+
+-- Why a pad's header row carries no settings mark (W.HeaderButtons refuses `settings = false` without
+-- a reason): a Comms Pad is a HUD display, and its settings mark rides its drag strip (modules/Pad.lua,
+-- DragHandle's `settings`), shown while the pads are unlocked, beside the strip's right-click.
+R.HEADER_SETTINGS_OPT_OUT = "a HUD display: its settings mark rides the pad's drag strip, shown "
+    .. "while the pads are unlocked"
+
+-- The collapse toggle's tooltip, by state: what a click does.
+local function collapseTip(collapsed)
+    return collapsed and L["Expand"] or L["Collapse"]
+end
+
+--- The collapse toggle, a word mark on the header strip (LibKa0s#86): the strip's one size, inset,
+--- paint path (icon.tint at rest, text.link under the pointer, both through the owner's skin) and
+--- tooltip above it. `qcText` is its word, which the Header tab's face dresses (R.ApplyHeaderLook).
+local function buildCollapse(header, onCollapse)
+    local hb = NS.HeaderButtons and NS.HeaderButtons(header, { close = false, settings = false,
+        settingsOptOut = R.HEADER_SETTINGS_OPT_OUT, extras = { { key = "collapse", label = "-",
+        width = COLLAPSE_W, tip = collapseTip(false), onClick = function() onCollapse() end } } })
+    local collapse = hb and hb.extras.collapse
+    if collapse then
+        collapse.qcText = collapse.label
+        return collapse
+    end
+    -- The library absent: a plain toggle at the same place, so the row still collapses.
+    collapse = CreateFrame("Button", nil, header)
+    collapse:SetSize(COLLAPSE_W, COLLAPSE_W)
+    collapse:SetPoint("RIGHT", header, "RIGHT", -COLLAPSE_INSET, 0)
+    collapse.qcText = collapse:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    collapse.qcText:SetAllPoints(collapse)
+    collapse:SetScript("OnClick", function() onCollapse() end)
+    return collapse
+end
 
 --- Build the header row: the situation chip, the lockdown chip, the stale hint and the collapse
 --- toggle (its button, or a left click anywhere on the row). PREVIEW and TEST MODE are not here: they
@@ -869,17 +903,8 @@ function R.DressHeader(header, onCollapse)
     header.qcLockdown = header:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
     header.qcLockdown:SetPoint("LEFT", header.qcSituation, "RIGHT", LOCKDOWN_GAP, 0)
     header.qcLockdown:SetText(L["LOCKDOWN"])
-    local collapse = CreateFrame("Button", nil, header)
-    collapse:SetSize(COLLAPSE_W, COLLAPSE_W)
-    collapse:SetPoint("RIGHT", header, "RIGHT", -COLLAPSE_INSET, 0)
-    collapse.qcText = collapse:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    collapse.qcText:SetAllPoints(collapse)
-    collapse:SetScript("OnClick", function() onCollapse() end)
-    -- A title-bar control (smoke round 1 rulings 3 and 4): text.link under the pointer, icon.tint at
-    -- rest, and one line above it saying what a click does ("Collapse", or "Expand" while collapsed).
-    collapse:SetScript("OnEnter", function(self) self.qcText:SetTextColor(unpack(R.Chrome().link)) end)
-    collapse:SetScript("OnLeave", function(self) self.qcText:SetTextColor(unpack(R.Chrome().iconTint)) end)
-    NS.AttachTitleTip(collapse, function(self) return self.qcCollapsed and L["Expand"] or L["Collapse"] end)
+    -- A title-bar control (smoke round 1 rulings 3 and 4), on the header strip (buildCollapse).
+    local collapse = buildCollapse(header, onCollapse)
     header.qcCollapse = collapse
     -- A left click anywhere on the row collapses or expands it too (the button is a child, so its own
     -- click never reaches the row twice).
@@ -924,4 +949,6 @@ function R.PaintHeader(header, state)
     header.qcStale:SetShown(state.stale == true)
     header.qcCollapse.qcCollapsed = state.collapsed == true
     header.qcCollapse.qcText:SetText(state.collapsed and "+" or "-")
+    -- The strip reads a mark's tooltip off `__tip` on each hover (WidgetsHeader 1): what a click does now.
+    header.qcCollapse.__tip = collapseTip(state.collapsed == true)
 end

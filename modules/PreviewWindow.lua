@@ -21,8 +21,12 @@ local _, NS = ...
 -- every non-click close path).
 --
 -- The look copies LibKa0s's Perf and Sim step panels: BackdropTemplate, movable,
--- clamped, the GameFontNormal title, the close mark through the one wrapper (NS.MakeCloseButton,
--- standalone-windows). THE SKIN (QC-02, skinning-§1): the window is the owner's Shell, so it wears
+-- clamped, the GameFontNormal title. THE MARKS (AD-86-QC, LibKa0s#86, standalone-windows "Title-bar
+-- controls"): LibKa0s-Widgets-1.0's W.HeaderButtons, settings then close. The close is built through
+-- the one wrapper (NS.MakeCloseButton, handed to the strip as its makeClose) and ends the preview; the
+-- settings mark opens this addon's settings through the opener its launcher registered. No
+-- hideOnSettings: the window is small, sits clear of the settings panel, and hiding it would end the
+-- preview (the edit preview runs with the settings panel open by design). THE SKIN (QC-02, skinning-§1): the window is the owner's Shell, so it wears
 -- the skin's fill, edge and top bar, and the title and the close mark sit centered in that bar
 -- (`title.height`, the same in every skin; D9). The End preview button is the step panels' box (a
 -- Shell with no top bar) and its label their tokens: sem.stepReady at rest, btn.hover under the
@@ -59,6 +63,10 @@ local TYPED = "sem.unknown"
 local frame
 
 local DIM = 0.45
+
+-- What the header strip takes from the window's right edge: the corner inset, the close, the gap and
+-- the settings mark (NS.HEADER, the library's W.HEADER: 6 + 18 + 6 + 18).
+local MARKS_W = NS.HEADER.PAD + 2 * NS.HEADER.SIZE + NS.HEADER.GAP
 
 local function locked()
     return NS.Preview.EditGroup() ~= nil
@@ -203,8 +211,9 @@ local function chrome(f)
     end)
     -- The title and the close mark are placed on the band by S.Header (ensure, below).
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    -- One line: a long group name truncates (the width is the window's, inside the close mark).
-    title:SetWidth(WIDTH - 2 * (PAD + 20))
+    -- One line: a long group name truncates (the width is the window's, clear of the marks on each
+    -- side, so a centered title never runs under them).
+    title:SetWidth(WIDTH - 2 * (MARKS_W + PAD))
     if title.SetWordWrap then title:SetWordWrap(false) end
     f.title = title
 end
@@ -213,16 +222,20 @@ local function ensure()
     if frame then return frame end
     local f = CreateFrame("Frame", NAME, UIParent, "BackdropTemplate")
     chrome(f)
-    f.closeButton = NS.MakeCloseButton(f, endPreview)
-    if f.closeButton then
+    -- The header strip (THE MARKS above): placed by S.Header below, so `place = false` here.
+    local hb = NS.HeaderButtons(f, { makeClose = NS.MakeCloseButton, close = endPreview, place = false,
+        settingsTip = L["Open settings"] })
+    f.closeButton, f.settingsButton = hb and hb.close, hb and hb.settings
+    f.headerRight = hb and hb.right or { f.closeButton }
+    for _, mark in pairs({ f.settingsButton, f.closeButton }) do
         -- Locked, its own hover paint is undone (its OnLeave repaints it at rest) before the tooltip.
-        f.closeButton:HookScript("OnEnter", function(self)
+        mark:HookScript("OnEnter", function(self)
             if not locked() then return end
             local rest = self:GetScript("OnLeave")
             if rest then rest(self) end
             lockedTip(self)
         end)
-        f.closeButton:HookScript("OnLeave", hideTip)
+        mark:HookScript("OnLeave", hideTip)
     end
     f.dropdown = makeDropdown(f)
     f.endButton = makeButton(f, L["End preview"], endPreview)
@@ -230,9 +243,9 @@ local function ensure()
     -- The owner's Shell: the skin's fill, edge and top bar, the title's font and color (D9).
     NS.Skin.Shell(f)
     -- The header on the band (LibKa0s S.Header, R5-L3): the title by the skin's `title.align`, the
-    -- close mark at the band's right, each on the band's middle in every skin. Recorded, so a switch
-    -- places them again.
-    NS.Skin.Header(f, { title = f.title, right = { f.closeButton } })
+    -- strip's marks at the band's right at their offsets, each on the band's middle in every skin.
+    -- Recorded, so a switch places them again.
+    NS.Skin.Header(f, { title = f.title, right = f.headerRight })
     layout(f)
     f:Hide()
     if type(UISpecialFrames) == "table" then table.insert(UISpecialFrames, NAME) end
@@ -245,7 +258,7 @@ end
 -- disabled Button runs no OnEnter in the client unless told to (SetMotionScriptsWhileDisabled, as
 -- LibKa0s's SimPanel does), so it is: the tooltip says why it is off.
 local function setLocked(f, on)
-    for _, c in ipairs({ f.dropdown, f.endButton, f.closeButton }) do
+    for _, c in pairs({ f.dropdown, f.endButton, f.settingsButton, f.closeButton }) do
         if c.SetMotionScriptsWhileDisabled then c:SetMotionScriptsWhileDisabled(true) end
         if c.SetEnabled then c:SetEnabled(not on) end
         c:SetAlpha(on and DIM or 1)

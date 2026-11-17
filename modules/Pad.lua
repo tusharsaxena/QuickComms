@@ -346,6 +346,10 @@ local function build(id)
             savePoint(inst)
         end,
         onRightClick = function() NS.addon:OpenSettings() end,
+        -- The drag handle's settings mark (DragHandle minor 14, LibKa0s#86): left of the strip's help
+        -- mark, opening the addon's settings as the right-click does, with its own one-line tooltip.
+        settings = function() NS.addon:OpenSettings() end,
+        settingsTooltip = { title = L["Open settings"] },
         tooltip = { title = function() return padName(id) end, body = { function()
             return isLocked() and L["Right-click for settings."] or L["Drag to move. Right-click for settings."]
         end } },

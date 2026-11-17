@@ -460,6 +460,8 @@ L["updates after combat"] = "updates after combat"
 -- the header's collapse toggle, its title-bar tooltip (SR-QC, smoke round 1 ruling 3)
 L["Collapse"] = "Collapse"
 L["Expand"] = "Expand"
+-- the settings mark on a window's title bar and on a pad's drag strip (AD-86-QC, LibKa0s#86)
+L["Open settings"] = "Open settings"
 
 -- Comms Pad (modules/Pad.lua)
 L["Drag to move. Right-click for settings."] = "Drag to move. Right-click for settings."

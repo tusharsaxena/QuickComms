@@ -164,7 +164,9 @@ test("pad header: the text stays left, the collapse button right, each on the ba
     local _, _, _, _, inst = live()
     local h = inst.header
     assertAt(h.qcSituation, "LEFT", h, 4, 0, "the situation text at the left, on the middle")
-    assertAt(h.qcCollapse, "RIGHT", h, -2, 0, "the collapse button at the right, on the middle")
+    -- Re-pinned at AD-86-QC (LibKa0s#86): the header strip's corner inset, W.HEADER.PAD (6), where the
+    -- hand-built button sat 2 px in.
+    assertAt(h.qcCollapse, "RIGHT", h, -6, 0, "the collapse button at the right, on the middle")
 end)
 
 -- ── the section bands ─────────────────────────────────────────────────────────────────────────────

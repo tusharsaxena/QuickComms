@@ -68,7 +68,7 @@ core\State.lua
 core\EnvSetup.lua
 # Conventional: NS.Pool is read inside functions only.
 core\PoolSetup.lua
-# Conventional: NS.MakeDragHandle is read inside functions only (modules\Pad.lua).
+# LOAD-BEARING: publishes NS.HEADER (the header strip's figures), which modules\PreviewWindow.lua and modules\Pad_Render.lua take at load; NS.MakeDragHandle and NS.HeaderButtons are read inside functions only.
 core\WidgetsSetup.lua
 # Conventional: NS.GlowLib (the LibKa0s-Glow-1.0 seam) is read inside functions only (modules\Glow.lua).
 core\GlowSetup.lua

@@ -24,6 +24,13 @@ local _, NS = ...
 -- under the band (its top is NS.SkinBandBottom, laid again on every looks change), so no page covers
 -- the band's lower edge.
 --
+-- THE MARKS (AD-86-QC, LibKa0s#86, standalone-windows "Title-bar controls"). Both shapes' close is
+-- LibKa0s-Widgets-1.0's W.HeaderButtons strip: the template's own X adopted (`closeButton`), the
+-- fallback's built through the one wrapper (`makeClose = NS.MakeCloseButton`). The strip gives the close
+-- its "Close" tooltip and records the offsets S.Header places it at. The settings mark is opted out
+-- (SETTINGS_OPT_OUT): the window is a modal opened from a settings row, the Groups page's callout
+-- editor, with the settings panel already beneath it and its catcher covering that panel.
+--
 -- THE SKIN (QC-02; DECISIONS X10, D2; LibKa0s v1.81.0 R-2, Ka0sAddonsCommonTasks D-06). The
 -- template's chrome is painted through the owner's facade under every skin: the popup is a window,
 -- and LibKa0s v1.81.0 retired the stock look under Ka0s Default, so Ka0s Default draws
@@ -89,7 +96,20 @@ local dims = setmetatable({}, { __mode = "k" })
 -- Every window's page, laid under its band again on a looks change: window -> { panel, inset, banded }.
 local pages = setmetatable({}, { __mode = "k" })
 
+-- Why the modal carries no settings mark (THE MARKS above; W.HeaderButtons refuses `settings = false`
+-- without a reason).
+MW.SETTINGS_OPT_OUT = "a modal opened from a settings row (the Groups page's callout editor): the "
+    .. "settings panel is already beneath it, under its catcher"
+
 local function H() return Settings.Helpers end
+
+--- The window's header strip: the close alone (`spec` names it: adopted or built), settings opted out.
+--- Placed by S.Header (`place = false`); answers S.Header's `right` list.
+local function strip(bar, spec)
+    spec.settings, spec.settingsOptOut, spec.place = false, MW.SETTINGS_OPT_OUT, false
+    local hb = NS.HeaderButtons(bar, spec)
+    return hb and hb.right or { spec.closeButton }, hb
+end
 local function isTable(v) return type(v) == "table" end
 
 local function paintDim(dim)
@@ -116,11 +136,11 @@ local function skinTemplate(chrome)
         S.TitleBar(chrome.nineSlice, { text = chrome.nineSlice.Text, noBg = true })
     end
     S.CloseButton(chrome.close)
-    -- The template's X is the one close the library does not build, so its title-bar tooltip is
-    -- hooked here: "Close", above it, as Core.MakeCloseButton's (smoke round 1 ruling 3).
-    NS.AttachTitleTip(chrome.close, NS.CloseTip)
+    -- The template's X adopted onto the strip (THE MARKS above), which gives it its title-bar tooltip:
+    -- "Close", above it, as Core.MakeCloseButton's (smoke round 1 ruling 3).
+    local right = strip(f, { closeButton = chrome.close, frame = f })
     -- The template's title and close X on the band (THE HEADER above), off Blizzard's own anchors.
-    S.Header(f, { title = chrome.nineSlice.Text, right = { chrome.close } })
+    S.Header(f, { title = chrome.nineSlice.Text, right = right })
 end
 
 -- The window: the template when the client has it and it still has the parts used here, else a
@@ -150,8 +170,11 @@ local function plainChrome(window, panel, chrome, onClose, at)
     bg.title = bg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     bg.title:SetText(NS.BRAND)
     NS.Skin.Shell(bg)
-    local closeButton = NS.MakeCloseButton(panel, onClose)
-    NS.Skin.Header(bg, { title = bg.title, right = { closeButton } })
+    -- The close on the page panel (it draws over the page), recorded on the fill frame that wears the
+    -- band (THE MARKS above).
+    local right, hb = strip(panel, { makeClose = NS.MakeCloseButton, close = onClose, frame = bg })
+    local closeButton = hb and hb.close
+    NS.Skin.Header(bg, { title = bg.title, right = right })
     chrome.window, chrome.bg, chrome.close, chrome.title = window, bg, closeButton, bg.title
 end
 
