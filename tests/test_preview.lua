@@ -322,8 +322,12 @@ test("preview: [phase 3] the Preview as row and `/qc preview` drive the same swi
     assertTrue(m.prints[#m.prints]:find("Previewing: Current", 1, true) ~= nil, m.prints[#m.prints])
     assertTrue(NS.PreviewWindow.IsShown())
     m.prints = {}
+    NS.DebugLog:Clear()
     NS.addon:OnSlashCommand("preview list")
-    local text = table.concat(m.prints, "\n")
+    -- AD-79-QC (LibKa0s#79): the menu is a report, read in the console; chat holds the one pointer.
+    -- Re-pinned from reading the menu in chat.
+    assertEqual(#m.prints, 1, table.concat(m.prints, " | "))
+    local text = table.concat(NS.DebugLog.buffer, "\n")
     assertTrue(text:find("raid:2912", 1, true) ~= nil, text)
     NS.addon:OnSlashCommand("preview bg:ab")
     assertEqual(NS.Preview.PreviewAs(), "bg:ab")

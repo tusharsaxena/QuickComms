@@ -207,9 +207,14 @@ test("identity: /qc why opens with the role and where it came from; the diagnost
     roleLib(m).Resolve = function() return "TANK", "talents", "Protection" end
     NS.Situation.RefreshNow("test")
     m.prints = {}
+    NS.DebugLog:Clear()
     NS.addon:OnSlashCommand("why")
+    -- AD-79-QC (LibKa0s#79): `/qc why` is a report, so its role line is the console's second line, under
+    -- the `/qc why` header, and chat holds the one pointer. Re-pinned from the first chat line.
+    assertEqual(#m.prints, 1, table.concat(m.prints, " | "))
     -- red under: WhyLines without the role line
-    assertTrue(m.prints[1]:find("Your role: Tank, from your talents: Protection.", 1, true) ~= nil, m.prints[1])
+    local second = NS.DebugLog.buffer[2] or ""
+    assertTrue(second:find("Your role: Tank, from your talents: Protection.", 1, true) ~= nil, second)
     local text = report(NS)
     assertTrue(text:find("role=TANK", 1, true) ~= nil, text)
     assertTrue(text:find("roleSource=talents roleDetail=Protection override=auto", 1, true) ~= nil, text)

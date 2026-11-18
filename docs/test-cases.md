@@ -978,6 +978,16 @@ Total.
 - check: [CA-M2-10] a combined callout prints each action with its bytes, then the macro total
 - check: [CA-M2-10] a skipped action says why; a locked Line names its lock
 
+### test_reports.lua (7)
+
+- reports: [AD-79-QC] /qc why is a report in the console, with one pointer in chat
+- reports: [AD-79-QC] /qc check <id> is a report; a gone id is refused in chat
+- reports: [AD-79-QC] a one-line check verdict is a short answer and stays in chat
+- reports: [AD-79-QC] /qc probe and /qc probe ids are reports; clear and the combat refusal stay in chat
+- reports: [AD-79-QC] /qc preview list is a report; preview off and a bad name stay in chat
+- reports: [AD-79-QC] a report with logging on lands once and leaves logging on
+- reports: [AD-79-QC] without LibKa0s a report prints its lines in chat, with no pointer
+
 ### test_send_guard.lua (13)
 
 - guard: Decide is ok outside the window and guarded inside it
@@ -2385,6 +2395,7 @@ Total.
 | test_page_pads.lua | 28 |
 | test_page_dials.lua | 28 |
 | test_check.lua | 9 |
+| test_reports.lua | 7 |
 | test_send_guard.lua | 13 |
 | test_sendengine.lua | 49 |
 | test_autothank.lua | 68 |
@@ -2439,4 +2450,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2065** |
+| **Total** | **2072** |

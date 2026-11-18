@@ -194,6 +194,18 @@ line a callout would send under the current situation and never sends, `test` (t
 and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). `enable` and `disable` call the
 same handler as the Master controls row and the launcher entry.
 
+**Chat or console** (the owner's ruling of 2026-11-08, LibKa0s#79, AD-79-QC). A **report**, a
+multi-line read-out the player asks for to inspect or share, goes to the debug console through
+LibKa0s's `D:Report` (`settings/SlashVerbs.lua` `V.Answer`): `why`, `check <id>`, `probe`, `probe ids`
+and `preview list`, plus `diagnostics`, which was already the library's. A report is written whether
+or not logging is on, under its own tag (`Why`, `Check`, `Probe`, `Preview`) and a `/qc <verb>` header,
+a hidden console is shown, logging is left as it was, and chat gets exactly one pointer line,
+`<verb>: N lines written to the debug console. Use Copy to share it.` Acknowledgments and one-line
+answers, refusals and usage lines stay in chat and write nothing: `lock`, `unlock`, bare `preview`, a
+preview name and `off`, `probe clear`, a gone id, the combat refusal and a one-line `check` verdict
+(`<id> -> not sent here (<reason>)`); so do `help` and the reserved `list`. Without LibKa0s the
+DebugLog stub prints a report's lines in chat with no pointer. No `DevTools_Dump` call exists.
+
 ## Event Subscriptions
 
 Every game event is declared in `NS.FEATURE_EVENTS` and registered through `NS.SafeRegisterEvent`,

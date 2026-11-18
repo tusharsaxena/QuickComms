@@ -252,6 +252,7 @@ Kit.run{
         "test_page_pads",
         "test_page_dials",
         "test_check",
+        "test_reports",
         "test_send_guard",
         "test_sendengine",
         "test_autothank",

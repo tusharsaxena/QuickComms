@@ -18,7 +18,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
 | STATE-1..7 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload, a new profile's prebuilts, the owner's Solo / In Group / Dungeon / Raid defaults |
 | COMBAT-1 | Combat | The settings panel in combat |
-| DIAG-1..2 | Diagnostics | The debug console, the report, perf |
+| DIAG-1..3 | Diagnostics | The debug console, the report, perf, the report verbs (`why`, `check`, `probe`, `preview list`) in the console with one chat line |
 | DEGRADED-1..2 | Degraded | The install with LibKa0s missing, and its help rows |
 | SEND-1..7 | Send | Secure sends in keys and on bosses, the spam guard, General (/1) with its Say fallback, the lockdown lift after an encounter or a key |
 | TOKEN-1 | Tokens | `{coordinates}`: your map position, read at the press, in a preview echo and in combat |
@@ -183,6 +183,23 @@ afterwards. `/qc debug diagnostics` writes the same report again below the first
 **DIAG-2. Perf.** `/qc perf` → the step panel opens with its own close mark; run A, B and finish →
 the report prints the `bakeSurface`, `sendClick`, `padLayout` and `echoMatch` rows and no Lua
 error. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+
+**DIAG-3. A report goes to the debug console, and chat gets one line (2026-11-18, AD-79-QC, LibKa0s#79).**
+The owner's ruling of 2026-11-08. `/qc debug off` and close the console. `/qc why` → the console opens by
+itself and holds a `[Why] /qc why` header, then *Your role: ...* and each built pad and dial with its
+groups, and chat holds exactly one line, `why: <N> lines written to the debug console. Use Copy to share
+it.`, N matching the lines written; logging is still off. **Copy** → the lines, plain text, no `|cff`
+codes. With the console open, `/qc check <id of a Say or party callout>` → `[Check] /qc check <id>`, then
+`<id> -> <the line>` and its channel and bytes, and one chat line `check <id>: ...`. `/qc preview list` →
+`[Preview] /qc preview list` and the menu; nothing is previewed. Out of combat, `/qc probe` and
+`/qc probe ids` → `[Probe]` reports of four and five lines under their headers, one chat line each.
+These stay in chat as one line and write nothing new to the console: `/qc check c999` (*No callout with
+id c999.*), `/qc check <id of a /raid callout>` while solo (*<id> -> not sent here (...)*), `/qc preview`
+(*Previewing: Current*), `/qc preview off`, `/qc preview nope`, `/qc probe clear`, `/qc probe bogus` and
+`/qc probe` in combat. `/qc help` and `/qc list` stay in chat as before. With LibKa0s removed
+(DEGRADED-1), `/qc why` prints its lines in chat with no pointer line. *Failure:* a report line in chat, a
+second chat line, a pointer count that does not match, logging turned on, a one-line answer in the
+console, or a Lua error. Result: owed
 
 ## Degraded
 
@@ -812,7 +829,7 @@ Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-8. Bare `/qc preview` and `list`.** In the open world with no preview on: `/qc preview` →
 chat `Previewing: Current`, the window opens on Current and the pads show PREVIEW. `/qc preview list`
-→ the menu prints and nothing changes. `/qc preview nope` → the line points at `/qc preview list`.
+→ the menu is written to the debug console (DIAG-3; amended by AD-79-QC, 2026-11-18) and nothing changes. `/qc preview nope` → the line points at `/qc preview list`.
 `/qc help` → the preview line reads "Preview the pads and dials as another situation in a small
 window — …".
 Result: 2026-10-23, pass (the owner's run; client build not recorded).
@@ -2458,7 +2475,7 @@ The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compa
 
 - **FOREVER-22. `/qc probe` where you are, beside the ids record.** Out of combat, once in the open
   world and in any Forever dungeon, raid or battleground you happen to enter (no visit is owed: the ids
-  are FOREVER-16's and FOREVER-25's), type `/qc probe` → four chat lines: *Probe N saved for forever (...)*, then the place (its name, type, difficulty id and name,
+  are FOREVER-16's and FOREVER-25's), type `/qc probe` → four lines in the debug console under its `[Probe] /qc probe` header, and one chat pointer line (DIAG-3; amended by AD-79-QC, 2026-11-18): *Probe N saved for forever (...)*, then the place (its name, type, difficulty id and name,
   max players and instance id), then the content kind, group and role, then the spec, the talent
   groups with their points and the emote count (a few hundred). In combat → one line, *The probe is
   not available in combat.*, and nothing is recorded. Then `/qc probe ids` (FOREVER-25). Log out, then
@@ -2468,7 +2485,7 @@ The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compa
   tokens) and the ids record (`kind = "ids"`) in one list. Record any place whose content kind or
   instance id differs from `defaults/GameIds_Clients.lua`. Result: passed (owner, 2026-11-10)
 - **FOREVER-23. `/qc probe` on Retail, and `probe clear`.** On Retail, type `/qc probe` in the open world
-  → the same four lines, *saved for retail*, with no talent groups (*none*). Then `/qc probe clear` →
+  → the same four lines in the debug console, *saved for retail*, with no talent groups (*none*). Then `/qc probe clear` →
   *Probes cleared: N removed.*, N being the probes taken on this client; after a /reload the
   file has no `probes` table. `/qc help` lists `probe`. Result: passed (owner, 2026-11-10)
 
@@ -2488,7 +2505,7 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
 `ProbeBattlegrounds`, `ProbeGroupFinder`). Anywhere on Forever; no travel.
 
 - **FOREVER-25. `/qc probe ids` sweeps the client's names with no travel.** Out of combat, anywhere on
-  Forever, type `/qc probe ids` → no Lua error, and five chat lines: *Ids probe N saved for forever
+  Forever, type `/qc probe ids` → no Lua error, and five lines in the debug console under its `[Probe] /qc probe ids` header, with one chat pointer line (DIAG-3; amended by AD-79-QC, 2026-11-18): *Ids probe N saved for forever
   (...)*; *map names read: M of ids 0 to 4000; dungeon finder: L entries; battlegrounds: B*, with M at
   least 45 (the ids Forever ships); *shipped ids the client does not name: none* (FOREVER-16);
   *dungeon finder names no shipped id carries:* followed by *none*, by names, or by *not checked, the
@@ -2919,3 +2936,5 @@ Owed from combined actions M4 (QuickComms#19, CA-M4-1 to CA-M4-14, the same desi
 Owed from the LibKa0s v1.105.0 adoption, wave B (AD-86-QC, LibKa0s#86, Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`): PAD-18, PAD-19, EDIT-35 and PREVIEW-13, new, each owed.
 
 Owed from the LibKa0s v1.105.0 adoption, wave C (AD-92-QC, LibKa0s#92, Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`): TIP-1 to TIP-6, new, each owed; DIAL-21 (rewritten for the tooltip beside the dial, so it lost its pass mark).
+
+Owed from the LibKa0s v1.105.0 adoption, wave D (AD-79-QC, LibKa0s#79, the same bundle): DIAG-3, new, owed. PREVIEW-8, FOREVER-22, FOREVER-23 and FOREVER-25 now read their report lines in the debug console rather than chat; their pass marks stand for what they check, and DIAG-3 holds the routing.

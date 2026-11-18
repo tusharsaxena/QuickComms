@@ -21,6 +21,21 @@ end
 
 local function roleLib(m) return m.LibStub("LibKa0s-Role-1.0") end
 
+-- AD-79-QC (LibKa0s#79): `/qc probe` and `/qc probe ids` are reports, written to the debug console with
+-- one pointer line in chat (settings/SlashVerbs.lua V.Answer). `said` empties chat and the console
+-- before a run; `reported` pins the run's one chat line, the pointer, and reads what it wrote. Re-pinned
+-- from reading the summary in chat.
+local function said(NS, m)
+    m.prints = {}
+    NS.DebugLog:Clear()
+end
+
+local function reported(NS, m)
+    assertEqual(#m.prints, 1, "one chat line: " .. table.concat(m.prints, " | "))
+    assertTrue(m.prints[1]:find("lines written to the debug console", 1, true) ~= nil, m.prints[1])
+    return table.concat(NS.DebugLog.buffer, "\n")
+end
+
 test("probe: records the place, the situation, the role, the spec, the talent groups and the emotes", function()
     local NS, env, m = T.enableAddon()
     place(env)
@@ -28,7 +43,7 @@ test("probe: records the place, the situation, the role, the spec, the talent gr
     roleLib(m).Groups = function()
         return { { index = 1, id = 11, name = "Arms", spent = 0 }, { index = 2, id = 12, name = "Protection", spent = 31 } }
     end
-    m.prints = {}
+    said(NS, m)
     NS.addon:OnSlashCommand("probe")
     local list = NS.db.global.probes[NS.Compat.ClientKey()]
     -- red under: no `probe` row in settings/Slash.lua
@@ -49,13 +64,13 @@ test("probe: records the place, the situation, the role, the spec, the talent gr
     assertEqual(rec.emotes.count, 2)
     assertEqual(table.concat(rec.emotes.tokens, ","), "AGREE,POINT")
     assertTrue(rec.spec ~= nil and rec.spec.id == rec.situation.specID, "the spec the situation read")
-    local text = table.concat(m.prints, "\n")
+    local text = reported(NS, m)
     assertTrue(text:find("Probe 1 saved for " .. rec.client, 1, true) ~= nil, text)
     assertTrue(text:find("place: Molten Core, type raid, difficulty 9 (40 Player), 40 players, instance 409", 1, true) ~= nil, text)
     assertTrue(text:find("content: raid", 1, true) ~= nil, text)
     assertTrue(text:find("role: Tank, from your talents: Protection", 1, true) ~= nil, text)
     assertTrue(text:find("talent groups: Arms 0, Protection 31; emotes: 2", 1, true) ~= nil, text)
-    assertEqual(#m.prints, 4, "a short summary, not the record")
+    assertEqual(#NS.DebugLog.buffer, 5, "the header and a short summary, not the record")
 end)
 
 test("probe: probes append in order, keep the newest PROBE_KEEP, and clear empties every client", function()
@@ -254,7 +269,7 @@ end
 test("probe ids: sweeps map names 0..4000, the dungeon finder and the battlegrounds into one ids record", function()
     local NS, env, m = T.enableAddon()
     local zones, calls = idsClient(NS, env)
-    m.prints = {}
+    said(NS, m)
     NS.addon:OnSlashCommand("probe ids")
     local rec = idsRecord(NS)
     -- red under: no `ids` form (the bare probe runs, or the usage line prints)
@@ -285,20 +300,20 @@ test("probe ids: sweeps map names 0..4000, the dungeon finder and the battlegrou
     assertEqual(bg.mapID, 489); assertEqual(bg.isRandom, false)
     assertEqual(rec.battlegrounds[2].isRandom, true); assertNil(rec.battlegrounds[2].mapID)
     assertNil(rec.instance, "the ids record is not a place record")
-    local text = table.concat(m.prints, "\n")
+    local text = reported(NS, m)
     assertTrue(text:find("Ids probe 1 saved for " .. rec.client, 1, true) ~= nil, text)
     assertTrue(text:find(("map names read: %d of ids 0 to 4000; dungeon finder: 3 entries; battlegrounds: 2"):format(expected), 1, true) ~= nil, text)
     assertTrue(text:find("shipped ids the client does not name: none", 1, true) ~= nil, text)
     -- red under: a comparison that lists the random entry, or the name a shipped dungeon carries
     assertTrue(text:find("dungeon finder names no shipped id carries: Nowhere Keep", 1, true) ~= nil, text)
-    assertEqual(#m.prints, 5, "a short summary, not the record")
+    assertEqual(#NS.DebugLog.buffer, 6, "the header and a short summary, not the record")
 end)
 
 test("probe ids: [FID-4] records the group finder's activities, each once, with the fields the check reads", function()
     local NS, env, m = T.enableAddon()
     local G = NS.GameIds
     local _, _, cats = idsClient(NS, env)
-    m.prints = {}
+    said(NS, m)
     NS.addon:OnSlashCommand("probe ids")
     local gf = idsRecord(NS).groupFinder
     -- red under: no groupFinder reader (the record has no list)
@@ -317,7 +332,7 @@ test("probe ids: [FID-4] records the group finder's activities, each once, with 
     assertEqual(byId[2001].categoryID, 114, "the category the activity's info names")
     assertEqual(byId[3001].isPvp, true)
     assertEqual(byId[4001].maxNumPlayers, 0); assertEqual(byId[4001].mapID, 0)
-    local text = table.concat(m.prints, "\n")
+    local text = reported(NS, m)
     -- red under: a comparison that counts the zone (maxNumPlayers 0) or a shipped id as uncarried
     assertTrue(text:find(("group finder: %d activities; shipped ids it does not list: none; maps it lists that no "
         .. "shipped id carries: Sky Vault (3500)"):format(seen), 1, true) ~= nil, text)
@@ -336,9 +351,9 @@ test("probe ids: [FID-4] the group finder line names shipped ids it does not lis
     acts[4003] = { fullName = "Odd Hollow", categoryID = 2, mapID = 3600 }
     acts[4004] = { fullName = "Odd Hollow (Heroic)", categoryID = 2, mapID = 3600, maxNumPlayers = 5 }
     table.insert(cats[2], 4003); table.insert(cats[2], 4004)
-    m.prints = {}
+    said(NS, m)
     NS.addon:OnSlashCommand("probe ids")
-    local text = table.concat(m.prints, "\n")
+    local text = reported(NS, m)
     local want = ("shipped ids it does not list: dungeon %d, raid %d, battleground set %s (%s); maps it lists that no "
         .. "shipped id carries: Odd Hollow (3600), Sky Vault (3500)"):format(G.DUNGEONS[#G.DUNGEONS], G.RAIDS[2],
         sets[1].key, table.concat(sets[1].ids, ", "))
@@ -349,9 +364,9 @@ test("probe ids: [FID-4] the group finder line names shipped ids it does not lis
     acts[2002] = { fullName = "Map " .. G.RAIDS[2], categoryID = 114, mapID = G.RAIDS[2], maxNumPlayers = 40 }
     acts[3001] = { fullName = sets[1].key, categoryID = 114, mapID = sets[1].ids[#sets[1].ids], maxNumPlayers = 10 }
     acts[4002], acts[4003], acts[4004] = nil, nil, nil
-    m.prints = {}
+    said(NS, m)
     NS.addon:OnSlashCommand("probe ids")
-    text = table.concat(m.prints, "\n")
+    text = reported(NS, m)
     assertTrue(text:find("shipped ids it does not list: none; maps it lists that no shipped id carries: none", 1, true)
         ~= nil, text)
 end)
@@ -360,9 +375,9 @@ test("probe ids: [FID-4] an empty, missing, throwing, wrong-shape or secret grou
     local NS, env, m = T.enableAddon()
     idsClient(NS, env)
     local function line()
-        m.prints = {}
+        said(NS, m)
         NS.addon:OnSlashCommand("probe ids")
-        return table.concat(m.prints, "\n")
+        return reported(NS, m)
     end
     local notChecked = "  group finder: not checked, the group finder listed no activities"
     local cases = {
@@ -429,9 +444,9 @@ test("probe ids: the summary names each shipped id the client does not name, and
     for _, id in ipairs(first.ids) do zones[id] = nil end
     -- one id of the second set unnamed is not a mismatch: a set also carries the other client's ids
     zones[second.ids[1]] = nil
-    m.prints = {}
+    said(NS, m)
     NS.addon:OnSlashCommand("probe ids")
-    local text = table.concat(m.prints, "\n")
+    local text = reported(NS, m)
     local want = ("shipped ids the client does not name: dungeon %d, raid %d, battleground set %s (%s)"):format(d, r,
         first.key, table.concat(first.ids, ", "))
     -- red under: no unnamed-id check, or one that reads the record before the sweep stored it
@@ -442,9 +457,9 @@ test("probe ids: the summary names each shipped id the client does not name, and
     -- the shipped dungeon the finder names is still carried by name when the client names it
     assertTrue(text:find("carries: Nowhere Keep", 1, true) ~= nil, text)
     zones[G.DUNGEONS[1]] = nil
-    m.prints = {}
+    said(NS, m)
     NS.addon:OnSlashCommand("probe ids")
-    text = table.concat(m.prints, "\n")
+    text = reported(NS, m)
     assertTrue(text:find("carries: Map " .. G.DUNGEONS[1] .. ", Nowhere Keep", 1, true) ~= nil, text)
 end)
 
@@ -459,9 +474,9 @@ test("probe ids: a dungeon finder entry whose lfgMapID is a shipped id is carrie
         end
         return old(id)
     end
-    m.prints = {}
+    said(NS, m)
     NS.addon:OnSlashCommand("probe ids")
-    local text = table.concat(m.prints, "\n")
+    local text = reported(NS, m)
     assertTrue(text:find("dungeon finder names no shipped id carries: none", 1, true) ~= nil, text)
 end)
 
@@ -471,14 +486,14 @@ test("probe ids: missing or failing client APIs leave empty lists, and the recor
         "GetLFGDungeonInfo", "GetNumBattlegroundTypes", "C_PvP", "GetServerTime" }) do
         env[name] = nil
     end
-    m.prints = {}
+    said(NS, m)
     NS.addon:OnSlashCommand("probe ids")
     local rec = idsRecord(NS)
     -- red under: an unguarded read (the verb errors and stores nothing)
     assertTrue(rec ~= nil and rec.kind == "ids", "stored")
     assertNil(rec.time)
     assertNil(next(rec.maps)); assertEqual(#rec.lfg, 0); assertEqual(#rec.battlegrounds, 0)
-    local text = table.concat(m.prints, "\n")
+    local text = reported(NS, m)
     assertTrue(text:find("map names read: 0 of ids 0 to 4000; dungeon finder: 0 entries; battlegrounds: 0", 1, true) ~= nil, text)
     -- red under: an empty finder list passing the name check as "none" (WoW Forever's UI never calls these APIs)
     assertTrue(text:find("dungeon finder names no shipped id carries: not checked, the dungeon finder listed no entries", 1, true)

@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1765410)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2065%2F2065_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2072%2F2072_passing-green)
 
 Supports Retail and WoW Forever. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
@@ -163,9 +163,12 @@ change it), or both; leave it and it fades away. Nothing is sent unless you clic
 - Type `/qc diagnostics`.
 - If the debug window isn't open, open it with `/qc debug`. Press **Copy**, copy the entire output, and include it with your bug report.
 - On WoW Forever, if a dungeon, raid or battleground shows the wrong callouts, type `/qc probe` while
-  you are inside it and include the four lines it prints.
+  you are inside it and include the lines it writes to the debug window.
 - On WoW Forever, if a dungeon or raid is missing from Preview as... or carries the wrong name, type
-  `/qc probe ids` anywhere, out of combat, and include the four lines it prints.
+  `/qc probe ids` anywhere, out of combat, and include the lines it writes to the debug window.
+
+`/qc why`, `/qc check <id>`, `/qc probe` and `/qc preview list` write their read-outs to the debug
+window, which opens by itself, and chat gets one line saying so. Press **Copy** there to share one.
 
 The report is added after the debug trace in the same window, so one copy carries both.
 

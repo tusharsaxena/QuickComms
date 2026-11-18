@@ -131,6 +131,14 @@ test("slash: [audit QC-05] degraded, `debug on`/`off` flip the flag and ack, and
     assertTrue(m.prints[1]:find("/qc diagnostics is unavailable", 1, true) ~= nil, m.prints[1])
 end)
 
+-- AD-79-QC (LibKa0s#79): `/qc why` is a report, written to the debug console with one pointer line in
+-- chat (settings/SlashVerbs.lua V.Answer). The why cases read it there; re-pinned from chat.
+local function reported(NS, m)
+    assertEqual(#m.prints, 1, "one chat line: " .. table.concat(m.prints, " | "))
+    assertTrue(m.prints[1]:find("why: %d+ lines written to the debug console") ~= nil, m.prints[1])
+    return table.concat(NS.DebugLog.buffer, "\n")
+end
+
 test("slash: [phase 3] `why` prints each built pad and why its groups show", function()
     local NS, _, m = T.enableAddon()
     NS.Situation.ReadInputs = function()
@@ -138,9 +146,9 @@ test("slash: [phase 3] `why` prints each built pad and why its groups show", fun
             inGroup = true }
     end
     NS.Situation.RefreshNow("test")
-    m.prints = {}
+    m.prints = {}; NS.DebugLog:Clear()
     NS.addon:OnSlashCommand("why")
-    local text = table.concat(m.prints, "\n")
+    local text = reported(NS, m)
     assertTrue(text:find("Comms Pad (p1):", 1, true) ~= nil, text)
     assertTrue(text:find("  Dungeon: Content", 1, true) ~= nil, text)
 end)
@@ -151,9 +159,9 @@ test("slash: [phase 4] `why` covers the dials too", function()
             inGroup = true }
     end
     NS.Situation.RefreshNow("test")
-    m.prints = {}
+    m.prints = {}; NS.DebugLog:Clear()
     NS.addon:OnSlashCommand("why")
-    local text = table.concat(m.prints, "\n")
+    local text = reported(NS, m)
     assertTrue(text:find("Comms Pad (p1):", 1, true) ~= nil, text)
     assertTrue(text:find("Comms Dial (d2):", 1, true) ~= nil, text)
 end)
@@ -162,10 +170,10 @@ test("slash: [final 16] `why` with nothing built speaks of pads and dials", func
     local NS, _, m = T.enableAddon()
     NS.Surfaces.Plans = function() return {} end
     NS.Surfaces.DialPlans = function() return {} end
-    m.prints = {}
+    m.prints = {}; NS.DebugLog:Clear()
     NS.addon:OnSlashCommand("why")
     -- red under: keep the pads-only empty line in settings/SlashVerbs.lua
-    assertTrue(table.concat(m.prints, "\n"):find("Nothing is showing: no pad or dial has been built yet.", 1, true) ~= nil)
+    assertTrue(reported(NS, m):find("Nothing is showing: no pad or dial has been built yet.", 1, true) ~= nil)
 end)
 
 test("slash: a callout's rows take its id after the path; with none the write is refused and names the form", function()
