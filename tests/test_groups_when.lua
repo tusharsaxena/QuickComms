@@ -90,11 +90,11 @@ end)
 
 test("when: CharacterId takes Name-Realm as typed and gives a bare name the player's realm", function()
     local _, W = boot()
-    local live = { character = "Me-Area52" }
-    assertEqual(W.CharacterId("Traxex", live), "Traxex-Area52")
-    assertEqual(W.CharacterId("  Traxex-Other  ", live), "Traxex-Other")
+    local live = { character = "Me-Samplerealm" }
+    assertEqual(W.CharacterId("Samplehunter", live), "Samplehunter-Samplerealm")
+    assertEqual(W.CharacterId("  Samplehunter-Other  ", live), "Samplehunter-Other")
     assertNil(W.CharacterId("two words", live))
-    assertNil(W.CharacterId("Traxex", {}), "no realm to add")
+    assertNil(W.CharacterId("Samplehunter", {}), "no realm to add")
     assertNil(W.CharacterId("", live))
 end)
 
@@ -129,13 +129,13 @@ end)
 test("when: [final 6] a typed character takes the client's case; the Resolver matches one in any case", function()
     local NS, W = boot()
     -- red under: W.CharacterId returns the typed name as typed
-    assertEqual(W.CharacterId("bob-Area52", {}), "Bob-Area52")
-    assertEqual(W.CharacterId("BOB", { character = "Me-Area52" }), "Bob-Area52")
+    assertEqual(W.CharacterId("bob-Samplerealm", {}), "Bob-Samplerealm")
+    assertEqual(W.CharacterId("BOB", { character = "Me-Samplerealm" }), "Bob-Samplerealm")
     assertNil(W.CharacterId("bob", {}), "no realm known")
-    assertNil(W.CharacterId("-Area52", {}))
+    assertNil(W.CharacterId("-Samplerealm", {}))
     -- red under: Resolver CHECK.characters compares the exact string
-    assertTrue((NS.Resolver.Matches({ characters = { ["bob-area52"] = true } }, { character = "Bob-Area52" })))
-    assertFalse((NS.Resolver.Matches({ characters = { ["Bob-Other"] = true } }, { character = "Bob-Area52" })))
+    assertTrue((NS.Resolver.Matches({ characters = { ["bob-samplerealm"] = true } }, { character = "Bob-Samplerealm" })))
+    assertFalse((NS.Resolver.Matches({ characters = { ["Bob-Other"] = true } }, { character = "Bob-Samplerealm" })))
 end)
 
 test("when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it", function()
@@ -158,9 +158,9 @@ end)
 test("when: [characterization] ResolveValue's every branch: the character, the reason each refusal gives", function()
     local NS, W = boot()
     local LABEL = NS.Resolver.LABEL
-    NS.Situation.Current = function() return { character = "Traxex-Area52" } end
+    NS.Situation.Current = function() return { character = "Samplehunter-Samplerealm" } end
     -- red under: W.ResolveValue's row dispatch sending a row to the wrong resolver (performance-§11)
-    assertEqual(W.ResolveValue("characters", "  bob  "), "Bob-Area52", "trimmed, and the player's realm")
+    assertEqual(W.ResolveValue("characters", "  bob  "), "Bob-Samplerealm", "trimmed, and the player's realm")
     local v, why = W.ResolveValue("characters", "two words")
     assertNil(v)
     assertEqual(why, "A character is Name-Realm, or a name on your realm.")
@@ -170,7 +170,7 @@ test("when: [characterization] ResolveValue's every branch: the character, the r
     v, why = W.ResolveValue("spec", "abc")
     assertNil(v)
     assertEqual(why, LABEL.spec .. " does not take abc. It takes: a specialization id (a whole number).")
-    assertEqual(W.ResolveValue("characters", "all"), "All-Area52", "no whole kind on the character row: a name")
+    assertEqual(W.ResolveValue("characters", "all"), "All-Samplerealm", "no whole kind on the character row: a name")
     assertEqual(W.ResolveValue("role", " Healer "), "HEALER", "a token, trimmed")
     v, why = W.ResolveValue("role", "all")
     assertNil(v, "a token row has no whole kind")
@@ -201,8 +201,8 @@ test("when: [drawers] Summary gives the key level and the id rows a short phrase
     -- one entry by its name, several by their count
     assertEqual(W.Summary("battleground", { battleground = { [2107] = true } }), "Arathi Basin")
     assertEqual(W.Summary("instances", { instances = { [2526] = true, [2527] = true } }), "2 instances")
-    assertEqual(W.Summary("characters", { characters = { ["Bob-Area52"] = true } }), "Bob-Area52")
-    assertEqual(W.Summary("characters", { characters = { ["Bob-Area52"] = true, ["Al-Area52"] = true } }), "2 characters")
+    assertEqual(W.Summary("characters", { characters = { ["Bob-Samplerealm"] = true } }), "Bob-Samplerealm")
+    assertEqual(W.Summary("characters", { characters = { ["Bob-Samplerealm"] = true, ["Al-Samplerealm"] = true } }), "2 characters")
 end)
 
 test("when: [drawers] SelectAll ticks every value the row offers, and never mutates its input", function()

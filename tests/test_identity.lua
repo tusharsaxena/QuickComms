@@ -31,31 +31,46 @@ end
 
 -- ── names ───────────────────────────────────────────────────────────────────────────────────
 
+-- The player in these cases is the collection's first sample character (LibKa0s#87, AD-87-QC):
+-- Samplehunter-Samplerealm on Retail, Samplehunter Mockstride where names are regional. The fixtures
+-- across tests/ use the sample realms (Samplerealm, Mockrealm, and Mock Realm / Sample-Realm where a
+-- case needs a realm to normalize), never a real realm or a real-looking character.
+test("identity: [AD-87-QC] the fixtures' player is LibKa0s Sim's first sample character on each client", function()
+    T.newAddon()
+    local Sim = T.LibStub("LibKa0s-Sim-1.0")
+    -- red under: a fixture name that drifts from the shared set, or a library without Sample
+    local retail, forever = Sim.Sample("retail")[1], Sim.Sample("forever")[1]
+    assertEqual(retail.fullName, "Samplehunter-Samplerealm")
+    assertEqual(retail.name .. "-" .. retail.realm, "Samplehunter-Samplerealm")
+    assertEqual(forever.fullName, "Samplehunter Mockstride")
+    assertEqual(forever.name .. " " .. forever.surname, "Samplehunter Mockstride")
+end)
+
 test("identity: without regional names the character is Name-Realm and the names carry no realm", function()
     local NS, env = T.newAddon()
-    env.UnitFullName = function() return "Kaos", "Silvermoon" end
-    env.UnitName = function() return "Kaos", "Silvermoon" end
+    env.UnitFullName = function() return "Samplehunter", "Samplerealm" end
+    env.UnitName = function() return "Samplehunter", "Samplerealm" end
     local C = NS.Compat
     assertFalse(C.RegionalNames())
-    assertEqual(C.CharacterKey(), "Kaos-Silvermoon")
+    assertEqual(C.CharacterKey(), "Samplehunter-Samplerealm")
     local _, _, _, character = C.PlayerIdentity()
-    assertEqual(character, "Kaos-Silvermoon", "the form every saved When holds")
+    assertEqual(character, "Samplehunter-Samplerealm", "the form every saved When holds")
     -- red under: PlayerName joining UnitName's second value
-    assertEqual(C.PlayerName(), "Kaos")
+    assertEqual(C.PlayerName(), "Samplehunter")
 end)
 
 test("identity: with regional names the character, {me} and a unit are First Surname, never a realm", function()
     local NS, env = T.newAddon()
-    regional(env, "Traxex", "Silentshot")
-    env.UnitFullName = function() return "Traxex", "Silentshot" end   -- its second value is the surname
+    regional(env, "Samplehunter", "Mockstride")
+    env.UnitFullName = function() return "Samplehunter", "Mockstride" end   -- its second value is the surname
     env.GetNormalizedRealmName = function() return "Ignored" end
     env.__unitExists.target = true
     local C = NS.Compat
     assertTrue(C.RegionalNames())
-    -- red under: PlayerIdentity reading UnitFullName ("Traxex-Silentshot")
+    -- red under: PlayerIdentity reading UnitFullName ("Samplehunter-Mockstride")
     local _, _, _, character = C.PlayerIdentity()
-    assertEqual(character, "Traxex Silentshot")
-    assertEqual(C.PlayerName(), "Traxex Silentshot")
+    assertEqual(character, "Samplehunter Mockstride")
+    assertEqual(C.PlayerName(), "Samplehunter Mockstride")
     assertEqual(C.UnitDisplayName("target"), "Other Person")
     regional(env, "Solo", nil)
     assertEqual(C.CharacterKey(), "Solo", "no surname: the first name alone")
@@ -63,33 +78,33 @@ end)
 
 test("identity: with regional names a chat sender is the player by the long form alone", function()
     local NS, env = T.newAddon()
-    regional(env, "Traxex", "Silentshot")
+    regional(env, "Samplehunter", "Mockstride")
     local C = NS.Compat
     assertTrue(C.SenderIsPlayer("Someone Else", env.playerGUID), "the GUID still decides first")
     -- red under: split the sender on whitespace or a hyphen and compare the first name
-    assertTrue(C.SenderIsPlayer("Traxex Silentshot", nil))
-    assertFalse(C.SenderIsPlayer("Traxex", nil), "a first name alone is someone else")
-    assertFalse(C.SenderIsPlayer("Traxex Other", nil))
+    assertTrue(C.SenderIsPlayer("Samplehunter Mockstride", nil))
+    assertFalse(C.SenderIsPlayer("Samplehunter", nil), "a first name alone is someone else")
+    assertFalse(C.SenderIsPlayer("Samplehunter Other", nil))
     env.UnitName = function() return nil end
-    assertNil(C.SenderIsPlayer("Traxex Silentshot", nil), "the player's name unreadable: unknown")
+    assertNil(C.SenderIsPlayer("Samplehunter Mockstride", nil), "the player's name unreadable: unknown")
 end)
 
 test("identity: the When editor takes and shows the long form where names are regional", function()
     local NS, env = T.newAddon()
     local W = NS.addon.Settings.GroupsWhen
     assertEqual(W.Tip("characters"), "Specific characters, as Name-Realm.")
-    regional(env, "Traxex", "Silentshot")
+    regional(env, "Samplehunter", "Mockstride")
     -- red under: W.CharacterId refusing a space (Retail's Name-Realm rule)
-    assertEqual(W.CharacterId("  traxex   silentshot ", {}), "Traxex Silentshot")
-    assertEqual(W.CharacterId("Traxex", {}), "Traxex")
-    assertNil(W.CharacterId("Traxex-Area52", {}), "no realm on a regional client")
+    assertEqual(W.CharacterId("  samplehunter   mockstride ", {}), "Samplehunter Mockstride")
+    assertEqual(W.CharacterId("Samplehunter", {}), "Samplehunter")
+    assertNil(W.CharacterId("Samplehunter-Samplerealm", {}), "no realm on a regional client")
     assertNil(W.CharacterId("one two three", {}))
     assertNil(W.CharacterId("", {}))
     assertEqual(W.Tip("characters"), "Specific characters, by first name and surname.")
     local _, why = W.ResolveValue("characters", "a-b")
     assertEqual(why, "A character is a first name and surname.")
-    assertTrue((NS.Resolver.Matches({ characters = { ["traxex silentshot"] = true } },
-        { character = "Traxex Silentshot" })), "matched without regard to case")
+    assertTrue((NS.Resolver.Matches({ characters = { ["samplehunter mockstride"] = true } },
+        { character = "Samplehunter Mockstride" })), "matched without regard to case")
 end)
 
 -- ── the role ────────────────────────────────────────────────────────────────────────────────

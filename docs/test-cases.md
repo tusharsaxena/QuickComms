@@ -323,8 +323,9 @@ Total.
 - compat: [CA-M4-2] WhisperName is Name-Realm with the realm normalized, the name alone on the same realm
 - compat: [CA-M4-2] WhisperName with regional names is First-Surname, whatever the realm
 
-### test_identity.lua (11)
+### test_identity.lua (12)
 
+- identity: [AD-87-QC] the fixtures' player is LibKa0s Sim's first sample character on each client
 - identity: without regional names the character is Name-Realm and the names carry no realm
 - identity: with regional names the character, {me} and a unit are First Surname, never a realm
 - identity: with regional names a chat sender is the player by the long form alone
@@ -2371,7 +2372,7 @@ Total.
 | test_disabled.lua | 27 |
 | test_diagnostics.lua | 14 |
 | test_compat.lua | 32 |
-| test_identity.lua | 11 |
+| test_identity.lua | 12 |
 | test_probe.lua | 18 |
 | test_restrictions.lua | 20 |
 | test_situation.lua | 20 |
@@ -2450,4 +2451,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2072** |
+| **Total** | **2073** |

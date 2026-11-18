@@ -7,7 +7,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
 local function res() return T.newAddon().Resolver end
 local MPLUS = { content = "mythicPlus", instanceID = 2526, difficulty = "keystone", keyLevel = 14,
     group = "party", instanceGroup = false, leader = true, assist = false, classFile = "WARLOCK",
-    specID = 265, role = "DAMAGER", character = "Traxex-Area52" }
+    specID = 265, role = "DAMAGER", character = "Samplehunter-Samplerealm" }
 
 test("resolver: an empty When always matches", function()
     local ok, matched = res().Matches({}, MPLUS)
@@ -33,7 +33,7 @@ test("resolver: each row matches and fails on its own", function()
         { { class = { WARLOCK = true } }, true },
         { { spec = { [266] = true } }, false },
         { { role = { DAMAGER = true } }, true },
-        { { characters = { ["Traxex-Area52"] = true } }, true },
+        { { characters = { ["Samplehunter-Samplerealm"] = true } }, true },
         { { battleground = { [2107] = true } }, false },
     }
     for n, c in ipairs(CASES) do assertEqual((R.Matches(c[1], MPLUS)), c[2], "case " .. n) end
