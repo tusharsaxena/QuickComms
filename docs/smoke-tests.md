@@ -832,7 +832,7 @@ chat `Previewing: Current`, the window opens on Current and the pads show PREVIE
 → the menu is written to the debug console (DIAG-3; amended by AD-79-QC, 2026-11-18) and nothing changes. `/qc preview nope` → the line points at `/qc preview list`.
 `/qc help` → the preview line reads "Preview the pads and dials as another situation in a small
 window — …".
-Result: 2026-10-23, pass (the owner's run; client build not recorded).
+Result: owed (the expected result changed: AD-79-QC, 2026-11-18, moved `/qc preview list` to the debug console; it passed on 2026-10-23, the owner's run, client build not recorded, when the menu was in chat).
 
 **PREVIEW-9. Every preview looks like live (2026-10-23, run item QC-05, SM-QC-8).** In the open
 world, solo, note how the pad's buttons and the dial's wedge icons look in a live situation (or
@@ -2483,11 +2483,11 @@ The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compa
   `global.probes.forever` holds one record per probe, oldest first, the place records (no `kind`, each
   with every `GetInstanceInfo` value, the situation, the role and source, the spec and the emote
   tokens) and the ids record (`kind = "ids"`) in one list. Record any place whose content kind or
-  instance id differs from `defaults/GameIds_Clients.lua`. Result: passed (owner, 2026-11-10)
+  instance id differs from `defaults/GameIds_Clients.lua`. Result: owed (the expected result changed: AD-79-QC, 2026-11-18, moved the report lines to the debug console; it passed on 2026-11-10, owner, when they were in chat)
 - **FOREVER-23. `/qc probe` on Retail, and `probe clear`.** On Retail, type `/qc probe` in the open world
   → the same four lines in the debug console, *saved for retail*, with no talent groups (*none*). Then `/qc probe clear` →
   *Probes cleared: N removed.*, N being the probes taken on this client; after a /reload the
-  file has no `probes` table. `/qc help` lists `probe`. Result: passed (owner, 2026-11-10)
+  file has no `probes` table. `/qc help` lists `probe`. Result: owed (the expected result changed: AD-79-QC, 2026-11-18, moved the report lines to the debug console; it passed on 2026-11-10, owner, when they were in chat)
 
 The Dungeon set on Forever (QFE-C7, the lead's call; **code:** `defaults/GameIds_Clients.lua`
 `BUILTIN_WHEN`, `defaults/BuiltIns.lua` `WhenOf`, `modules/Library.lua` `seedGroup`).
@@ -2528,7 +2528,7 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
   `battlegrounds` (each with its `name`, `battlegroundID` and `mapID`) and `groupFinder` (each activity
   with its `id`, `name`, `categoryID`, `mapID`, `maxNumPlayers` and `isPvp`); Darkspear Islands is among
   the group finder's activities and gets no set of its own (D3-R), and Battle for Gilneas is not listed
-  by the group finder. Result: passed (owner, 2026-11-10)
+  by the group finder. Result: owed (the expected result changed: AD-79-QC, 2026-11-18, moved the report lines to the debug console; it passed on 2026-11-10, owner, when they were in chat)
 - **FOREVER-26. The combined-actions core on Forever.** On WoW Forever, run ACTION-1 (one press sends a
   line, an emote, a ping and a marker), PING-2 (a ping in a party, in combat), MARK-2 (a mark in a party
   as a non-leader) and MARK-7 (marking in combat and during a boss encounter) → each as its check
@@ -2937,4 +2937,4 @@ Owed from the LibKa0s v1.105.0 adoption, wave B (AD-86-QC, LibKa0s#86, Ka0sAddon
 
 Owed from the LibKa0s v1.105.0 adoption, wave C (AD-92-QC, LibKa0s#92, Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`): TIP-1 to TIP-6, new, each owed; DIAL-21 (rewritten for the tooltip beside the dial, so it lost its pass mark).
 
-Owed from the LibKa0s v1.105.0 adoption, wave D (AD-79-QC, LibKa0s#79, the same bundle): DIAG-3, new, owed. PREVIEW-8, FOREVER-22, FOREVER-23 and FOREVER-25 now read their report lines in the debug console rather than chat; their pass marks stand for what they check, and DIAG-3 holds the routing.
+Owed from the LibKa0s v1.105.0 adoption, wave D (AD-79-QC, LibKa0s#79, the same bundle): DIAG-3, new, owed. PREVIEW-8, FOREVER-22, FOREVER-23 and FOREVER-25 now read their report lines in the debug console rather than chat; each has a changed expected result, so it lost its pass mark and is owed again (AD-79-QC review fixes).
