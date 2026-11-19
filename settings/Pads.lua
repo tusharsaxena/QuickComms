@@ -6,8 +6,8 @@ local _, NS = ...
 --              [ Icons ]   (outside in since item 020, QUI-L09; Header and Section titles were Pad
 --              header and Section header until then, QUI-L10)
 --     General  Name, Enable this pad, Visibility (with Fade and Faded opacity, `pad.look.*`, under its
---              own heading; on the Window tab until 2026-10-20), then Unlock (or Lock) all pads and
---              Delete pad…
+--              own heading; on the Window tab until 2026-10-20), then Show this pad while the pad is
+--              closed with its X (AF-STRIP-QC), then Unlock (or Lock) all pads and Delete pad…
 --     Groups   Show groups as, then Add group, then the pad's groups as a drag-to-reorder list with
 --              Remove (its priority order, spec §7); the add control above the list since item 020
 --              (QUI-L07), as the Callouts tab's
@@ -89,6 +89,22 @@ function PD.Create()
     return id
 end
 
+--- Edit pad `id` here (its drag strip's and header row's settings marks, AF-STRIP-QC and AF-HDR-QC):
+--- the page's selection moves to it, as the picker does, and the settings window opens on this page.
+--- In combat the window cannot open: the settings refusal is printed and the selection is kept.
+--- @return boolean opened
+function PD.Edit(id)
+    if not (type(id) == "string" and NS.db.profile.pads[id]) then return false end
+    if NS.Compat.InCombat() then return Ed.OpenPage(PAGE) end
+    if Ed.Selected("pad") ~= id then
+        Ed.Select("pad", id)
+        Ed.RequestRefresh()
+    end
+    return Ed.OpenPage(PAGE)
+end
+
+function QC.EditPad(_, id) return PD.Edit(id) end
+
 function PD.Delete(id)
     local pad = NS.db.profile.pads[id]
     if not pad then return end
@@ -158,6 +174,17 @@ local function renderGeneral(ctx, rows)
         return
     end
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
+    -- A pad closed with its X (AF-STRIP-QC, AF-HDR-QC): one of the three ways back, beside /qc show and
+    -- the launcher's Show window. Shown only while this character has it closed.
+    if NS.SlashVerbs.PadClosed(id) then
+        h.TextRow(ctx, NS.SkinMarkup("qc.hint", L["You closed this pad with its X, so it is hidden on this character. Its settings are kept."]))
+        h.InlineButtonPair(ctx, { text = L["Show this pad"],
+            tooltip = L["Show this pad again on this character, as it was."],
+            onClick = function()
+                NS.SlashVerbs.ShowPad(id)
+                Ed.RequestRefresh()
+            end }, nil)
+    end
     -- The master lock (item 020, QUI-L15: "all", since it moves every pad).
     local locked = NS.Setting("locked") ~= false
     h.InlineButtonPair(ctx,

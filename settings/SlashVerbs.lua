@@ -1,6 +1,6 @@
 local _, NS = ...
 -- settings/SlashVerbs.lua — the bodies of the feature verbs settings/Slash.lua's NS.COMMANDS rows
--- call (spec §14). Today: `check`, `lock`, `unlock`, `toggle`, `preview` (bare, a name, `off`, `list`),
+-- call (spec §14). Today: `check`, `lock`, `unlock`, `toggle`, `show`, `preview` (bare, a name, `off`, `list`),
 -- `why` and `probe` (bare, `ids` or `clear`). The rows are positional triples; the work lives here so it
 -- can be tested without the dispatcher.
 --
@@ -9,7 +9,7 @@ local _, NS = ...
 -- `D:Report` (V.Answer below): written whether or not logging is on, a hidden console shown, one
 -- pointer line in chat. The report verbs are `why`, `check <id>`, `probe`, `probe ids` and
 -- `preview list`. An acknowledgment, a short one-line answer, a refusal or a usage line stays in chat
--- and writes nothing: `lock`, `unlock`, `preview` (bare, a name, `off`), `probe clear`, a gone id, the
+-- and writes nothing: `lock`, `unlock`, `show`, a pad's close, `preview` (bare, a name, `off`), `probe clear`, a gone id, the
 -- combat refusal and a one-line `check` verdict ("not sent here (reason)"). Without the library the
 -- stub (core/DebugLogSetup.lua) prints a report's lines in chat with no pointer.
 
@@ -140,11 +140,16 @@ end
 --- Surfaces.Request: now, or at the end of combat with the stale hint meanwhile. Test mode still shows
 --- them (an explicit preview); dials are not pads and are not affected. Stood down, it refuses by
 --- hold (NS.StoodDownRefusal): the disabled line under `disabled`, the capture line under `perf` alone.
+---
+--- Shown again, it shows every pad, the ones closed with their X too (V.ShowPads): Show window is one of
+--- the ways back the X's tooltip names. What it reads as shown is V.WindowShown, so a character whose
+--- every pad was closed sees Show window off, and one click brings them back.
 function V.TogglePads()
     local refusal = NS.StoodDownRefusal()
     if refusal then return NS.Print(refusal) end
-    local hidden = V.PadsShown()
+    local hidden = V.WindowShown()
     NS.db.char.padsHidden = hidden
+    if not hidden then NS.db.char.padsClosed = nil end
     NS.Surfaces.Request("padsHidden")
     -- Not a chat line (owner, 2026-10-21): the pads showing or going is the answer; the debug log keeps it.
     NS.Debug("Pads", hidden and "hidden on this character until shown again" or "shown")
@@ -188,6 +193,98 @@ end
 function V.PadsShown()
     local char = NS.db and NS.db.char
     return not (char and char.padsHidden == true)
+end
+
+-- ── one pad closed with its X (AF-STRIP-QC, AF-HDR-QC; standalone-windows, *Which marks a window owes*
+-- and *The drag strip's marks*, v2.115.0) ──────────────────────────────────────────────────────────────
+--
+-- The close mark on a pad's header row and on its drag strip hides THAT pad and keeps every setting it
+-- has: `db.char.padsClosed[id] = true`, beside `/qc toggle`'s padsHidden, so it survives a /reload,
+-- follows no profile, and writes nothing the pad's pages store. The pad's visibility driver carries it
+-- (modules/Pad.lua finishApply), so the change goes through Surfaces.Request, held to the end of combat
+-- with the stale hint meanwhile. Three ways bring it back, which the X's tooltip names: the pad's own
+-- page (General, Show this pad), the launcher's Show window (V.TogglePads) and `/qc show`.
+
+local function closedPads(create)
+    local char = NS.db and NS.db.char
+    if not char then return nil end
+    if create and type(char.padsClosed) ~= "table" then char.padsClosed = {} end
+    return type(char.padsClosed) == "table" and char.padsClosed or nil
+end
+
+--- Whether this character closed pad `id` with its X.
+function V.PadClosed(id)
+    local set = closedPads(false)
+    return set ~= nil and set[id] == true
+end
+
+--- Whether Show window reads on: the pads not hidden by `/qc toggle`, and not every enabled pad
+--- closed. With no enabled pad it is `/qc toggle`'s flag alone, as it always was.
+function V.WindowShown()
+    if not V.PadsShown() then return false end
+    local p = NS.db and NS.db.profile
+    local any, open = false, false
+    for _, id in ipairs(p and p.padOrder or {}) do
+        local pad = p.pads and p.pads[id]
+        if type(pad) == "table" and pad.enabled ~= false then
+            any = true
+            if not V.PadClosed(id) then open = true end
+        end
+    end
+    return open or not any
+end
+
+--- The Pad page's Show this pad comes and goes with the flag: refresh an open page in place.
+local function refreshPage()
+    local Settings = NS.addon and NS.addon.Settings
+    local Ed = Settings and Settings.Editors
+    if Ed and Ed.RequestRefresh then Ed.RequestRefresh() end
+end
+
+--- The pad's name as the strip and the lists say it.
+local function padName(id)
+    local pad = NS.db and NS.db.profile and NS.db.profile.pads and NS.db.profile.pads[id]
+    return pad and pad.name and pad.name ~= "" and pad.name or L["Comms Pad"]
+end
+
+--- The X on a pad's header row or drag strip: hide that pad on this character and keep its settings.
+--- One chat line names it and the ways back (an acknowledgment, chat by the routing ruling).
+--- @return boolean closed  false for an unknown pad or one already closed
+function V.ClosePad(id)
+    local pad = NS.db and NS.db.profile and NS.db.profile.pads and NS.db.profile.pads[id]
+    if type(pad) ~= "table" or V.PadClosed(id) then return false end
+    closedPads(true)[id] = true
+    NS.Surfaces.Request("padsHidden")
+    refreshPage()
+    NS.Print(L["%s hidden. Bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."]:format(padName(id)))
+    return true
+end
+
+--- Show this pad (its page's General tab): one closed pad back, its settings as they were.
+--- @return boolean shown  false when it was not closed
+function V.ShowPad(id)
+    local set = closedPads(false)
+    if not (set and set[id]) then return false end
+    set[id] = nil
+    if next(set) == nil then NS.db.char.padsClosed = nil end
+    NS.Surfaces.Request("padsHidden")
+    return true
+end
+
+--- `/qc show`: every pad back on this character, the ones closed with their X and `/qc toggle`'s hide.
+--- Stood down, it refuses by hold as `/qc toggle` does.
+function V.ShowPads()
+    local refusal = NS.StoodDownRefusal()
+    if refusal then return NS.Print(refusal) end
+    local char = NS.db.char
+    local n = 0
+    for _ in pairs(closedPads(false) or {}) do n = n + 1 end
+    local was = char.padsHidden == true
+    char.padsClosed, char.padsHidden = nil, false
+    NS.Surfaces.Request("padsHidden")
+    refreshPage()
+    if n == 0 and not was then return NS.Print(L["Every Comms Pad is already shown."]) end
+    NS.Print(L["Comms Pads shown."])
 end
 
 -- `/qc preview` bare: start Current when nothing is previewed, else keep the one on and put the

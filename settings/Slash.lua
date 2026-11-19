@@ -42,6 +42,8 @@ local COMMANDS = {
         function() NS.SlashVerbs.SetLocked(false) end},
     {"toggle",   L["Show or hide every Comms Pad (remembered per character)"],
         function() NS.SlashVerbs.TogglePads() end},
+    {"show",     L["Show every Comms Pad, the ones closed with their X too"],
+        function() NS.SlashVerbs.ShowPads() end},
     {"version",  L["Print the addon version"],
         function() Sl:CliVersion() end},
     {"list",     L["List every setting and its current value"],

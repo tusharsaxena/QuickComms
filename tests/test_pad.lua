@@ -815,12 +815,14 @@ test("pad: [bg buttons] the strip matches the pad's width through a resize, and 
     NS.db.profile.pads.p1.layout.orientation = "vertical"
     NS.Pad.Apply("p1", planFor(NS))
     assertTrue(inst.root.__w < wide, "the pad is narrower")
-    assertEqual(widths[#widths], inst.root.__w, "the strip follows the resize")
+    -- AF-STRIP-QC: the strip's three marks ([?][settings][close], DragHandle minor 15) reserve their room
+    -- on both sides of the label, so a strip narrower than its own natural width keeps that width.
+    assertEqual(widths[#widths], math.max(inst.root.__w, inst.handle:Measure()), "the strip follows the resize")
     -- up growth: the strip sits below the pad, the same width
     NS.db.profile.pads.p1.layout.growth = "rightUp"
     NS.Pad.Apply("p1", planFor(NS))
     assertEqual(pointsOf(inst.handle), "TOP,QuickCommsPadp1,BOTTOM,0," .. -NS.DRAG_GAP)
-    assertEqual(widths[#widths], inst.root.__w, "below the pad, still its width")
+    assertEqual(widths[#widths], math.max(inst.root.__w, inst.handle:Measure()), "below the pad, still its width")
 end)
 
 -- ── groups polish (2026-10-19) R4: right-click a section title to edit its group ─────────────

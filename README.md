@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1765410)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2073%2F2073_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2085%2F2085_passing-green)
 
 Supports Retail and WoW Forever. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
@@ -45,7 +45,9 @@ them, or write your own.
 Step into a dungeon, a key, a raid, an arena or a battleground and the Comms Pad shows the callouts for it.
 Click one to send it. To move the pad, type `/qc unlock`, drag it, then `/qc lock`; `/qc test` fills it
 with placeholder buttons first if you want to place it before your next run. `/qc toggle`, or the
-Toggle Comms Pads key, hides every pad until you bring them back.
+Toggle Comms Pads key, hides every pad until you bring them back. The X on a pad's header or its drag
+strip hides that one pad and keeps its settings; `/qc show`, Show window on the minimap menu, or Show
+this pad on the pad's settings page brings it back.
 
 The Comms Dial opens on a key you bind under Options → Keybindings → Ka0s Quick Comms, or on the
 Keybindings tab of this addon's General page. With one group active it opens straight on that

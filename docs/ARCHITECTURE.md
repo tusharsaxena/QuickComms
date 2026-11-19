@@ -190,7 +190,7 @@ tracked registration down and replay it.
 `/qc`, alias `/quickcomms`. The reserved verbs (`help config skin enable disable lock unlock version list
 get set reset resetall profile debug diagnostics perf`; `lock` and `unlock` are slash-commands-§8's,
 the Lock frame row's path through the seam) and the feature verbs `check <id>`, which prints the
-line a callout would send under the current situation and never sends, `test` (test mode), `toggle` (hide or show every Comms Pad, remembered per character in `db.char.padsHidden`, also the launcher's Show window entry), `preview` ("Preview as…": bare opens the preview window on where you are, or keeps the preview on; a name switches it, `off` ends it and `list` prints the menu) `why` ("Why is this showing?", for every built pad and dial) and `probe` (QFE-F5: records the place, the situation, the role, the talent groups and the client's emote tokens in `global.probes`, out of combat; `probe ids` records the client's map, dungeon finder and battleground names there with no travel, QuickComms#21; `probe clear` empties it). The full table, the live-while-disabled set
+line a callout would send under the current situation and never sends, `test` (test mode), `toggle` (hide or show every Comms Pad, remembered per character in `db.char.padsHidden`, also the launcher's Show window entry), `show` (every Comms Pad back on this character, the ones closed with their X and `toggle`'s hide, AF-STRIP-QC), `preview` ("Preview as…": bare opens the preview window on where you are, or keeps the preview on; a name switches it, `off` ends it and `list` prints the menu) `why` ("Why is this showing?", for every built pad and dial) and `probe` (QFE-F5: records the place, the situation, the role, the talent groups and the client's emote tokens in `global.probes`, out of combat; `probe ids` records the client's map, dungeon finder and battleground names there with no travel, QuickComms#21; `probe clear` empties it). The full table, the live-while-disabled set
 and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). `enable` and `disable` call the
 same handler as the Master controls row and the launcher entry.
 
@@ -354,8 +354,15 @@ the settings pages and the library's own windows.
     `buildCollapse` drops that record (`NS.SkinUntrack`), so a skin switch in combat, whose pad
     rebuild waits, leaves the word in the Header tab's face (`R.ApplyHeaderLook`) as the rest of the
     header. Its rest and hover colors still follow the skin.
-  - **A Comms Pad's drag strip** carries the drag handle's settings mark (DragHandle minor 14,
-    `spec.settings`), opening the settings as the strip's right-click does, its tooltip Open settings. The callout popup and the icon browser are built from Blizzard's
+  - **A Comms Pad's drag strip** carries all three marks, `?` · settings · close left to right
+    (DragHandle minor 15, LibKa0s v1.107.0; standalone-windows *The drag strip's marks*, v2.115.0;
+    AF-STRIP-QC). The settings mark opens this pad's own page with the pad picked (`Pad.OpenSettings`,
+    `QC:EditPad`, settings/Pads.lua `PD.Edit`), its tooltip Open settings; the strip's right-click still
+    opens the addon's settings. The close hides that pad on this character and keeps its settings
+    (`SlashVerbs.ClosePad`, `db.char.padsClosed[id]`), its tooltip Hide this pad and the three ways back:
+    `/qc show`, the launcher's Show window (which reads off once every enabled pad is closed, and shows
+    them all again on its next click) and Show this pad on the pad's General tab. The strip's own
+    tooltip is the library's, above the strip; this addon never passed `tooltipPlace`. The callout popup and the icon browser are built from Blizzard's
   `SettingsFrameTemplate` and wear the skin's window under every skin, Ka0s Default included: LibKa0s
   v1.81.0 retired the stock look (R-2, Ka0sAddonsCommonTasks D-06), so the WoW Default skin is the way
   to Blizzard's settings window ([Documented deviations](#documented-deviations)); the browser's

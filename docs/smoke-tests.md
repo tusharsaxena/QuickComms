@@ -406,12 +406,39 @@ under the pointer, a settings or close mark on the row, the "-" or its hover are
 edge at Header height 14, or the "-" changing face on its own during the in-combat skin switch.
 Result: owed
 
-**PAD-19. The drag strip's settings mark (2026-11-17, AD-86-QC, LibKa0s#86).** `/qc unlock` → each pad's
-drag strip shows a settings mark left of its "?" mark, the same size and tint as it; under the pointer it
-lights and a one-line tooltip says **Open settings**. A left click opens the Quick Comms settings (as a
-right-click on the strip does); dragging from the mark still moves the pad; a right-click on it still opens
-settings. The pad's name on the strip is not cut off by the extra mark. `/qc lock` → the strip and its
-marks are gone. Fail: no settings mark, a click that opens nothing, or the pad's tooltip on the mark.
+**PAD-19. The drag strip's marks read ? · settings · close (2026-11-17, AD-86-QC; rewritten 2026-11-19,
+AF-RV-QC and AF-STRIP-QC, LibKa0s v1.107.0).** `/qc unlock` → each pad's drag strip shows three marks at
+its right end, left to right **?**, the settings gear and an **X**, packed closer than before. At rest
+each is the skin's icon color, like the "-" on the pad's header row; under the pointer the ? and the gear
+light the skin's link color (orange under Ka0s Default) and the X lights red. Hover the strip's label →
+its tooltip opens centered above the strip (below it only with the pad at the screen's top), never beside
+the pad. Hover the gear → **Open settings**; a left click opens the settings on the **Pad** page with this
+pad picked in its dropdown (with two pads, try each strip). A right-click on the strip still opens the
+Quick Comms settings. The pad's name on the strip is not cut off. Repeat under Obsidian. `/qc lock` → the
+strip and its marks are gone. Fail: the marks in the old order, the gear opening the main page, a mark
+showing the strip's "Drag to move" tooltip, or the strip's tooltip beside the pad.
+Result: owed
+
+**PAD-20. The drag strip's X hides that pad and keeps its settings (2026-11-19, AF-STRIP-QC).** With two
+pads (Pad page → New pad) and `/qc unlock` → hover the first pad's strip **X** → its tooltip says **Hide
+this pad** and names the ways back: `/qc show`, Show window on the minimap menu, and Show this pad on its
+settings page. Click it → that pad goes, the other stays, and one chat line names the pad and the ways
+back. `/reload` → it stays hidden. Its page still holds its name, groups, layout and position. In
+combat (a target dummy) click the other pad's X → the pad's header shows "updates after combat" and the
+pad goes when combat ends. Fail: both pads going, the pad disabled (Enable this pad off), a setting
+changed, or no chat line.
+Result: owed
+
+**PAD-21. Every way back brings a closed pad back as it was (2026-11-19, AF-STRIP-QC).** Close a pad with
+its X, then each in turn (closing it again between them): (a) Pad page → that pad → General shows a gray
+line ("You closed this pad with its X…") and **Show this pad**; click it → the pad is back where it was
+and the line and button go; (b) `/qc show` → the pad is back and chat says **Comms Pads shown.**; a second
+`/qc show` says **Every Comms Pad is already shown.**; (c) with every pad closed, the minimap button's
+menu shows **Show window** unticked; click it → every pad is back. With one of two pads closed, Show
+window is ticked; a click hides both, the next shows both. `/qc test` with a pad closed → the pad shows
+for test mode and goes again when test mode ends. `/qc diagnostics` → the debug console's Pad lines name
+the closed pad. Fail: a way back that does nothing, the pad back somewhere else or restyled, or Show window
+ticked while no pad shows.
 Result: owed
 
 ## Editors
@@ -2938,3 +2965,5 @@ Owed from the LibKa0s v1.105.0 adoption, wave B (AD-86-QC, LibKa0s#86, Ka0sAddon
 Owed from the LibKa0s v1.105.0 adoption, wave C (AD-92-QC, LibKa0s#92, Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`): TIP-1 to TIP-6, new, each owed; DIAL-21 (rewritten for the tooltip beside the dial, so it lost its pass mark).
 
 Owed from the LibKa0s v1.105.0 adoption, wave D (AD-79-QC, LibKa0s#79, the same bundle): DIAG-3, new, owed. PREVIEW-8, FOREVER-22, FOREVER-23 and FOREVER-25 now read their report lines in the debug console rather than chat; each has a changed expected result, so it lost its pass mark and is owed again (AD-79-QC review fixes).
+
+Owed from the adoption feedback run (AF-RV-QC, AF-STRIP-QC, Ka0sAddonsCommonTasks `docs/2026-11-19-ADOPTION_FEEDBACK/`): PAD-19 (rewritten for the strip's new marks, still owed), PAD-20 and PAD-21, new, each owed.

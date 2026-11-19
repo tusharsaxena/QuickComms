@@ -37,6 +37,17 @@ L["Turn test mode on or off (placeholder buttons and wedges; it opens dial 1; co
     "Turn test mode on or off (placeholder buttons and wedges; it opens dial 1; combat ends it)"
 L["Unlock the Comms Pads so they can be dragged"] = "Unlock the Comms Pads so they can be dragged"
 L["Show or hide every Comms Pad (remembered per character)"] = "Show or hide every Comms Pad (remembered per character)"
+L["Show every Comms Pad, the ones closed with their X too"] = "Show every Comms Pad, the ones closed with their X too"
+-- a pad closed with its X, and /qc show (settings/SlashVerbs.lua, AF-STRIP-QC)
+L["%s hidden. Bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."] =
+    "%s hidden. Bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."
+L["Every Comms Pad is already shown."] = "Every Comms Pad is already shown."
+L["Comms Pads shown."] = "Comms Pads shown."
+-- the Pad page's General tab, while the pad is closed with its X (AF-STRIP-QC)
+L["You closed this pad with its X, so it is hidden on this character. Its settings are kept."] =
+    "You closed this pad with its X, so it is hidden on this character. Its settings are kept."
+L["Show this pad"] = "Show this pad"
+L["Show this pad again on this character, as it was."] = "Show this pad again on this character, as it was."
 L["Write the diagnostics report to the debug console"] =
     "Write the diagnostics report to the debug console"
 

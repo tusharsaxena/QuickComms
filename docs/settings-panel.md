@@ -590,7 +590,9 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
 band     [ Pad v (picker) ][ New pad ]
 strip    [ General ][ Groups ][ Layout ][ Window ][ Header ][ Section titles ][ Buttons ][ Icons ]
 General  Name, Enable this pad, Visibility (visibility, fade and faded opacity, under its heading),
-         then Unlock (or Lock) all pads and Delete pad…
+         then, while this character has the pad closed with its X, a hint and Show this pad
+         (AF-STRIP-QC: one of the X's three ways back, with /qc show and the launcher's Show
+         window), then Unlock (or Lock) all pads and Delete pad…
 Groups   Show groups as, then Add group (the top-level groups the pad does not hold: a group
          inside another shows with it), then the pad's groups as a drag-to-reorder list with a
          remove glyph (its priority order; it takes the group off the pad and asks nothing)
