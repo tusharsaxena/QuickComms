@@ -1423,7 +1423,7 @@ Total.
 - pad header: the band and the header sit over the root, never level with its backdrop
 - pad header: the header sits flush inside the window edge, down growth and up, in every skin
 - pad header: the rows start under the band, and a collapsed pad is the band and its edges
-- pad header: the text stays left, the collapse button right, each on the band's middle
+- pad header: the text stays left, the marks right, each on the band's middle
 - pad header: the collapse mark never stands taller than the row, down to Header height 14
 - pad header: a skin switch in combat leaves the collapse word in the Header tab's face
 - pad header: a section band draws no band in any skin, so the header is the only band
@@ -1481,7 +1481,7 @@ Total.
 - pad: [F-006] a rebuild that moved no line rewrites no button's type or macrotext
 - pad: [F-006] after a rebuild, every button outside the active set carries no type and is not armed
 
-### test_pad_close.lua (12)
+### test_pad_close.lua (15)
 
 - pad close: a pad's drag strip carries all three marks, [?][settings][close]
 - pad close: each strip mark says its own words, never the strip's description
@@ -1495,6 +1495,9 @@ Total.
 - pad close: the Pad page's Show this pad brings back that one pad
 - pad close: test mode still shows a closed pad, and it hides again when test mode ends
 - pad close: the diagnostics name the pads closed on this character
+- pad close: the header row's X hides that pad and keeps its settings, as the strip's does
+- pad close: the header row's settings mark opens this pad's own page
+- pad close: the header row's lock calls the one lock seam and follows the lock's state
 
 ### test_dial.lua (38)
 
@@ -2053,7 +2056,7 @@ Total.
 - skin windows: the modal window's title and close X sit on the band's middle, the page under it, every skin (R5-WIN)
 - skin windows: the modal fallback wears the band too, its title and close mark on it (R5-WIN)
 
-### test_title_bars.lua (14)
+### test_title_bars.lua (15)
 
 - title bars: the Preview window's close shows its tooltip
 - title bars: the Preview window's close rests in icon.tint and hovers in close.hot
@@ -2067,7 +2070,8 @@ Total.
 - header strip: the Preview window's settings mark shows its tooltip and wears the title-bar colors
 - header strip: the modal window's close is the strip's, settings opted out with its reason
 - header strip: the modal fallback's close is the strip's, settings opted out
-- header strip: a pad header's collapse toggle is the strip's, settings opted out
+- header strip: a pad header's marks are the strip's, collapse · lock · settings · close
+- title bars: a pad header's lock, settings and close show their tooltips
 - header strip: a pad's drag strip carries the settings mark, which opens settings
 
 ### test_skin_hud.lua (21)
@@ -2428,7 +2432,7 @@ Total.
 | test_pad_looks.lua | 21 |
 | test_pad_header.lua | 11 |
 | test_pad.lua | 47 |
-| test_pad_close.lua | 12 |
+| test_pad_close.lua | 15 |
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
@@ -2447,7 +2451,7 @@ Total.
 | test_skinsetup.lua | 25 |
 | test_launcher_skin_entry.lua | 1 |
 | test_skin_windows.lua | 24 |
-| test_title_bars.lua | 14 |
+| test_title_bars.lua | 15 |
 | test_skin_hud.lua | 21 |
 | test_skin_flip.lua | 61 |
 | test_skin_picker.lua | 28 |
@@ -2467,4 +2471,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2085** |
+| **Total** | **2089** |

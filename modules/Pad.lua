@@ -336,7 +336,16 @@ local function build(id)
         GameTooltip:Hide()
         Pad.SetHover(id, false)
     end)
-    R.DressHeader(header, function() Pad.ToggleCollapsed(id) end)
+    -- The header row's marks, collapse · lock · settings · close (AF-HDR-QC; standalone-windows, *Which
+    -- marks a window owes*, v2.115.0: the pads are this addon's primary display). Lock is the one lock
+    -- seam `/qc lock`, the Lock frame row and the launcher's Locked entry call; settings opens this
+    -- pad's page; the X hides this pad and keeps its settings, as the drag strip's X does.
+    R.DressHeader(header, function() Pad.ToggleCollapsed(id) end, {
+        locked = isLocked(),
+        onLock = function() NS.SlashVerbs.ToggleLock() end,
+        onSettings = function() Pad.OpenSettings(id) end,
+        onClose = function() NS.SlashVerbs.ClosePad(id) end,
+    })
     inst.header, inst.headBand = header, band
     -- The label is set again on every Apply (stripLabel), so a rename and a preview reach it.
     -- ignoreParentAlpha (DragHandle minor 5, QUI-Z11): the strip is the root's child and the root takes
@@ -562,6 +571,8 @@ end
 function Pad.ApplyLock()
     local locked = isLocked()
     for _, inst in pairs(pads) do
+        -- The header row's lock mark follows the lock: its art and what a click does (AF-HDR-QC).
+        R.PaintLock(inst.header, locked)
         if inst.handle then
             if not inst.live or (locked and not inst.mark) then
                 inst.handle:Hide()

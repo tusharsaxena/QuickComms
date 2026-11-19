@@ -212,3 +212,50 @@ test("pad close: the diagnostics name the pads closed on this character", functi
     -- red under: no closed-pads line in modules/Diagnostics.lua surfaces
     assertTrue(text:find("closed with their X (this character) p1", 1, true) ~= nil, text)
 end)
+
+-- ── the header row's marks (AF-HDR-QC) ────────────────────────────────────────────────────────────
+
+local function marks(NS) return inst(NS).header.qcMarks end
+
+test("pad close: the header row's X hides that pad and keeps its settings, as the strip's does", function()
+    local NS, m = live()
+    local before = copy(NS.db.profile.pads.p1)
+    -- red under: the header row built with close = false (AD-86-QC)
+    marks(NS).close:__fire("OnClick", "LeftButton")
+    assertTrue(NS.SlashVerbs.PadClosed("p1"))
+    assertEqual(driver(NS, m), "hide")
+    same(before, NS.db.profile.pads.p1, "pads.p1")
+    NS.addon:OnSlashCommand("show")
+    assertEqual(driver(NS, m), "show", "and /qc show brings it back")
+end)
+
+test("pad close: the header row's settings mark opens this pad's own page", function()
+    local NS = live()
+    local got = {}
+    NS.addon.EditPad = function(_, id) got[#got + 1] = id end
+    marks(NS).settings:__fire("OnClick", "LeftButton")
+    -- red under: settings = false (AD-86-QC's opt-out)
+    assertEqual(table.concat(got, ","), "p1")
+end)
+
+test("pad close: the header row's lock calls the one lock seam and follows the lock's state", function()
+    local NS = live()
+    local lock = inst(NS).header.qcLock
+    assertTrue(lock ~= nil, "a lock mark")
+    assertFalse(NS.Setting("locked"), "unlocked to start (live)")
+    assertFalse(lock.qcLocked, "the mark reads unlocked")
+    assertEqual(lock.__tip, "Lock the pads", "its tooltip says what a click does")
+    local calls, real = 0, NS.SlashVerbs.ToggleLock
+    NS.SlashVerbs.ToggleLock = function() calls = calls + 1; return real() end
+    lock:__fire("OnClick", "LeftButton")
+    NS.SlashVerbs.ToggleLock = real
+    -- red under: a lock mark that writes `locked` itself instead of calling the seam
+    assertEqual(calls, 1, "the click goes through SlashVerbs.ToggleLock")
+    assertTrue(NS.Setting("locked"), "locked")
+    assertTrue(lock.qcLocked, "repainted for the new state")
+    assertEqual(lock.__tip, "Unlock the pads")
+    -- another way in (/qc unlock) repaints the mark too
+    NS.addon:OnSlashCommand("unlock")
+    assertFalse(lock.qcLocked, "/qc unlock repainted it")
+    assertEqual(lock.__tip, "Lock the pads")
+end)

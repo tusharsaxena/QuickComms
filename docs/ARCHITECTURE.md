@@ -344,13 +344,20 @@ the settings pages and the library's own windows.
     adopted (`closeButton`) or the fallback's built through the wrapper. Settings opted out
     (`MW.SETTINGS_OPT_OUT`): a modal opened from a settings row with the settings panel already
     beneath it, under its catcher.
-  - **A Comms Pad's header row:** the collapse toggle as the strip's one extra, a word mark ("-" / "+")
-    in the Header tab's face, its tooltip Collapse / Expand (`__tip`, set by `PaintHeader`). No close.
-    Settings opted out (`PadRender.HEADER_SETTINGS_OPT_OUT`): a pad is a HUD display and its settings
-    mark rides the drag strip. The toggle sits at the strip's 18 px and 6 px inset (`NS.HEADER`), so
-    `HeaderMinWidth` grew by 6 px over the hand-built 16 at 2. Its height is the slot's, or the row's
-    where the row is shorter (`PadRender.FitCollapse`, from `sizeRoot`), so at Header height 14 the
-    mark never overhangs the row. The library fonts the word on a recorded skin paint (the body face);
+  - **A Comms Pad's header row:** collapse · lock · settings · close (AF-HDR-QC; standalone-windows
+    *Which marks a window owes*, v2.115.0: the pads are this addon's primary display, so their header
+    carries close, settings and lock). The collapse toggle is a word mark ("-" / "+") in the Header
+    tab's face, its tooltip Collapse / Expand (`__tip`, set by `PaintHeader`). The lock is the catalog's
+    `lock` while the pads are locked and `unlock` while they are not, its tooltip Unlock the pads / Lock
+    the pads, and its click the one lock seam (`SlashVerbs.ToggleLock`, as `/qc lock`, the Lock frame row
+    and the launcher's Locked entry); `Pad.ApplyLock`, run on every `locked` change and rebuild,
+    repaints it (`PadRender.PaintLock`). Settings opens this pad's page (`Pad.OpenSettings`). The close
+    is built through Core's `MakeCloseButton` with the owner and hides this pad on this character,
+    keeping its settings (`SlashVerbs.ClosePad`, the drag strip's X's twin); its one-line tooltip is
+    Hide this pad: /qc show or Show window brings it back. The marks sit at the strip's 18 px slots, 6
+    px apart and 6 px in (`NS.HEADER`); `HeaderMinWidth` keeps the run from the collapse toggle to the
+    corner clear (`qcMarksW`). Their height is the slot's, or the row's where the row is shorter
+    (`PadRender.FitCollapse`, from `sizeRoot`), so at Header height 14 no mark overhangs the row. The library fonts the word on a recorded skin paint (the body face);
     `buildCollapse` drops that record (`NS.SkinUntrack`), so a skin switch in combat, whose pad
     rebuild waits, leaves the word in the Header tab's face (`R.ApplyHeaderLook`) as the rest of the
     header. Its rest and hover colors still follow the skin.

@@ -160,13 +160,19 @@ test("pad header: the rows start under the band, and a collapsed pad is the band
     assertTrue(inst.root.__w >= w + 2 * e, "the pad is as wide as the row needs, inside its edges")
 end)
 
-test("pad header: the text stays left, the collapse button right, each on the band's middle", function()
-    local _, _, _, _, inst = live()
+test("pad header: the text stays left, the marks right, each on the band's middle", function()
+    local NS, _, _, _, inst = live()
     local h = inst.header
+    local H = NS.HEADER
     assertAt(h.qcSituation, "LEFT", h, 4, 0, "the situation text at the left, on the middle")
     -- Re-pinned at AD-86-QC (LibKa0s#86): the header strip's corner inset, W.HEADER.PAD (6), where the
-    -- hand-built button sat 2 px in.
-    assertAt(h.qcCollapse, "RIGHT", h, -6, 0, "the collapse button at the right, on the middle")
+    -- hand-built button sat 2 px in. Re-pinned at AF-HDR-QC: the close in the corner, then settings,
+    -- lock and the collapse toggle inward, each a slot and a gap further in.
+    local hb = h.qcMarks
+    assertAt(hb.close, "RIGHT", h, -H.PAD, 0, "the close in the corner, on the middle")
+    assertAt(hb.settings, "RIGHT", h, -(H.PAD + H.SIZE + H.GAP), 0, "settings beside it")
+    assertAt(h.qcLock, "RIGHT", h, -(H.PAD + 2 * (H.SIZE + H.GAP)), 0, "the lock beside settings")
+    assertAt(h.qcCollapse, "RIGHT", h, -(H.PAD + 3 * (H.SIZE + H.GAP)), 0, "the collapse toggle innermost")
 end)
 
 test("pad header: the collapse mark never stands taller than the row, down to Header height 14", function()
@@ -179,6 +185,12 @@ test("pad header: the collapse mark never stands taller than the row, down to He
     assertEqual(inst.header.__h, 14, "the row at its minimum")
     assertEqual(inst.header.qcCollapse.__h, 14, "the mark no taller than the row")
     assertEqual(inst.header.qcCollapse.__w, NS.HEADER.SIZE, "its width the strip's slot still")
+    -- AF-HDR-QC: every mark on the row, not the collapse toggle alone
+    local hb = inst.header.qcMarks
+    for _, k in ipairs({ "lock", "settings", "close" }) do
+        local b = k == "lock" and hb.extras.lock or hb[k]
+        assertEqual(b.__h, 14, k .. ": no taller than the row")
+    end
     NS.db.profile.pads.p1.header.height = 30
     inst = applyPad(NS)
     assertEqual(inst.header.qcCollapse.__h, NS.HEADER.SIZE, "back to the slot on a taller row")
