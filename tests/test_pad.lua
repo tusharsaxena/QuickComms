@@ -569,13 +569,18 @@ test("pad: [icon only] the pad is as wide as its buttons when the header is narr
     local PL = NS.PadLayout
     local inst = NS.Pad.Instance("p1")
     local sit = inst.header.qcSituation
-    -- a narrow header (36 pixels: what "M+ +12" measured before the header read "Quick Comms: ...")
-    sit.GetStringWidth = function() return 36 end
+    -- a narrow header (0 pixels: no situation text). Since AF-HDR-QC the row carries four marks, so
+    -- six columns are needed for the buttons to be the wider of the two.
+    sit.GetStringWidth = function() return 0 end
     assertTrue(NS.SchemaRuntime.Set("pad.layout.style", "icon", "p1"))
+    assertTrue(NS.SchemaRuntime.Set("pad.layout.columns", 6, "p1"))
+    assertTrue(NS.SchemaRuntime.Set("pad.layout.orientation", "grid", "p1"))
     local cw = PL.ICON_ONLY
-    local contentW = 4 * cw + 3 * 4
+    local cols = math.min(6, #inst.buttons.active)
+    local contentW = cols * cw + (cols - 1) * 4
+    assertTrue(contentW + 2 * PL.PAD > NS.PadRender.HeaderMinWidth(inst.header) + 4, "the buttons are wider than the row")
     -- red under: PL.Compute's fixed 120-pixel floor (116 of buttons left 4 spare pixels at the right edge)
-    assertEqual(inst.root.__w, contentW + 2 * PL.PAD, "four 24-pixel columns and the pad's padding")
+    assertEqual(inst.root.__w, contentW + 2 * PL.PAD, "the columns and the pad's padding")
     sit.GetStringWidth = function() return 200 end
     NS.Pad.Apply("p1", planFor(NS))
     -- The header row stands inside the window's edge on both sides (R5-QC1: Ka0s Default's 1 px edge
@@ -583,9 +588,13 @@ test("pad: [icon only] the pad is as wide as its buttons when the header is narr
     assertEqual(inst.wlook.edge, 2, "Ka0s Default's header inset")
     assertEqual(inst.root.__w, NS.PadRender.HeaderMinWidth(inst.header) + 4, "a wide header widens the pad")
     -- Re-pinned at AD-86-QC (LibKa0s#86): the collapse button is the header strip's mark, 18 px at the
-    -- strip's 6 px corner inset (W.HEADER), where the hand-built one was 16 at 2.
-    assertEqual(inst.root.__w, PL.PAD + 200 + 4 + 18 + 6 + 4,
-        "its text, a gap and the collapse button at its inset, inside the edges")
+    -- strip's 6 px corner inset (W.HEADER), where the hand-built one was 16 at 2. Re-pinned at AF-HDR-QC:
+    -- the row's marks are collapse · lock · settings · close, four 18 px slots 6 px apart.
+    local H = NS.HEADER
+    local marks = H.PAD + 4 * H.SIZE + 3 * H.GAP
+    assertEqual(inst.header.qcMarksW, marks, "the marks from the collapse toggle to the corner")
+    assertEqual(inst.root.__w, PL.PAD + 200 + 4 + marks + 4,
+        "its text, a gap and the marks at their inset, inside the edges")
 end)
 
 test("pad: [icon only] a PvP match's lockdown chip, shown out of combat, widens the header row by itself", function()
@@ -600,8 +609,10 @@ test("pad: [icon only] a PvP match's lockdown chip, shown out of combat, widens 
     assertTrue(NS.Pad.Apply("p1", plan))
     assertTrue(inst.header.qcLockdown:IsShown(), "the lockdown chip is shown")
     -- red under: the lockdown chip left out (it would run under the collapse button and past the edge)
-    -- The button at the header strip's 18 px and 6 px inset (re-pinned at AD-86-QC, LibKa0s#86).
-    assertEqual(inst.root.__w, PL.PAD + 70 + 6 + 60 + 4 + 18 + 6 + 2 * inst.wlook.edge,
+    -- The marks at the header strip's 18 px and 6 px inset (re-pinned at AD-86-QC, LibKa0s#86, and at
+    -- AF-HDR-QC for collapse · lock · settings · close).
+    local H = NS.HEADER
+    assertEqual(inst.root.__w, PL.PAD + 70 + 6 + 60 + 4 + H.PAD + 4 * H.SIZE + 3 * H.GAP + 2 * inst.wlook.edge,
         "the text, the lockdown chip at its gap, then the button, inside the edges (R5-QC1)")
 end)
 
@@ -815,12 +826,14 @@ test("pad: [bg buttons] the strip matches the pad's width through a resize, and 
     NS.db.profile.pads.p1.layout.orientation = "vertical"
     NS.Pad.Apply("p1", planFor(NS))
     assertTrue(inst.root.__w < wide, "the pad is narrower")
-    assertEqual(widths[#widths], inst.root.__w, "the strip follows the resize")
+    -- AF-STRIP-QC: the strip's three marks ([?][settings][close], DragHandle minor 15) reserve their room
+    -- on both sides of the label, so a strip narrower than its own natural width keeps that width.
+    assertEqual(widths[#widths], math.max(inst.root.__w, inst.handle:Measure()), "the strip follows the resize")
     -- up growth: the strip sits below the pad, the same width
     NS.db.profile.pads.p1.layout.growth = "rightUp"
     NS.Pad.Apply("p1", planFor(NS))
     assertEqual(pointsOf(inst.handle), "TOP,QuickCommsPadp1,BOTTOM,0," .. -NS.DRAG_GAP)
-    assertEqual(widths[#widths], inst.root.__w, "below the pad, still its width")
+    assertEqual(widths[#widths], math.max(inst.root.__w, inst.handle:Measure()), "below the pad, still its width")
 end)
 
 -- ── groups polish (2026-10-19) R4: right-click a section title to edit its group ─────────────

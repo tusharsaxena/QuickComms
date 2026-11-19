@@ -480,7 +480,7 @@ local PREVIEW = {
         return P.SetTestMode(false)
     end,
     isActive = function() return NS.Preview ~= nil and NS.Preview.IsTestMode() end,
-    isShown = function() return NS.SlashVerbs ~= nil and NS.SlashVerbs.PadsShown() end,
+    isShown = function() return NS.SlashVerbs ~= nil and NS.SlashVerbs.WindowShown() end,
 }
 
 --- The player's close: the picker seen, and nothing else. The library's put-back already wears the

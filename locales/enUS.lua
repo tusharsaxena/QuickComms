@@ -462,6 +462,14 @@ L["Collapse"] = "Collapse"
 L["Expand"] = "Expand"
 -- the settings mark on a window's title bar and on a pad's drag strip (AD-86-QC, LibKa0s#86)
 L["Open settings"] = "Open settings"
+-- a pad's close mark, on its drag strip and its header row, and the ways back its tooltip names (AF-STRIP-QC)
+L["Hide this pad"] = "Hide this pad"
+-- the pad header row's close and lock marks (AF-HDR-QC): one-line title-bar tooltips
+L["Hide this pad: /qc show or Show window brings it back"] = "Hide this pad: /qc show or Show window brings it back"
+L["Lock the pads"] = "Lock the pads"
+L["Unlock the pads"] = "Unlock the pads"
+L["Its settings are kept. Bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."] =
+    "Its settings are kept. Bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."
 
 -- Comms Pad (modules/Pad.lua)
 L["Drag to move. Right-click for settings."] = "Drag to move. Right-click for settings."

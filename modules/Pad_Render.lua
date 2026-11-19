@@ -865,32 +865,71 @@ end
 -- it and the lockdown chip's gap after the situation text (R.HeaderMinWidth measures with them).
 local COLLAPSE_W, COLLAPSE_INSET, HEADER_GAP, LOCKDOWN_GAP = NS.HEADER.SIZE, NS.HEADER.PAD, 4, 6
 
--- Why a pad's header row carries no settings mark (W.HeaderButtons refuses `settings = false` without
--- a reason): a Comms Pad is a HUD display, and its settings mark rides its drag strip (modules/Pad.lua,
--- DragHandle's `settings`), shown while the pads are unlocked, beside the strip's right-click.
-R.HEADER_SETTINGS_OPT_OUT = "a HUD display: its settings mark rides the pad's drag strip, shown "
-    .. "while the pads are unlocked"
-
 -- The collapse toggle's tooltip, by state: what a click does.
 local function collapseTip(collapsed)
     return collapsed and L["Expand"] or L["Collapse"]
 end
 
---- The collapse toggle, a word mark on the header strip (LibKa0s#86): the strip's one size, inset,
---- paint path (icon.tint at rest, text.link under the pointer, both through the owner's skin) and
---- tooltip above it. `qcText` is its word, which the Header tab's face dresses (R.ApplyHeaderLook).
---- The library fonts the word with the skin's body face on a recorded paint, which a skin switch
---- replays at once while the Header tab's face (S.HudFont, unrecorded) returns only with the pads'
---- rebuild, held to the end of combat; so that record is dropped here and the word keeps the
---- header's face throughout, as the situation text does. Its colors still follow the skin.
-local function buildCollapse(header, onCollapse)
-    local hb = NS.HeaderButtons and NS.HeaderButtons(header, { close = false, settings = false,
-        settingsOptOut = R.HEADER_SETTINGS_OPT_OUT, extras = { { key = "collapse", label = "-",
-        width = COLLAPSE_W, tip = collapseTip(false), onClick = function() onCollapse() end } } })
+--- The lock mark's face for a lock state (AF-HDR-QC): its art, the tooltip that says what a click does,
+--- and the glyph a client without the art draws. Each name reaches NS.Icon as a literal.
+local function lockFace(locked)
+    if locked then return "lock", L["Unlock the pads"], "L" end
+    return "unlock", L["Lock the pads"], "U"
+end
+
+local function lockArt(locked)
+    if not NS.Icon then return nil end
+    if locked then return NS.Icon("lock") end
+    return NS.Icon("unlock")
+end
+
+--- Repaint a header row's lock mark for `locked` (Pad.ApplyLock, on every lock change and rebuild):
+--- its art, or its glyph without the art, and the tooltip the strip reads on each hover.
+function R.PaintLock(header, locked)
+    local btn = header and header.qcLock
+    if not btn then return end
+    local _, tip, glyph = lockFace(locked)
+    btn.__tip = tip
+    btn.qcLocked = locked == true
+    local path = lockArt(locked)
+    local icon = rawget(btn, "icon")
+    local label = rawget(btn, "label")
+    if icon and path then icon:SetTexture(path) end
+    if label then label:SetText(glyph) end
+end
+
+--- The header row's marks (LibKa0s#86; AF-HDR-QC, standalone-windows *Which marks a window owes*,
+--- v2.115.0: a primary display's header carries close, settings and lock), right-aligned, left to
+--- right collapse · lock · settings · close, the strip's one size, inset, paint path (icon.tint at
+--- rest, text.link under the pointer, close.hot on the X) and tooltip above each. `marks` carries the
+--- pad's handlers: `onSettings` (the pad's page), `onLock` (the one lock seam) and `onClose` (hide this
+--- pad); a row built without them carries the collapse toggle and the owner's settings opener alone.
+--- The collapse toggle is a word mark: `qcText` is its word, which the Header tab's face dresses
+--- (R.ApplyHeaderLook). The library fonts the word with the skin's body face on a recorded paint,
+--- which a skin switch replays at once while the Header tab's face (S.HudFont, unrecorded) returns only
+--- with the pads' rebuild, held to the end of combat; so that record is dropped here and the word keeps
+--- the header's face throughout, as the situation text does. Its colors still follow the skin.
+local function buildCollapse(header, onCollapse, marks)
+    marks = type(marks) == "table" and marks or {}
+    local extras = { { key = "collapse", label = "-", width = COLLAPSE_W, tip = collapseTip(false),
+        onClick = function() onCollapse() end } }
+    if marks.onLock then
+        local icon, tip, glyph = lockFace(marks.locked == true)
+        extras[2] = { key = "lock", icon = icon, glyph = glyph, tip = tip, onClick = function() marks.onLock() end }
+    end
+    local hb = NS.HeaderButtons and NS.HeaderButtons(header, { close = marks.onClose or false,
+        closeTip = marks.onClose and L["Hide this pad: /qc show or Show window brings it back"] or nil,
+        settings = marks.onSettings, settingsTip = L["Open settings"], extras = extras })
     local collapse = hb and hb.extras.collapse
     if collapse then
         collapse.qcText = collapse.label
         if NS.SkinUntrack then NS.SkinUntrack(collapse.label) end
+        header.qcLock = hb.extras.lock
+        if header.qcLock then header.qcLock.qcLocked = marks.locked == true end
+        header.qcMarks = hb
+        -- From the row's right edge to the collapse toggle's left: what R.HeaderMinWidth keeps clear.
+        local off = hb.offsets and hb.offsets.collapse
+        header.qcMarksW = off and (math.abs(off) + COLLAPSE_W) or nil
         return collapse
     end
     -- The library absent: a plain toggle at the same place, so the row still collapses.
@@ -903,10 +942,10 @@ local function buildCollapse(header, onCollapse)
     return collapse
 end
 
---- Build the header row: the situation chip, the lockdown chip, the stale hint and the collapse
---- toggle (its button, or a left click anywhere on the row). PREVIEW and TEST MODE are not here: they
---- ride the drag strip's label (R.StripLabel).
-function R.DressHeader(header, onCollapse)
+--- Build the header row: the situation chip, the lockdown chip, the stale hint and the marks (the
+--- collapse toggle, or a left click anywhere on the row; with `marks`, lock, settings and close too,
+--- buildCollapse). PREVIEW and TEST MODE are not here: they ride the drag strip's label (R.StripLabel).
+function R.DressHeader(header, onCollapse, marks)
     header.qcSituation = header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     -- At the section titles' left edge (Pad_Layout places them at PL.PAD), in every growth direction:
     -- the header spans the pad, and no growth moves a title off it.
@@ -915,7 +954,7 @@ function R.DressHeader(header, onCollapse)
     header.qcLockdown:SetPoint("LEFT", header.qcSituation, "RIGHT", LOCKDOWN_GAP, 0)
     header.qcLockdown:SetText(L["LOCKDOWN"])
     -- A title-bar control (smoke round 1 rulings 3 and 4), on the header strip (buildCollapse).
-    local collapse = buildCollapse(header, onCollapse)
+    local collapse = buildCollapse(header, onCollapse, marks)
     header.qcCollapse = collapse
     -- A left click anywhere on the row collapses or expands it too (the button is a child, so its own
     -- click never reaches the row twice).
@@ -931,7 +970,8 @@ end
 
 --- The narrowest the header row may be (modules/Pad.lua hands it to PL.Compute as opts.minWidth):
 --- the situation text at its left inset, the lockdown chip after it while shown, a gap, and the
---- collapse button at its right inset. Measured in the font, text and button the row wears now, so
+--- header's marks from the collapse toggle to the row's right edge (collapse · lock · settings ·
+--- close, `qcMarksW`), else the collapse button alone at its right inset. Measured in the font, text and button the row wears now, so
 --- ApplyHeaderLook and PaintHeader come first. The button counts out of combat too: a PvP match's
 --- lockdown (and a battleground or arena preview) shows it while rebuilds still run.
 function R.HeaderMinWidth(header)
@@ -939,7 +979,7 @@ function R.HeaderMinWidth(header)
     if header.qcLockdown:IsShown() then
         w = w + LOCKDOWN_GAP + (tonumber(header.qcLockdown:GetStringWidth()) or 0)
     end
-    return math.ceil(PL.PAD + w + HEADER_GAP + COLLAPSE_W + COLLAPSE_INSET)
+    return math.ceil(PL.PAD + w + HEADER_GAP + (header.qcMarksW or (COLLAPSE_W + COLLAPSE_INSET)))
 end
 
 --- The drag strip's label: the pad's name, then the marker (PREVIEW or TEST MODE) in qc.preview (under
@@ -954,13 +994,19 @@ function R.StripLabel(name, mark)
     return name .. "  " .. (NS.SkinEscape("qc.preview") or "") .. mark .. "|r"
 end
 
---- Fit the collapse mark to a row `h` px tall: the strip's slot (COLLAPSE_W) where the row holds it,
+--- Fit the header's marks to a row `h` px tall: the strip's slot (COLLAPSE_W) where the row holds it,
 --- else the row's height, so a row at the Header tab's minimum (14) has no mark overhanging it.
---- The width stays the slot's, and R.HeaderMinWidth measures with it.
+--- The widths stay the slot's, and R.HeaderMinWidth measures with them.
 function R.FitCollapse(header, h)
     local collapse = header.qcCollapse
     if not collapse then return end
-    collapse:SetHeight(math.min(COLLAPSE_W, tonumber(h) or COLLAPSE_W))
+    local fit = math.min(COLLAPSE_W, tonumber(h) or COLLAPSE_W)
+    collapse:SetHeight(fit)
+    local hb = header.qcMarks
+    if not hb then return end
+    for _, b in ipairs({ hb.extras.lock or false, hb.settings or false, hb.close or false }) do
+        if b then b:SetHeight(fit) end
+    end
 end
 
 function R.PaintHeader(header, state)

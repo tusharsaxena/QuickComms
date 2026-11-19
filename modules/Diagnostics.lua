@@ -115,6 +115,7 @@ local function surfaces(out)
     out:add("Pad", "previewWindow=%s", NS.PreviewWindow and NS.PreviewWindow.IsShown() and "shown" or "hidden")
     out:add("Pad", "editPreview=%s", NS.Preview.EditGroup() or "off")
     out:add("Pad", "padsHidden=%s (this character)", not NS.SlashVerbs.PadsShown())
+    out:joined("Pad", "closed with their X (this character)", NS.SlashVerbs.ClosedIds())
     local ids = {}
     for id in pairs(plans) do ids[#ids + 1] = id end
     table.sort(ids)

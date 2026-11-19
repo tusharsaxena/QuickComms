@@ -269,6 +269,7 @@ Kit.run{
         "test_pad_looks",
         "test_pad_header",
         "test_pad",
+        "test_pad_close",
         "test_dial",
         "test_dial_catcher",
         "test_dial_look",

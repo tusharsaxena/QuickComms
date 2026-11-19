@@ -101,6 +101,8 @@ function QC:OnProfileChanged(_, _, key)
 end
 
 function QC:OnProfileCopied(_, _, source)
+    -- the copied pads replace this profile's: its closed set named the old ones (AF-STRIP-QC)
+    if NS.SlashVerbs then NS.SlashVerbs.ForgetClosed() end
     NS.Debug("Set", "copied profile '%s' \226\134\146 '%s'", source, self.db:GetCurrentProfile())
     reloadProfile(self)
 end
@@ -113,6 +115,8 @@ function QC:OnProfileReset()
     else
         NS.Debug("Set", "reset profile '%s' to defaults", self.db:GetCurrentProfile())
     end
+    -- the reset pads take the old ids again: forget the ones closed in this profile (AF-STRIP-QC)
+    if NS.SlashVerbs then NS.SlashVerbs.ForgetClosed() end
     reloadProfile(self)
 end
 
@@ -137,6 +141,9 @@ function QC:OnInitialize()
         self.db.RegisterCallback(self, "OnProfileChanged", function(...) self:OnProfileChanged(...) end)
         self.db.RegisterCallback(self, "OnProfileCopied",  function(...) self:OnProfileCopied(...) end)
         self.db.RegisterCallback(self, "OnProfileReset",   function(...) self:OnProfileReset(...) end)
+        self.db.RegisterCallback(self, "OnProfileDeleted", function(_, _, key)
+            if NS.SlashVerbs then NS.SlashVerbs.ForgetClosed(nil, key) end
+        end)
     end
 
     self:RegisterChatCommand(NS.SLASH:sub(2), "OnSlashCommand")

@@ -286,6 +286,15 @@ local function place(inst, box, style, clook, slook, icfg)
     end
 end
 
+--- A pad's settings mark, on its drag strip and its header row: this pad's own page, the pad picked
+--- (settings/Pads.lua PD.Edit), else the addon's settings where that page is not there.
+function Pad.OpenSettings(id)
+    local QC = NS.addon
+    if QC and QC.EditPad then return QC:EditPad(id) end
+    if QC and QC.OpenSettings then QC:OpenSettings() end
+    return false
+end
+
 -- ── the frame ───────────────────────────────────────────────────────────────────────────────
 
 local function build(id)
@@ -327,7 +336,16 @@ local function build(id)
         GameTooltip:Hide()
         Pad.SetHover(id, false)
     end)
-    R.DressHeader(header, function() Pad.ToggleCollapsed(id) end)
+    -- The header row's marks, collapse · lock · settings · close (AF-HDR-QC; standalone-windows, *Which
+    -- marks a window owes*, v2.115.0: the pads are this addon's primary display). Lock is the one lock
+    -- seam `/qc lock`, the Lock frame row and the launcher's Locked entry call; settings opens this
+    -- pad's page; the X hides this pad and keeps its settings, as the drag strip's X does.
+    R.DressHeader(header, function() Pad.ToggleCollapsed(id) end, {
+        locked = isLocked(),
+        onLock = function() NS.SlashVerbs.ToggleLock() end,
+        onSettings = function() Pad.OpenSettings(id) end,
+        onClose = function() NS.SlashVerbs.ClosePad(id) end,
+    })
     inst.header, inst.headBand = header, band
     -- The label is set again on every Apply (stripLabel), so a rename and a preview reach it.
     -- ignoreParentAlpha (DragHandle minor 5, QUI-Z11): the strip is the root's child and the root takes
@@ -348,10 +366,14 @@ local function build(id)
             savePoint(inst)
         end,
         onRightClick = function() NS.addon:OpenSettings() end,
-        -- The drag handle's settings mark (DragHandle minor 14, LibKa0s#86): left of the strip's help
-        -- mark, opening the addon's settings as the right-click does, with its own one-line tooltip.
-        settings = function() NS.addon:OpenSettings() end,
+        -- The strip's marks, [?][settings][close] (DragHandle minor 15; standalone-windows, *The drag
+        -- strip's marks*, v2.115.0; AF-STRIP-QC). Settings opens this pad's own page (Pad.OpenSettings);
+        -- the X hides this pad on this character and keeps its settings (SlashVerbs.ClosePad), the
+        -- header row's X's twin. Each mark carries its own words, so none falls back to the strip's.
+        settings = function() Pad.OpenSettings(id) end,
         settingsTooltip = { title = L["Open settings"] },
+        onClose = function() NS.SlashVerbs.ClosePad(id) end,
+        closeTooltip = { title = L["Hide this pad"], body = { L["Its settings are kept. Bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."] } },
         tooltip = { title = function() return padName(id) end, body = { function()
             return isLocked() and L["Right-click for settings."] or L["Drag to move. Right-click for settings."]
         end } },
@@ -437,14 +459,15 @@ local function sizeRoot(inst, layout, box)
     R.FitCollapse(inst.header, box.headerH)
 end
 
--- After the buttons: the strip's label and marker, the lock, the visibility driver and the alpha.
+-- After the buttons: the strip's label and marker, the lock, the visibility driver and the alpha. The
+-- driver hides the pad under `/qc toggle`'s hide and when this character closed it with its X.
 local function finishApply(inst, id, plan, look, hstate)
     inst.mark = hstate.mark
     if inst.handle then inst.handle:SetLabel(R.StripLabel(padName(id), hstate.mark)) end
     Pad.ApplyLock()
     NS.SendEngine.SetVisibility(inst.root,
         PL.VisibilityDriver(NS.Setting("visibility"), look.visibility, plan.hasActive, plan.test == true,
-            not NS.SlashVerbs.PadsShown()))
+            not NS.SlashVerbs.PadsShown() or NS.SlashVerbs.PadClosed(id)))
     Pad.ApplyAlpha(id)
 end
 
@@ -548,6 +571,8 @@ end
 function Pad.ApplyLock()
     local locked = isLocked()
     for _, inst in pairs(pads) do
+        -- The header row's lock mark follows the lock: its art and what a click does (AF-HDR-QC).
+        R.PaintLock(inst.header, locked)
         if inst.handle then
             if not inst.live or (locked and not inst.mark) then
                 inst.handle:Hide()

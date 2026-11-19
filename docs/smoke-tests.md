@@ -393,25 +393,82 @@ Result: 2026-10-25, pass (the owner's run; client build not recorded).
 (or any setting that changes no line) and press a button → it still sends its line.
 Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
-**PAD-18. The collapse toggle is the header strip's (2026-11-17, AD-86-QC, LibKa0s#86).** On any pad, the
-header row's "-" sits 6 pixels in from the row's right edge (it sat 2 in) in an 18-pixel slot, still in the
-Header tab's face, on the row's middle. At rest it is the skin's icon color; under the pointer it lights the
-skin's link color (orange under Ka0s Default) and a one-line tooltip above it says **Collapse**. A click
-collapses the pad and the mark reads "+", its tooltip **Expand**; a click on the row still collapses too.
-The row carries no settings mark (a pad is a HUD display: its settings mark is on the drag strip, PAD-19).
-Repeat under Obsidian. Set Header height to 14: the "-" and its hover area stay inside the row. In
-combat (a target dummy), switch the skin on the Skin tab: the "-" keeps the same face as the situation text
-beside it until and after combat ends. Fail: the "-" in the gold header color at rest, no tooltip or one
-under the pointer, a settings or close mark on the row, the "-" or its hover area running past the row's
-edge at Header height 14, or the "-" changing face on its own during the in-combat skin switch.
+**PAD-18. The collapse toggle is the header strip's (2026-11-17, AD-86-QC, LibKa0s#86; rewritten 2026-11-19,
+AF-HDR-QC).** On any pad, the header row's "-" is the leftmost of its four marks (PAD-22), in an 18-pixel
+slot, still in the Header tab's face, on the row's middle. At rest it is the skin's icon color; under the
+pointer it lights the skin's link color (orange under Ka0s Default) and a one-line tooltip above it says
+**Collapse**. A click collapses the pad and the mark reads "+", its tooltip **Expand**; a click on the row
+still collapses too. Repeat under Obsidian. Set Header height to 14: every mark and its hover area stay
+inside the row. In combat (a target dummy), switch the skin on the Skin tab: the "-" keeps the same face
+as the situation text beside it until and after combat ends. Fail: the "-" in the gold header color at
+rest, no tooltip or one under the pointer, a mark or its hover area running past the row's edge at Header
+height 14, or the "-" changing face on its own during the in-combat skin switch.
 Result: owed
 
-**PAD-19. The drag strip's settings mark (2026-11-17, AD-86-QC, LibKa0s#86).** `/qc unlock` → each pad's
-drag strip shows a settings mark left of its "?" mark, the same size and tint as it; under the pointer it
-lights and a one-line tooltip says **Open settings**. A left click opens the Quick Comms settings (as a
-right-click on the strip does); dragging from the mark still moves the pad; a right-click on it still opens
-settings. The pad's name on the strip is not cut off by the extra mark. `/qc lock` → the strip and its
-marks are gone. Fail: no settings mark, a click that opens nothing, or the pad's tooltip on the mark.
+**PAD-19. The drag strip's marks read ? · settings · close (2026-11-17, AD-86-QC; rewritten 2026-11-19,
+AF-RV-QC and AF-STRIP-QC, LibKa0s v1.107.0).** `/qc unlock` → each pad's drag strip shows three marks at
+its right end, left to right **?**, the settings gear and an **X**, packed closer than before. At rest
+each is the skin's icon color, like the "-" on the pad's header row; under the pointer the ? and the gear
+light the skin's link color (orange under Ka0s Default) and the X lights red. Hover the strip's label →
+its tooltip opens centered above the strip (below it only with the pad at the screen's top), never beside
+the pad. Hover the gear → **Open settings**; a left click opens the settings on the **Pad** page with this
+pad picked in its dropdown (with two pads, try each strip). A right-click on the strip still opens the
+Quick Comms settings. The pad's name on the strip is not cut off. Repeat under Obsidian. `/qc lock` → the
+strip and its marks are gone. Fail: the marks in the old order, the gear opening the main page, a mark
+showing the strip's "Drag to move" tooltip, or the strip's tooltip beside the pad.
+Result: owed
+
+**PAD-20. The drag strip's X hides that pad and keeps its settings (2026-11-19, AF-STRIP-QC).** With two
+pads (Pad page → New pad) and `/qc unlock` → hover the first pad's strip **X** → its tooltip says **Hide
+this pad** and names the ways back: `/qc show`, Show window on the minimap menu, and Show this pad on its
+settings page. Click it → that pad goes, the other stays, and one chat line names the pad and the ways
+back. `/reload` → it stays hidden. Its page still holds its name, groups, layout and position. In
+combat (a target dummy) click the other pad's X → the pad's header shows "updates after combat" and the
+pad goes when combat ends. Fail: both pads going, the pad disabled (Enable this pad off), a setting
+changed, or no chat line.
+Result: owed
+
+**PAD-21. Every way back brings a closed pad back as it was (2026-11-19, AF-STRIP-QC).** Close a pad with
+its X, then each in turn (closing it again between them): (a) Pad page → that pad → General shows a gray
+line ("You closed this pad with its X…") and **Show this pad**; click it → the pad is back where it was
+and the line and button go; (b) `/qc show` → the pad is back and chat says **Comms Pads shown.**; a second
+`/qc show` says **Every Comms Pad is already shown.**; (c) with every pad closed, the minimap button's
+menu shows **Show window** unticked; click it → every pad is back. With one of two pads closed, Show
+window is ticked; a click hides both, the next shows both. `/qc test` with a pad closed → the pad shows
+for test mode and goes again when test mode ends. `/qc diagnostics` → the debug console's Pad lines name
+the closed pad. Fail: a way back that does nothing, the pad back somewhere else or restyled, or Show window
+ticked while no pad shows.
+Result: owed
+
+**PAD-22. The pad header's lock, settings and close (2026-11-19, AF-HDR-QC).** On any pad, the header
+row's right end reads, left to right, "-" · a padlock · the settings gear · an X, packed at one pitch with
+the X in the corner and the situation text never running under them (try a long situation, such as a
+battleground). Each rests in the skin's icon color; the "-", the padlock and the gear light the link color
+under the pointer and the X lights red, each with a one-line tooltip above it. With the pads unlocked the
+padlock shows open and says **Lock the pads**; click it → the pads lock (the drag strips go), chat says
+`locked = true`, and the padlock shows closed and says **Unlock the pads**. `/qc unlock`, the Lock frame
+row and the minimap menu's Locked entry each flip it too. The gear says **Open settings** and opens the
+settings on the Pad page with this pad picked. A click on any mark does not also collapse the pad.
+Repeat under Obsidian. Fail: a mark missing, the order otherwise, a padlock showing the wrong state after
+a lock change made elsewhere, or a click that also collapses the row.
+Result: owed
+
+**PAD-23. The pad header's X hides that pad (2026-11-19, AF-HDR-QC).** With two pads, hover the first
+pad's header X → its tooltip says **Hide this pad: /qc show or Show window brings it back**. Click it →
+that pad goes (the other stays) and one chat line names it and the ways back; it is the same as the drag
+strip's X (PAD-20), so `/qc show`, Show window and Show this pad each bring it back (PAD-21). With the
+pads locked (no drag strip), the header X still works. Fail: both pads going, the pad disabled or
+restyled, or a pad that cannot be brought back.
+Result: owed
+
+**PAD-24. A closed pad stays in its own profile, and test mode answers the X (2026-11-19, AF-STRIP-QC
+review fix).** Close the pad with its X, then the profile page → create and switch to a new profile → its
+pad shows (closing a pad in one profile does not hide the same pad in another); switch back → the closed
+pad is still hidden. Reset that profile (the Profiles page's reset) → its pad shows. Close a second
+pad, delete it on the Pad page, make a new pad → the new pad shows. `/qc test` → click a pad's X → the pad
+stays up for test mode and chat says it hides when test mode ends; click the X again → chat says so again;
+`/qc test` off → the pad goes. Fail: a pad hidden in a profile where it was never closed, a reset or new
+pad that never shows, or a test-mode X click with no chat line.
 Result: owed
 
 ## Editors
@@ -2938,3 +2995,5 @@ Owed from the LibKa0s v1.105.0 adoption, wave B (AD-86-QC, LibKa0s#86, Ka0sAddon
 Owed from the LibKa0s v1.105.0 adoption, wave C (AD-92-QC, LibKa0s#92, Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`): TIP-1 to TIP-6, new, each owed; DIAL-21 (rewritten for the tooltip beside the dial, so it lost its pass mark).
 
 Owed from the LibKa0s v1.105.0 adoption, wave D (AD-79-QC, LibKa0s#79, the same bundle): DIAG-3, new, owed. PREVIEW-8, FOREVER-22, FOREVER-23 and FOREVER-25 now read their report lines in the debug console rather than chat; each has a changed expected result, so it lost its pass mark and is owed again (AD-79-QC review fixes).
+
+Owed from the adoption feedback run (AF-RV-QC, AF-STRIP-QC, AF-HDR-QC, Ka0sAddonsCommonTasks `docs/2026-11-19-ADOPTION_FEEDBACK/`): PAD-19 (rewritten for the strip's new marks, still owed), PAD-20 and PAD-21, new, each owed. From AF-HDR-QC: PAD-18 (rewritten for the header's four marks, still owed), PAD-22 and PAD-23, new, each owed. From the AF-STRIP-QC review fixes: PAD-24, new, owed.

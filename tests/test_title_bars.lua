@@ -265,8 +265,8 @@ end)
 -- settings · close: the Preview window settings · close (settings opening this addon's settings
 -- through the opener its launcher registered); the callout popup's modal window close alone, opted out
 -- with its reason (a modal opened from a settings row, the panel beneath it); a Comms Pad's header row
--- its collapse toggle alone, opted out with its reason (a HUD display: its settings mark rides the drag
--- strip). A Comms Pad's drag strip carries the drag handle's settings mark (DragHandle minor 14).
+-- collapse · lock · settings · close (AF-HDR-QC). A Comms Pad's drag strip carries the drag handle's
+-- ? · settings · close (DragHandle minor 15, AF-STRIP-QC; tests/test_pad_close.lua has their wiring).
 
 --- Count NS.addon:OpenSettings calls from here on (the launcher's registered opener calls it).
 local function spySettings(NS)
@@ -348,18 +348,31 @@ test("header strip: the modal fallback's close is the strip's, settings opted ou
     assertFalse(Pop.IsOpen(), "the close still cancels the popup")
 end)
 
-test("header strip: a pad header's collapse toggle is the strip's, settings opted out", function()
+test("header strip: a pad header's marks are the strip's, collapse · lock · settings · close", function()
     local NS = livePad()
     local header = NS.Pad.Instance("p1").header
     local hb = header.headerButtons
     -- red under: the collapse toggle built and placed by hand
     assertTrue(type(hb) == "table", "the header row's marks are W.HeaderButtons'")
-    assertEqual(table.concat(hb.order, ","), "collapse")
+    -- red under: close = false, settings = false (the AD-86-QC opt-out, before AF-HDR-QC)
+    assertEqual(table.concat(hb.order, ","), "collapse,lock,settings,close")
     assertTrue(hb.extras.collapse == collapseOf(NS), "the collapse toggle is the strip's extra")
-    assertTrue(hb.close == nil and hb.settings == nil, "no close, no settings mark")
-    assertTrue(type(hb.optOut) == "string" and hb.optOut ~= "", "the opt-out names its reason")
+    assertTrue(hb.close ~= nil and hb.settings ~= nil and hb.extras.lock ~= nil, "close, settings and lock")
+    assertTrue(hb.optOut == nil, "no opt-out")
     collapseOf(NS):__fire("OnClick", "LeftButton")
     assertEqual(collapseOf(NS).qcText:GetText(), "+", "a click still collapses the pad")
+end)
+
+test("title bars: a pad header's lock, settings and close show their tooltips", function()
+    local NS, m = livePad()
+    local hb = NS.Pad.Instance("p1").header.headerButtons
+    local said = checkTips(NS, m, { { "lock", hb.extras.lock }, { "settings", hb.settings }, { "close", hb.close } },
+        "the pad header")
+    assertEqual(said.settings, "Open settings")
+    -- red under: the library's default "Close" (the X must say how to bring the pad back)
+    assertEqual(said.close, "Hide this pad: /qc show or Show window brings it back")
+    local want = NS.Setting("locked") ~= false and "Unlock the pads" or "Lock the pads"
+    assertEqual(said.lock, want, "the lock says what a click does")
 end)
 
 test("header strip: a pad's drag strip carries the settings mark, which opens settings", function()

@@ -66,7 +66,8 @@ NS.Launcher = lib:New({
     isTestMode     = function() return NS.Preview ~= nil and NS.Preview.IsTestMode() end,
     toggleTestMode = function() NS.Preview.ToggleTestMode() end,
     -- The pads are the primary display (launcher-§2, v2.84.0): Show window is `/qc toggle`'s session hide.
-    isWindowShown  = function() return NS.SlashVerbs ~= nil and NS.SlashVerbs.PadsShown() end,
+    -- On while a pad shows: off under `/qc toggle`'s hide, and off when every pad was closed with its X.
+    isWindowShown  = function() return NS.SlashVerbs ~= nil and NS.SlashVerbs.WindowShown() end,
     toggleWindow   = function() NS.SlashVerbs.TogglePads() end,
 
     print         = function(line) NS.Print(line) end,

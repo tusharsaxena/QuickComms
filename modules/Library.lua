@@ -1095,6 +1095,8 @@ function Lib.DeleteSurface(kind, id)
     if not (set and set[id]) then return false end
     set[id] = nil
     removeAll(kind == "pad" and p.padOrder or p.dialOrder, id)
+    -- a deleted pad's id may be taken again: forget it in this character's closed set (AF-STRIP-QC)
+    if kind == "pad" and NS.SlashVerbs and NS.SlashVerbs.ForgetClosed then NS.SlashVerbs.ForgetClosed(id) end
     announce(kind, id)
     return true
 end
