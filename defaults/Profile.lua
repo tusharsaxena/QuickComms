@@ -87,7 +87,8 @@ NS.C = {
     -- And LibKa0s Role's store (QFE-F4): `override`, the General page's Role pick (nil is Automatic),
     -- and `last`, the last role read, which the library writes (core/Compat.lua Compat.RoleStore).
     -- `padsClosed` has no default: the pads closed with their X (AF-STRIP-QC, AF-HDR-QC), a set of pad
-    -- ids, absent until one is closed and dropped when the last comes back (settings/SlashVerbs.lua
+    -- ids per profile key (`{ [profileKey] = { [id] = true } }`, as pad ids repeat across profiles),
+    -- absent until one is closed and dropped when the last comes back (settings/SlashVerbs.lua
     -- V.ClosePad). Additive, so no schema step.
     CHAR_DEFAULTS = { padsHidden = false, role = {} },
 }

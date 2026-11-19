@@ -366,7 +366,8 @@ the settings pages and the library's own windows.
     AF-STRIP-QC). The settings mark opens this pad's own page with the pad picked (`Pad.OpenSettings`,
     `QC:EditPad`, settings/Pads.lua `PD.Edit`), its tooltip Open settings; the strip's right-click still
     opens the addon's settings. The close hides that pad on this character and keeps its settings
-    (`SlashVerbs.ClosePad`, `db.char.padsClosed[id]`), its tooltip Hide this pad and the three ways back:
+    (`SlashVerbs.ClosePad`, `db.char.padsClosed[profileKey][id]`: per profile, since pad ids repeat across
+    profiles, and forgotten on a profile reset, copy or delete and on the pad's deletion), its tooltip Hide this pad and the three ways back:
     `/qc show`, the launcher's Show window (which reads off once every enabled pad is closed, and shows
     them all again on its next click) and Show this pad on the pad's General tab. The strip's own
     tooltip is the library's, above the strip; this addon never passed `tooltipPlace`. The callout popup and the icon browser are built from Blizzard's

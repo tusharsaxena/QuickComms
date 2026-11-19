@@ -461,6 +461,16 @@ pads locked (no drag strip), the header X still works. Fail: both pads going, th
 restyled, or a pad that cannot be brought back.
 Result: owed
 
+**PAD-24. A closed pad stays in its own profile, and test mode answers the X (2026-11-19, AF-STRIP-QC
+review fix).** Close the pad with its X, then the profile page → create and switch to a new profile → its
+pad shows (closing a pad in one profile does not hide the same pad in another); switch back → the closed
+pad is still hidden. Reset that profile (the Profiles page's reset) → its pad shows. Close a second
+pad, delete it on the Pad page, make a new pad → the new pad shows. `/qc test` → click a pad's X → the pad
+stays up for test mode and chat says it hides when test mode ends; click the X again → chat says so again;
+`/qc test` off → the pad goes. Fail: a pad hidden in a profile where it was never closed, a reset or new
+pad that never shows, or a test-mode X click with no chat line.
+Result: owed
+
 ## Editors
 
 **EDIT-1. A callout and a group on the pad (the phase 3 exit).** Settings → Groups → New group; on
@@ -2986,4 +2996,4 @@ Owed from the LibKa0s v1.105.0 adoption, wave C (AD-92-QC, LibKa0s#92, Ka0sAddon
 
 Owed from the LibKa0s v1.105.0 adoption, wave D (AD-79-QC, LibKa0s#79, the same bundle): DIAG-3, new, owed. PREVIEW-8, FOREVER-22, FOREVER-23 and FOREVER-25 now read their report lines in the debug console rather than chat; each has a changed expected result, so it lost its pass mark and is owed again (AD-79-QC review fixes).
 
-Owed from the adoption feedback run (AF-RV-QC, AF-STRIP-QC, AF-HDR-QC, Ka0sAddonsCommonTasks `docs/2026-11-19-ADOPTION_FEEDBACK/`): PAD-19 (rewritten for the strip's new marks, still owed), PAD-20 and PAD-21, new, each owed. From AF-HDR-QC: PAD-18 (rewritten for the header's four marks, still owed), PAD-22 and PAD-23, new, each owed.
+Owed from the adoption feedback run (AF-RV-QC, AF-STRIP-QC, AF-HDR-QC, Ka0sAddonsCommonTasks `docs/2026-11-19-ADOPTION_FEEDBACK/`): PAD-19 (rewritten for the strip's new marks, still owed), PAD-20 and PAD-21, new, each owed. From AF-HDR-QC: PAD-18 (rewritten for the header's four marks, still owed), PAD-22 and PAD-23, new, each owed. From the AF-STRIP-QC review fixes: PAD-24, new, owed.

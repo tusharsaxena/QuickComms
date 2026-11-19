@@ -42,6 +42,9 @@ L["Show every Comms Pad, the ones closed with their X too"] = "Show every Comms 
 L["%s hidden. Bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."] =
     "%s hidden. Bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."
 L["Every Comms Pad is already shown."] = "Every Comms Pad is already shown."
+L["%s is closed. It hides when test mode ends."] = "%s is closed. It hides when test mode ends."
+L["%s closed. It hides when test mode ends; bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."] =
+    "%s closed. It hides when test mode ends; bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."
 L["Comms Pads shown."] = "Comms Pads shown."
 -- the Pad page's General tab, while the pad is closed with its X (AF-STRIP-QC)
 L["You closed this pad with its X, so it is hidden on this character. Its settings are kept."] =

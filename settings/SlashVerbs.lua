@@ -149,7 +149,7 @@ function V.TogglePads()
     if refusal then return NS.Print(refusal) end
     local hidden = V.WindowShown()
     NS.db.char.padsHidden = hidden
-    if not hidden then NS.db.char.padsClosed = nil end
+    if not hidden then V.ForgetClosed() end
     NS.Surfaces.Request("padsHidden")
     -- Not a chat line (owner, 2026-10-21): the pads showing or going is the answer; the debug log keeps it.
     NS.Debug("Pads", hidden and "hidden on this character until shown again" or "shown")
@@ -199,17 +199,65 @@ end
 -- and *The drag strip's marks*, v2.115.0) ──────────────────────────────────────────────────────────────
 --
 -- The close mark on a pad's header row and on its drag strip hides THAT pad and keeps every setting it
--- has: `db.char.padsClosed[id] = true`, beside `/qc toggle`'s padsHidden, so it survives a /reload,
+-- has: `db.char.padsClosed[profileKey][id] = true`, beside `/qc toggle`'s padsHidden, so it survives a /reload,
 -- follows no profile, and writes nothing the pad's pages store. The pad's visibility driver carries it
 -- (modules/Pad.lua finishApply), so the change goes through Surfaces.Request, held to the end of combat
 -- with the stale hint meanwhile. Three ways bring it back, which the X's tooltip names: the pad's own
 -- page (General, Show this pad), the launcher's Show window (V.TogglePads) and `/qc show`.
 
+--
+-- Keyed by profile, then pad id: pad ids are unique within one profile only (Library takeId counts per
+-- profile, and the default pad is p1 in every profile), so a pad closed in one profile leaves the same
+-- id in another shown. A profile reset or copy, and the pad's deletion, forget it (V.ForgetClosed).
+
+local function profileKey()
+    local db = NS.db
+    return db and db.GetCurrentProfile and db:GetCurrentProfile() or "Default"
+end
+
 local function closedPads(create)
     local char = NS.db and NS.db.char
     if not char then return nil end
     if create and type(char.padsClosed) ~= "table" then char.padsClosed = {} end
-    return type(char.padsClosed) == "table" and char.padsClosed or nil
+    local all = type(char.padsClosed) == "table" and char.padsClosed or nil
+    if not all then return nil end
+    local key = profileKey()
+    if create and type(all[key]) ~= "table" then all[key] = {} end
+    return type(all[key]) == "table" and all[key] or nil
+end
+
+--- Drop empty sets: the profile's when its last pad comes back, the whole table with the last profile.
+local function pruneClosed()
+    local char = NS.db and NS.db.char
+    local all = char and char.padsClosed
+    if type(all) ~= "table" then return end
+    for key, set in pairs(all) do
+        if type(set) ~= "table" or next(set) == nil then all[key] = nil end
+    end
+    if next(all) == nil then char.padsClosed = nil end
+end
+
+--- Forget this character's closed pads: one pad id, or every pad of a profile (the current one by
+--- default). A profile reset, copy or delete, `/qc show`, Show window and Lib.DeleteSurface call it.
+function V.ForgetClosed(id, key)
+    local char = NS.db and NS.db.char
+    local all = char and char.padsClosed
+    if type(all) ~= "table" then return end
+    key = key or profileKey()
+    if id == nil then
+        all[key] = nil
+    elseif type(all[key]) == "table" then
+        all[key][id] = nil
+    end
+    pruneClosed()
+end
+
+--- The ids of the pads closed in the current profile, sorted (the diagnostics' line).
+function V.ClosedIds()
+    local out = {}
+    for id in pairs(closedPads(false) or {}) do out[#out + 1] = id end
+    table.sort(out)
+    return out
 end
 
 --- Whether this character closed pad `id` with its X.
@@ -248,15 +296,28 @@ local function padName(id)
 end
 
 --- The X on a pad's header row or drag strip: hide that pad on this character and keep its settings.
---- One chat line names it and the ways back (an acknowledgment, chat by the routing ruling).
+--- One chat line names it and the ways back (an acknowledgment, chat by the routing ruling). Test mode
+--- still shows a closed pad (an explicit preview), so there the line says it hides when test mode ends,
+--- and a click on a pad already closed says that again rather than nothing.
 --- @return boolean closed  false for an unknown pad or one already closed
 function V.ClosePad(id)
     local pad = NS.db and NS.db.profile and NS.db.profile.pads and NS.db.profile.pads[id]
-    if type(pad) ~= "table" or V.PadClosed(id) then return false end
+    if type(pad) ~= "table" then return false end
+    local testMode = NS.Preview and NS.Preview.IsTestMode and NS.Preview.IsTestMode()
+    if V.PadClosed(id) then
+        if testMode then
+            NS.Print(L["%s is closed. It hides when test mode ends."]:format(padName(id)))
+        end
+        return false
+    end
     closedPads(true)[id] = true
     NS.Surfaces.Request("padsHidden")
     refreshPage()
-    NS.Print(L["%s hidden. Bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."]:format(padName(id)))
+    if testMode then
+        NS.Print(L["%s closed. It hides when test mode ends; bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."]:format(padName(id)))
+    else
+        NS.Print(L["%s hidden. Bring it back with /qc show, Show window on the minimap menu, or Show this pad on its settings page."]:format(padName(id)))
+    end
     return true
 end
 
@@ -266,7 +327,7 @@ function V.ShowPad(id)
     local set = closedPads(false)
     if not (set and set[id]) then return false end
     set[id] = nil
-    if next(set) == nil then NS.db.char.padsClosed = nil end
+    pruneClosed()
     NS.Surfaces.Request("padsHidden")
     return true
 end
@@ -280,7 +341,8 @@ function V.ShowPads()
     local n = 0
     for _ in pairs(closedPads(false) or {}) do n = n + 1 end
     local was = char.padsHidden == true
-    char.padsClosed, char.padsHidden = nil, false
+    V.ForgetClosed()
+    char.padsHidden = false
     NS.Surfaces.Request("padsHidden")
     refreshPage()
     if n == 0 and not was then return NS.Print(L["Every Comms Pad is already shown."]) end

@@ -259,3 +259,69 @@ test("pad close: the header row's lock calls the one lock seam and follows the l
     assertFalse(lock.qcLocked, "/qc unlock repainted it")
     assertEqual(lock.__tip, "Lock the pads")
 end)
+
+-- ── the closed set is per profile (AF-STRIP-QC review fix) ───────────────────────────────────────
+-- Pad ids are unique within one profile only (Library takeId counts per profile, and the default pad
+-- is p1 everywhere), so a pad closed in one profile must not hide the same id in another, nor survive a
+-- reset or the pad's deletion.
+
+test("pad close: a pad closed in one profile leaves the same id in another profile shown", function()
+    local NS, m = live()
+    NS.SlashVerbs.ClosePad("p1")
+    assertEqual(driver(NS, m), "hide")
+    NS.addon.db:SetProfile("Other")
+    -- a fresh profile shows the skin picker, which previews in test mode: end it, test mode shows every pad
+    NS.Preview.SetTestMode(false)
+    NS.Surfaces.ApplyAll("test")
+    -- red under: db.char.padsClosed keyed by pad id alone (Other's p1 hidden too)
+    assertFalse(NS.SlashVerbs.PadClosed("p1"), "Other's p1 is not closed")
+    assertEqual(driver(NS, m), "show")
+    assertTrue(NS.SlashVerbs.WindowShown(), "Show window reads on in Other")
+    NS.addon.db:SetProfile("Default")
+    NS.Preview.SetTestMode(false)
+    NS.Surfaces.ApplyAll("test")
+    assertTrue(NS.SlashVerbs.PadClosed("p1"), "Default's p1 is still closed")
+    assertEqual(driver(NS, m), "hide")
+end)
+
+test("pad close: a profile reset forgets the pads closed in that profile", function()
+    local NS, m = live()
+    NS.SlashVerbs.ClosePad("p1")
+    NS.addon.db:ResetProfile()
+    NS.Surfaces.ApplyAll("test")
+    -- red under: no OnProfileReset cleanup (the reset default p1 never shows)
+    assertFalse(NS.SlashVerbs.PadClosed("p1"))
+    assertTrue(NS.db.char.padsClosed == nil, "nothing left closed")
+    assertEqual(driver(NS, m), "show")
+end)
+
+test("pad close: deleting a closed pad drops it from the closed set", function()
+    local NS = live()
+    local id = NS.Library.CreateSurface("pad", "Second")
+    NS.Surfaces.ApplyAll("test")
+    NS.SlashVerbs.ClosePad(id)
+    assertTrue(NS.SlashVerbs.PadClosed(id))
+    NS.Library.DeleteSurface("pad", id)
+    -- red under: Lib.DeleteSurface leaving the closed entry behind
+    assertFalse(NS.SlashVerbs.PadClosed(id))
+    assertTrue(NS.db.char.padsClosed == nil, "the set is dropped when empty")
+end)
+
+test("pad close: in test mode the X says the pad hides when test mode ends, and a second click says so too", function()
+    local NS, m = live()
+    NS.Preview.SetTestMode(true)
+    NS.Surfaces.ApplyAll("test")
+    m.prints = {}
+    inst(NS).handle.close:__fire("OnClick", "LeftButton")
+    assertTrue(NS.SlashVerbs.PadClosed("p1"))
+    assertEqual(driver(NS, m), "show", "test mode still shows it")
+    assertEqual(#m.prints, 1)
+    -- red under: the plain "hidden" line while the pad stays on screen
+    assertTrue(m.prints[1]:find("when test mode ends", 1, true) ~= nil, m.prints[1])
+    m.prints = {}
+    inst(NS).handle.close:__fire("OnClick", "LeftButton")
+    -- red under: a second click on a closed pad saying nothing
+    assertEqual(#m.prints, 1, "the click on a pad already closed is answered")
+    assertTrue(m.prints[1]:find("when test mode ends", 1, true) ~= nil, m.prints[1])
+    NS.Preview.SetTestMode(false)
+end)

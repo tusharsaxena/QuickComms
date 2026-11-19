@@ -1481,7 +1481,7 @@ Total.
 - pad: [F-006] a rebuild that moved no line rewrites no button's type or macrotext
 - pad: [F-006] after a rebuild, every button outside the active set carries no type and is not armed
 
-### test_pad_close.lua (15)
+### test_pad_close.lua (19)
 
 - pad close: a pad's drag strip carries all three marks, [?][settings][close]
 - pad close: each strip mark says its own words, never the strip's description
@@ -1498,6 +1498,10 @@ Total.
 - pad close: the header row's X hides that pad and keeps its settings, as the strip's does
 - pad close: the header row's settings mark opens this pad's own page
 - pad close: the header row's lock calls the one lock seam and follows the lock's state
+- pad close: a pad closed in one profile leaves the same id in another profile shown
+- pad close: a profile reset forgets the pads closed in that profile
+- pad close: deleting a closed pad drops it from the closed set
+- pad close: in test mode the X says the pad hides when test mode ends, and a second click says so too
 
 ### test_dial.lua (38)
 
@@ -2432,7 +2436,7 @@ Total.
 | test_pad_looks.lua | 21 |
 | test_pad_header.lua | 11 |
 | test_pad.lua | 47 |
-| test_pad_close.lua | 15 |
+| test_pad_close.lua | 19 |
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
@@ -2471,4 +2475,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2089** |
+| **Total** | **2093** |
