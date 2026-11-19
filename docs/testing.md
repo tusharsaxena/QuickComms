@@ -110,6 +110,15 @@ pinned in `test_surface_parity`.
 Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API, never
 `tests/_kit/`.
 
+**Made-up people in fixtures** (LibKa0s#87, AD-87-QC; preview-mode's sample-character convention). A
+case that needs a character uses LibKa0s-Sim-1.0's shared sample set, `Sim.Sample(client)`: the player
+is its first row, *Samplehunter-Samplerealm* on Retail and *Samplehunter Mockstride* where names are
+regional (`test_identity` pins both against the library). Realms are `Samplerealm` and `Mockrealm`,
+and `Mock Realm` or `Sample-Realm` where a case needs a realm with a space or a hyphen to normalize.
+Never a real realm (Silvermoon, Area 52, Argent Dawn) or a real-looking character. Generic
+placeholders (`Bob`, `Caster1`, the kit's `Testchar-Testrealm`) stay as they are. The addon itself
+shows no made-up people: test mode's placeholders are the shipped callouts.
+
 `lua tests/run.lua --list` prints the case inventory; it is committed as
 [`test-cases.md`](test-cases.md), and its Total is the README's `[tests]` badge. Regenerate both in
 the change that moves the count (testing-§5).

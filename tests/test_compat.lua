@@ -41,11 +41,11 @@ end)
 
 test("compat: [final] an empty-string realm falls back to the normalized realm name", function()
     local NS, env = T.newAddon()
-    env.UnitFullName = function() return "Kaos", "" end
-    env.GetNormalizedRealmName = function() return "Silvermoon" end
+    env.UnitFullName = function() return "Samplehunter", "" end
+    env.GetNormalizedRealmName = function() return "Samplerealm" end
     local _, _, _, character = NS.Compat.PlayerIdentity()
     -- red under: `if not realm` alone
-    assertEqual(character, "Kaos-Silvermoon")
+    assertEqual(character, "Samplehunter-Samplerealm")
 end)
 
 test("compat: UseKeyDown reads the cvar, and defaults on when it cannot", function()
@@ -382,11 +382,11 @@ test("mock: [CA-M4-1] GUIDs, player info, group, friend and guild answers are se
     m.unitGUIDs.target = "Player-2-0000000B"
     assertEqual(m.UnitGUID("target"), "Player-2-0000000B")
     assertNil(m.GetPlayerInfoByGUID("Player-2-0000000B"))
-    m.players["Player-2-0000000B"] = { name = "Bob", realm = "Argent Dawn", classToken = "MAGE" }
+    m.players["Player-2-0000000B"] = { name = "Bob", realm = "Mock Realm", classToken = "MAGE" }
     local _, token, _, _, _, name, realm = m.GetPlayerInfoByGUID("Player-2-0000000B")
     assertEqual(token, "MAGE")
     assertEqual(name, "Bob")
-    assertEqual(realm, "Argent Dawn")
+    assertEqual(realm, "Mock Realm")
     assertFalse(m.C_PartyInfo.IsGUIDInGroup("Player-2-0000000B"))
     assertFalse(m.C_FriendList.IsFriend("Player-2-0000000B"))
     assertFalse(m.IsGuildMember("Player-2-0000000B"))
@@ -415,7 +415,7 @@ end)
 local STRANGER = "Player-2-0000000B"
 
 local function stranger(m, fields)
-    m.players[STRANGER] = { name = "Bob", realm = "Argent Dawn" }
+    m.players[STRANGER] = { name = "Bob", realm = "Mock Realm" }
     return m.addAura(fields or { casterGUID = STRANGER })
 end
 
@@ -427,7 +427,7 @@ test("compat: [CA-M4-2] AuraCaster reads the caster's GUID first, then the aura'
     local c = C.AuraCaster(a.auraInstanceID, a)
     assertEqual(c.guid, STRANGER)
     assertEqual(c.name, "Bob")
-    assertEqual(c.whisperName, "Bob-ArgentDawn")
+    assertEqual(c.whisperName, "Bob-MockRealm")
     assertEqual(c.emoteName, "Bob", "the emote names the bare name (CA-THX-2)")
     assertFalse(c.known)
     local b = m.addAura{ sourceUnit = "target" }
@@ -521,8 +521,8 @@ test("compat: [CA-M4-2] WhisperName is Name-Realm with the realm normalized, the
     local NS = T.newAddon()
     local C = NS.Compat
     assertFalse(C.RegionalNames())
-    assertEqual(C.WhisperName("Bob", "Argent Dawn"), "Bob-ArgentDawn")
-    assertEqual(C.WhisperName("Bob", "Azjol-Nerub"), "Bob-AzjolNerub")
+    assertEqual(C.WhisperName("Bob", "Mock Realm"), "Bob-MockRealm")
+    assertEqual(C.WhisperName("Bob", "Sample-Realm"), "Bob-SampleRealm")
     assertEqual(C.WhisperName("Bob", ""), "Bob")
     assertNil(C.WhisperName("Bob", nil), "an unreadable realm")
     assertNil(C.WhisperName(T.secret("Bob"), ""), "a secret name")
@@ -535,6 +535,6 @@ test("compat: [CA-M4-2] WhisperName with regional names is First-Surname, whatev
     local C = NS.Compat
     assertTrue(C.RegionalNames())
     -- red under: choosing the form by the client rather than by Compat.RegionalNames()
-    assertEqual(C.WhisperName("Traxex Silentshot", "Anything"), "Traxex-Silentshot")
+    assertEqual(C.WhisperName("Samplehunter Mockstride", "Anything"), "Samplehunter-Mockstride")
     assertEqual(C.WhisperName("Solo", nil), "Solo", "a name with no surname")
 end)

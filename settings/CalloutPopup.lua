@@ -281,12 +281,15 @@ end
 -- tooltip tokens (QC-02): the title gtip.value, each token gtip.title and what it fills in
 -- gtip.value (white and gold on Ka0s Default, as typed before); the frame stays Blizzard's. It is
 -- the page's tooltip (its glyph sits on the Text label), so its colors are panel-scoped (D-03), as
--- the When drawer's tooltip title is.
+-- the When drawer's tooltip title is. Where it opens (AD-92-QC, standalone-windows *Tooltip
+-- placement*): the glyph is in the popup's content, a BODY element, so the tooltip opens beside the
+-- popup window (Pop.frame, named: its outermost ancestor is the full-screen catcher), its top level
+-- with the glyph, and covers none of the fields the player is filling in.
 local function showTokenHelp(owner)
     if not GameTooltip then return end
     local vr, vg, vb = NS.SkinColor("gtip.value", true)
     local tr, tg, tb = NS.SkinColor("gtip.title", true)
-    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    NS.Tip.Own(GameTooltip, owner)
     GameTooltip:SetText(L["Tokens"], vr, vg, vb)
     local lr, lg, lb = NS.SkinColor("gtip.line", true)
     GameTooltip:AddLine(L["Type a token into the text. It is filled in when the callout is sent."], lr, lg, lb,
@@ -295,6 +298,7 @@ local function showTokenHelp(owner)
         GameTooltip:AddDoubleLine(line[1], line[2], tr, tg, tb, vr, vg, vb)
     end
     GameTooltip:Show()
+    NS.Tip.Beside(GameTooltip, owner, Pop.frame)
 end
 
 local function hideTooltip()

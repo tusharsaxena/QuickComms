@@ -323,8 +323,9 @@ Total.
 - compat: [CA-M4-2] WhisperName is Name-Realm with the realm normalized, the name alone on the same realm
 - compat: [CA-M4-2] WhisperName with regional names is First-Surname, whatever the realm
 
-### test_identity.lua (11)
+### test_identity.lua (12)
 
+- identity: [AD-87-QC] the fixtures' player is LibKa0s Sim's first sample character on each client
 - identity: without regional names the character is Name-Realm and the names carry no realm
 - identity: with regional names the character, {me} and a unit are First Surname, never a realm
 - identity: with regional names a chat sender is the player by the long form alone
@@ -978,6 +979,16 @@ Total.
 - check: [CA-M2-10] a combined callout prints each action with its bytes, then the macro total
 - check: [CA-M2-10] a skipped action says why; a locked Line names its lock
 
+### test_reports.lua (7)
+
+- reports: [AD-79-QC] /qc why is a report in the console, with one pointer in chat
+- reports: [AD-79-QC] /qc check <id> is a report; a gone id is refused in chat
+- reports: [AD-79-QC] a one-line check verdict is a short answer and stays in chat
+- reports: [AD-79-QC] /qc probe and /qc probe ids are reports; clear and the combat refusal stay in chat
+- reports: [AD-79-QC] /qc preview list is a report; preview off and a bad name stay in chat
+- reports: [AD-79-QC] a report with logging on lands once and leaves logging on
+- reports: [AD-79-QC] without LibKa0s a report prints its lines in chat, with no pointer
+
 ### test_send_guard.lua (13)
 
 - guard: Decide is ok outside the window and guarded inside it
@@ -1406,13 +1417,15 @@ Total.
 - pad looks: a stored Strength with no strength token is as stored
 - pad looks: with the library absent a button stays flat and its stored Strength draws
 
-### test_pad_header.lua (9)
+### test_pad_header.lua (11)
 
 - pad header: the header is the library's title band in every skin, borderless, the header itself clear
 - pad header: the band and the header sit over the root, never level with its backdrop
 - pad header: the header sits flush inside the window edge, down growth and up, in every skin
 - pad header: the rows start under the band, and a collapsed pad is the band and its edges
 - pad header: the text stays left, the collapse button right, each on the band's middle
+- pad header: the collapse mark never stands taller than the row, down to Header height 14
+- pad header: a skin switch in combat leaves the collapse word in the Header tab's face
 - pad header: a section band draws no band in any skin, so the header is the only band
 - pad header: a section band the player dresses still draws what was stored
 - pad header: the band stands down when the header's background stops following the skin, and comes back
@@ -1530,7 +1543,7 @@ Total.
 - dial: [paging] the indicators sit on a rounded background sized to the row; off hides it
 - dial: [paging] every dot and the pill has a border, its size plus twice the Dot border; 0 draws none
 - dial: [front] the hub, its circle and the pointer draw over the slices
-- dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side
+- dial: [tooltip] a wedge's tooltip sits outside the dial: beside it, the span the disc, labels and offset
 - dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off
 - dial: [labels] the Label offset moves every label out from the center; the title and the page row follow
 - dial: [polish] default hub is a solid gold circle of 24 on a 32 backdrop with a 1 px rim, no red X
@@ -1543,6 +1556,27 @@ Total.
 - dial: [art] RingTexture picks the nearest step
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
+
+### test_tooltips.lua (18)
+
+- tooltips: only core/TooltipSetup.lua leases LibKa0s-Tooltip-1.0 (library-stack-§7)
+- tooltips: no own tooltip is owned on the cursor or at a corner; every SetOwner is ANCHOR_NONE
+- tooltips: with the geometry unreadable, the seam attaches above the element
+- tooltips: with LibKa0s absent the seam owns at ANCHOR_NONE and attaches above, with no error
+- tooltips: [pad] a button's tooltip opens beside the whole pad (PlaceBeside, the pad's group)
+- tooltips: [pad] the drag strip is in the pad's group while it shows
+- tooltips: [pad] a section title's tooltip opens beside the pad (a body element)
+- tooltips: [pad] the header row's Why is this showing? is chrome: attached above the header
+- tooltips: [pad] the wheel's combat refusal is attached above the header
+- tooltips: [dial] a wedge's tooltip opens right of the whole dial, top level with the wedge, 2 px off
+- tooltips: [dial] the hub's and a page arrow's tooltips open beside the dial too
+- tooltips: [dial] Beside, prefer left tries the left first; Tooltip offset widens the span
+- tooltips: [dial] a ring title or a page row wider than the labels widens the span
+- tooltips: [preview window] the dropdown's and End preview's tooltips open beside the window
+- tooltips: [preview window] locked, a title mark's tooltip is attached above it (chrome)
+- tooltips: [callout popup] the token glyph's tooltip opens beside the popup, not beside its catcher
+- tooltips: [migration 21] a dial's retired Above or Below side becomes Beside; the old default offset 0
+- tooltips: [migration 21] the runner moves a stored schemaVersion 20 profile's Above to Beside
 
 ### test_anim.lua (46)
 
@@ -2004,7 +2038,7 @@ Total.
 - skin windows: the modal window's title and close X sit on the band's middle, the page under it, every skin (R5-WIN)
 - skin windows: the modal fallback wears the band too, its title and close mark on it (R5-WIN)
 
-### test_title_bars.lua (7)
+### test_title_bars.lua (14)
 
 - title bars: the Preview window's close shows its tooltip
 - title bars: the Preview window's close rests in icon.tint and hovers in close.hot
@@ -2013,6 +2047,13 @@ Total.
 - title bars: the modal window's fallback close shows its tooltip and wears the close colors
 - title bars: a pad header's collapse toggle shows its tooltip, Collapse or Expand
 - title bars: a pad header's collapse toggle rests in icon.tint and hovers in text.link
+- header strip: the Preview window's marks are HeaderButtons', settings then close
+- header strip: the Preview window's settings mark opens settings and ends nothing
+- header strip: the Preview window's settings mark shows its tooltip and wears the title-bar colors
+- header strip: the modal window's close is the strip's, settings opted out with its reason
+- header strip: the modal fallback's close is the strip's, settings opted out
+- header strip: a pad header's collapse toggle is the strip's, settings opted out
+- header strip: a pad's drag strip carries the settings mark, which opens settings
 
 ### test_skin_hud.lua (21)
 
@@ -2331,7 +2372,7 @@ Total.
 | test_disabled.lua | 27 |
 | test_diagnostics.lua | 14 |
 | test_compat.lua | 32 |
-| test_identity.lua | 11 |
+| test_identity.lua | 12 |
 | test_probe.lua | 18 |
 | test_restrictions.lua | 20 |
 | test_situation.lua | 20 |
@@ -2355,6 +2396,7 @@ Total.
 | test_page_pads.lua | 28 |
 | test_page_dials.lua | 28 |
 | test_check.lua | 9 |
+| test_reports.lua | 7 |
 | test_send_guard.lua | 13 |
 | test_sendengine.lua | 49 |
 | test_autothank.lua | 68 |
@@ -2369,11 +2411,12 @@ Total.
 | test_surfaces.lua | 36 |
 | test_pad_render.lua | 28 |
 | test_pad_looks.lua | 21 |
-| test_pad_header.lua | 9 |
+| test_pad_header.lua | 11 |
 | test_pad.lua | 47 |
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
+| test_tooltips.lua | 18 |
 | test_anim.lua | 46 |
 | test_anim_styles.lua | 140 |
 | test_anim_surfaces.lua | 42 |
@@ -2388,7 +2431,7 @@ Total.
 | test_skinsetup.lua | 25 |
 | test_launcher_skin_entry.lua | 1 |
 | test_skin_windows.lua | 24 |
-| test_title_bars.lua | 7 |
+| test_title_bars.lua | 14 |
 | test_skin_hud.lua | 21 |
 | test_skin_flip.lua | 61 |
 | test_skin_picker.lua | 28 |
@@ -2408,4 +2451,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2038** |
+| **Total** | **2073** |

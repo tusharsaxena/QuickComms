@@ -184,12 +184,17 @@ end)
 test("preview window: `/qc preview list` changes nothing and shows no window", function()
     local NS, m = live()
     m.prints = {}
+    NS.DebugLog:Clear()
     NS.addon:OnSlashCommand("preview list")
     -- red under: `list` read as a situation name
     assertTrue(NS.Preview.PreviewAs() == nil)
     assertFalse(NS.PreviewWindow.IsShown())
-    assertTrue(m.prints[1]:find("Preview as (now: Off):", 1, true) ~= nil, m.prints[1])
-    assertTrue(table.concat(m.prints, "\n"):find("raid:2912", 1, true) ~= nil)
+    -- AD-79-QC (LibKa0s#79): the menu is a report, under the console's `/qc preview list` header, and
+    -- chat holds the one pointer. Re-pinned from the first chat line.
+    assertEqual(#m.prints, 1, table.concat(m.prints, " | "))
+    local second = NS.DebugLog.buffer[2] or ""
+    assertTrue(second:find("Preview as (now: Off):", 1, true) ~= nil, second)
+    assertTrue(table.concat(NS.DebugLog.buffer, "\n"):find("raid:2912", 1, true) ~= nil)
 end)
 
 test("preview window: a refused start never shows it", function()
@@ -347,6 +352,18 @@ test("preview window: [QF-07] over the edit preview it is locked: dimmed, its co
     for _, c in ipairs({ f.dropdown, f.endButton, f.closeButton }) do
         assertTrue(c:GetMotionScriptsWhileDisabled(), "hover reaches a disabled control")
     end
+    -- AD-86-QC (LibKa0s#86): the header strip's settings mark is locked with the rest, and says why.
+    -- red under: a settings mark left live over the edit preview, or showing "Open settings"
+    assertFalse(f.settingsButton:IsEnabled(), "the settings mark is off")
+    assertTrue(f.settingsButton:GetAlpha() < 1, "the settings mark is dimmed")
+    assertTrue(f.settingsButton:GetMotionScriptsWhileDisabled(), "hover reaches the settings mark")
+    m.GameTooltip.__lines = {}
+    f.settingsButton:__fire("OnEnter")
+    local tipSaid = {}
+    for _, l in ipairs(m.GameTooltip.__lines or {}) do tipSaid[#tipSaid + 1] = tostring(l[1]) end
+    assertTrue(table.concat(tipSaid, " | "):find("disabled while you edit a group", 1, true) ~= nil,
+        table.concat(tipSaid, " | "))
+    f.settingsButton:__fire("OnLeave")
     f.dropdown:__fire("OnEnter")
     local said = table.concat((function()
         local out = {}

@@ -582,7 +582,9 @@ test("pad: [icon only] the pad is as wide as its buttons when the header is narr
     -- and its inner rule, 2 px a side), so the pad is that much wider than the row.
     assertEqual(inst.wlook.edge, 2, "Ka0s Default's header inset")
     assertEqual(inst.root.__w, NS.PadRender.HeaderMinWidth(inst.header) + 4, "a wide header widens the pad")
-    assertEqual(inst.root.__w, PL.PAD + 200 + 4 + 16 + 2 + 4,
+    -- Re-pinned at AD-86-QC (LibKa0s#86): the collapse button is the header strip's mark, 18 px at the
+    -- strip's 6 px corner inset (W.HEADER), where the hand-built one was 16 at 2.
+    assertEqual(inst.root.__w, PL.PAD + 200 + 4 + 18 + 6 + 4,
         "its text, a gap and the collapse button at its inset, inside the edges")
 end)
 
@@ -598,7 +600,8 @@ test("pad: [icon only] a PvP match's lockdown chip, shown out of combat, widens 
     assertTrue(NS.Pad.Apply("p1", plan))
     assertTrue(inst.header.qcLockdown:IsShown(), "the lockdown chip is shown")
     -- red under: the lockdown chip left out (it would run under the collapse button and past the edge)
-    assertEqual(inst.root.__w, PL.PAD + 70 + 6 + 60 + 4 + 16 + 2 + 2 * inst.wlook.edge,
+    -- The button at the header strip's 18 px and 6 px inset (re-pinned at AD-86-QC, LibKa0s#86).
+    assertEqual(inst.root.__w, PL.PAD + 70 + 6 + 60 + 4 + 18 + 6 + 2 * inst.wlook.edge,
         "the text, the lockdown chip at its gap, then the button, inside the edges (R5-QC1)")
 end)
 

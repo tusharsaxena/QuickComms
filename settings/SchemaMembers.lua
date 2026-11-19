@@ -865,7 +865,10 @@ for _, row in ipairs(pagingRows()) do ROWS[#ROWS + 1] = row end
 -- Paging and Icons.
 local LABELS, LABELP = L["Labels"], "dial.label."
 local SLICE_LABELS = L["Slice labels"]
-local TIP_SIDE = choices({ { "top", L["Above"] }, { "bottom", L["Below"] }, { "left", L["Left"] }, { "right", L["Right"] } })
+-- The tooltip's side (AD-92-QC, standalone-windows *Tooltip placement*: a wedge is a body element, so its
+-- tooltip opens beside the whole dial, right when it fits, else left). Above and Below are retired
+-- (migration step 21); Left asks for the left first.
+local TIP_SIDE = choices({ { "right", L["Beside the dial"] }, { "left", L["Beside, prefer left"] } })
 local function labelRows()
     local O = NS.addon.Settings.Helpers
     local ldef = T.dial.label
@@ -895,11 +898,11 @@ local function tooltipRows()
     local ldef, TIP = T.dial.label, L["Tooltip"]
     return { { path = LABELP .. "tooltipSide", instance = "dial", type = "string", default = ldef.tooltipSide,
         values = TIP_SIDE, page = "dials", group = LABELS, subgroup = TIP, label = L["Tooltip side"], startsLine = true,
-        desc = L["Which side of the dial a slice's tooltip shows on. It always sits outside the dial."],
+        desc = L["A slice's tooltip opens beside the dial, its top level with the slice: on the right when there is room, else on the left. Prefer left tries the left first."],
         validate = oneOf(TIP_SIDE) },
       { path = LABELP .. "tooltipOffset", instance = "dial", type = "number", default = ldef.tooltipOffset,
         min = 0, max = 80, step = 1, page = "dials", group = LABELS, subgroup = TIP, label = L["Tooltip offset"],
-        desc = L["How far the tooltip sits from the dial's title, labels or page arrows, in pixels."],
+        desc = L["Extra room between the tooltip and the dial's labels, in pixels, beyond the standard 2."],
         validate = NUMBER, normalize = clamp(0, 80, true) } }
 end
 

@@ -22,7 +22,7 @@ local function aura(over)
 end
 
 local function caster(over)
-    local c = { guid = STRANGER, name = "Bob", whisperName = "Bob-ArgentDawn", emoteName = "Bob", known = false }
+    local c = { guid = STRANGER, name = "Bob", whisperName = "Bob-MockRealm", emoteName = "Bob", known = false }
     for k, v in pairs(over or {}) do c[k] = v end
     return c
 end
@@ -136,10 +136,10 @@ test("autothank: [CA-M4-4] Macro per mode: the THANK emote on the caster, a whis
     local macro, why, whisper = AT.Macro(caster(), "Arcane Intellect", settings{ send = "emote" })
     assertEqual(macro, thank .. " Bob") assertNil(why) assertFalse(whisper)
     macro, why, whisper = AT.Macro(caster(), "Arcane Intellect", settings{ send = "line" })
-    assertEqual(macro, m.SLASH_WHISPER1 .. " Bob-ArgentDawn Thanks for the Arcane Intellect, Bob!")
+    assertEqual(macro, m.SLASH_WHISPER1 .. " Bob-MockRealm Thanks for the Arcane Intellect, Bob!")
     assertNil(why) assertTrue(whisper)
     macro, why, whisper = AT.Macro(caster(), "Arcane Intellect", settings{ send = "both" })
-    assertEqual(macro, thank .. " Bob\n" .. m.SLASH_WHISPER1 .. " Bob-ArgentDawn Thanks for the Arcane Intellect, Bob!")
+    assertEqual(macro, thank .. " Bob\n" .. m.SLASH_WHISPER1 .. " Bob-MockRealm Thanks for the Arcane Intellect, Bob!")
     assertNil(why) assertTrue(whisper)
 end)
 
@@ -150,15 +150,15 @@ test("autothank: [CA-THX-2] the emote names the caster's bare name; the whisper 
     local NS, m = boot()
     local AT = NS.AutoThank
     local thank = NS.Emotes.Command("THANK")
-    assertEqual(AT.Macro(caster(), "x", settings{ send = "emote" }), thank .. " Bob", "red under: /thank Bob-ArgentDawn")
+    assertEqual(AT.Macro(caster(), "x", settings{ send = "emote" }), thank .. " Bob", "red under: /thank Bob-MockRealm")
     assertEqual(AT.Macro(caster{ emoteName = "Bob Smith", whisperName = "Bob-Smith" }, "x", settings{ send = "emote" }),
         thank .. " Bob Smith", "a regional name as it reads")
     local unnamed = caster()
     unnamed.emoteName = nil
-    assertEqual(AT.Macro(unnamed, "x", settings{ send = "emote" }), thank .. " Bob-ArgentDawn",
+    assertEqual(AT.Macro(unnamed, "x", settings{ send = "emote" }), thank .. " Bob-MockRealm",
         "no emote name: the whisper form")
     assertEqual(AT.Macro(caster(), "x", settings{ send = "both", text = "ty" }),
-        thank .. " Bob\n" .. m.SLASH_WHISPER1 .. " Bob-ArgentDawn ty")
+        thank .. " Bob\n" .. m.SLASH_WHISPER1 .. " Bob-MockRealm ty")
 end)
 
 test("autothank: [CA-M4-4] Macro holds the whole macro to 255 bytes, the whisper's text cut to fit", function()
@@ -196,7 +196,7 @@ test("autothank: [CA-M4-4] Macro reads the client's own /w through Compat: none 
     local NS, m = boot()
     local AT = NS.AutoThank
     m.SLASH_WHISPER1 = "/susurrar"
-    assertEqual(AT.Macro(caster(), "x", settings{ send = "line", text = "ty" }), "/susurrar Bob-ArgentDawn ty")
+    assertEqual(AT.Macro(caster(), "x", settings{ send = "line", text = "ty" }), "/susurrar Bob-MockRealm ty")
     m.SLASH_WHISPER1 = nil
     local macro, why = AT.Macro(caster(), "x", settings{ send = "line", text = "ty" })
     assertNil(macro) assertEqual(why, "noWhisper")
@@ -281,7 +281,7 @@ end)
 -- An enabled addon in the open world whose candidates are caught, with a stranger who can buff.
 local function detecting()
     local NS, m = live()
-    m.players[STRANGER] = { name = "Bob", realm = "Argent Dawn" }
+    m.players[STRANGER] = { name = "Bob", realm = "Mock Realm" }
     m.__now = 1000
     local got = {}
     NS.AutoThank.Offer = function(c) got[#got + 1] = c end
@@ -571,7 +571,7 @@ end
 
 local function stranger(m, n)
     local guid = ("Player-2-%08X"):format(0x100 + n)
-    m.players[guid] = { name = "Caster" .. n, realm = "Argent Dawn" }
+    m.players[guid] = { name = "Caster" .. n, realm = "Mock Realm" }
     return guid
 end
 
@@ -972,7 +972,7 @@ local function echo(m, event, sender, guid)
     m.__fire(event, "never read", sender or "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1, guid or m.playerGUID)
 end
 
-local function whisperName(NS) return NS.Compat.WhisperName("Caster1", "Argent Dawn") end
+local function whisperName(NS) return NS.Compat.WhisperName("Caster1", "Mock Realm") end
 
 test("autothank: [CA-M4-12] the Thank click runs the macro of each mode", function()
     for _, send in ipairs({ "emote", "line", "both" }) do
@@ -1001,7 +1001,7 @@ test("autothank: [CA-THX-2] the debug log traces the caster, the armed macro and
     m.__click(b)
     NS.Debug = debug0
     local all = table.concat(logged, "\n")
-    assertTrue(all:find("macro=[/thank Caster1 \\n /w Caster1-ArgentDawn", 1, true) ~= nil, "the click's macro: " .. all)
+    assertTrue(all:find("macro=[/thank Caster1 \\n /w Caster1-MockRealm", 1, true) ~= nil, "the click's macro: " .. all)
     assertTrue(all:find("acting=true", 1, true) ~= nil, "the acting edge")
     assertTrue(all:find("type=macro", 1, true) ~= nil, "the type attribute")
     local NS2, m2 = hosting()
@@ -1011,7 +1011,7 @@ test("autothank: [CA-THX-2] the debug log traces the caster, the armed macro and
     end
     offer(NS2, m2, 1)
     local trail = table.concat(seen, "\n")
-    assertTrue(trail:find('name="Caster1" realm="Argent Dawn"', 1, true) ~= nil, "the caster as read: " .. trail)
+    assertTrue(trail:find('name="Caster1" realm="Mock Realm"', 1, true) ~= nil, "the caster as read: " .. trail)
     assertTrue(trail:find('emote="Caster1"', 1, true) ~= nil, "the emote name")
     assertTrue(trail:find("arm ", 1, true) ~= nil, "the arm")
 end)
@@ -1066,7 +1066,7 @@ test("autothank: [CA-M4-12] both records two pending entries and gives one resul
     echo(m, "CHAT_MSG_TEXT_EMOTE")
     assertEqual(#got, 0, "one of two")
     -- the whisper's echo names the recipient as its sender: it is ours all the same
-    echo(m, "CHAT_MSG_WHISPER_INFORM", "Caster1-ArgentDawn", "Player-2-00000101")
+    echo(m, "CHAT_MSG_WHISPER_INFORM", "Caster1-MockRealm", "Player-2-00000101")
     assertEqual(#got, 1, "red under: no CHAT_MSG_WHISPER_INFORM echo, or one read as someone else's")
     assertEqual(got[1].what, "sent")
 end)

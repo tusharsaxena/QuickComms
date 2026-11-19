@@ -85,6 +85,10 @@ NS.MIGRATIONS = {
     -- or marker; name, icon and icon color not compared, F4a), and the stored Dungeon and Raid sets
     -- gain their Heal me callout after Kick order and Healthstones. Copies and deleted sets gain nothing.
     { to = 20, perProfile = true, run = function(_, profile) NS.Library.MigrateComboCallouts(profile) end },
+    -- 20 -> 21 (AD-92-QC, LibKa0s#92, standalone-windows *Tooltip placement*): a dial's tooltip opens
+    -- beside the dial; the retired Above and Below sides become Beside the dial, Left keeps its side
+    -- (Beside, prefer left), and the old default offset (8, measured from the title) becomes 0.
+    { to = 21, perProfile = true, run = function(_, profile) NS.Library.MigrateDialTipSide(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

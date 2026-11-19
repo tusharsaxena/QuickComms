@@ -80,14 +80,14 @@ test("builtins: bake audit, every callout bakes under its set's snapshot", funct
         local snap = BI.SNAPSHOTS[topOf(gid)]
         assertTrue(snap ~= nil, "snapshot for " .. topOf(gid))
         for _, cid in ipairs(g.callouts or {}) do
-            local line, reason, info = NS.Bake.Bake(BI.callouts[cid], snap, { ctx = { me = "Traxex" } })
+            local line, reason, info = NS.Bake.Bake(BI.callouts[cid], snap, { ctx = { me = "Samplehunter" } })
             assertTrue(line ~= nil, cid .. ": " .. tostring(reason))
             assertTrue(info.length <= 255, cid .. " length")
             assertTrue(#(info.unknown or {}) == 0, cid .. " unknown token")
             assertTrue(info.lock == nil, cid .. " locked under its own snapshot: " .. tostring(info.lock))
             -- every action, not only the Line (CA-M3-1): an emote beside a line bakes, fits, and is
             -- not padlocked under its own set's snapshot
-            local _, why, all = NS.Bake.BakeActions(BI.callouts[cid], snap, { ctx = { me = "Traxex" } })
+            local _, why, all = NS.Bake.BakeActions(BI.callouts[cid], snap, { ctx = { me = "Samplehunter" } })
             assertTrue(#all.baked == #all.actions, cid .. ": an action skipped: " .. tostring(why))
             assertTrue(all.total <= NS.Bake.MAX_MACRO, cid .. " macro length")
             for _, a in ipairs(all.baked) do
@@ -213,7 +213,8 @@ test("builtins: [QF-05] the owner's edits are the shipped look, with no schema s
     -- neither touches a prebuilt, nor does step 18, the Friz move (R3-FRIZ), nor step 19, which only
     -- adds the new Emotes set (QFE-E3). Step 20 does touch prebuilts (combined actions §8): it gives
     -- unedited shipped callouts their emote and adds the two Heal me rows, not these colors or At Stone.
-    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 20)
+    -- Step 21 (AD-92-QC) moves only a dial's tooltip side and offset. Re-pinned 20 -> 21.
+    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 21)
 end)
 
 test("builtins: [polish] every battleground node set has map-wide callouts of its own", function()
@@ -406,7 +407,7 @@ test("builtins: [bg buttons] Temple of Kotmogu has its four orbs and the center"
     end
     -- the {target} a row's %s fill leaves for the bake
     local line = NS.Bake.Bake(BI.callouts["bi.bg.tok.green.kill"], BI.SNAPSHOTS["bi.bg.tok"],
-        { ctx = { target = "Traxex" } })
+        { ctx = { target = "Samplehunter" } })
     assertTrue(line:find("Kill their green orb carrier", 1, true) ~= nil, line)
     assertEqual(BI.callouts["bi.bg.tok.mid"].text, "Orbs to the middle", "the map-wide callouts stay")
 end)

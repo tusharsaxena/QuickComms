@@ -18,13 +18,14 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
 | STATE-1..7 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload, a new profile's prebuilts, the owner's Solo / In Group / Dungeon / Raid defaults |
 | COMBAT-1 | Combat | The settings panel in combat |
-| DIAG-1..2 | Diagnostics | The debug console, the report, perf |
+| DIAG-1..3 | Diagnostics | The debug console, the report, perf, the report verbs (`why`, `check`, `probe`, `preview list`) in the console with one chat line |
 | DEGRADED-1..2 | Degraded | The install with LibKa0s missing, and its help rows |
 | SEND-1..7 | Send | Secure sends in keys and on bosses, the spam guard, General (/1) with its Say fallback, the lockdown lift after an encounter or a key |
 | TOKEN-1 | Tokens | `{coordinates}`: your map position, read at the press, in a preview echo and in combat |
-| PAD-1..17 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
-| EDIT-1..34 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its look on the skin and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion |
-| PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
+| PAD-1..19 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text, the header strip's collapse toggle and the drag strip's settings mark |
+| EDIT-1..35 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its look on the skin and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion, the callout popup's close on the header strip |
+| PREVIEW-1..13 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick; the window's settings mark |
+| TIP-1..6 | [Tooltip placement](#tooltip-placement) | AD-92-QC (LibKa0s#92): a pad button's and a section title's tooltip beside the whole pad, the header row's above it, a wedge's beside the whole dial near each screen edge, the Preview as window's controls beside it and its locked marks above, the callout popup's token tooltip beside the popup, an existing profile's dial moved off Above |
 | DIAL-1..43 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | LAYOUT-1..6 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
 | LAYER-1..9 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before; #14: the pads and the dial over other addons' windows, QuickComms' own stack, a click outside the dial, the skin picker over a pad |
@@ -182,6 +183,23 @@ afterwards. `/qc debug diagnostics` writes the same report again below the first
 **DIAG-2. Perf.** `/qc perf` → the step panel opens with its own close mark; run A, B and finish →
 the report prints the `bakeSurface`, `sendClick`, `padLayout` and `echoMatch` rows and no Lua
 error. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+
+**DIAG-3. A report goes to the debug console, and chat gets one line (2026-11-18, AD-79-QC, LibKa0s#79).**
+The owner's ruling of 2026-11-08. `/qc debug off` and close the console. `/qc why` → the console opens by
+itself and holds a `[Why] /qc why` header, then *Your role: ...* and each built pad and dial with its
+groups, and chat holds exactly one line, `why: <N> lines written to the debug console. Use Copy to share
+it.`, N matching the lines written; logging is still off. **Copy** → the lines, plain text, no `|cff`
+codes. With the console open, `/qc check <id of a Say or party callout>` → `[Check] /qc check <id>`, then
+`<id> -> <the line>` and its channel and bytes, and one chat line `check <id>: ...`. `/qc preview list` →
+`[Preview] /qc preview list` and the menu; nothing is previewed. Out of combat, `/qc probe` and
+`/qc probe ids` → `[Probe]` reports of four and five lines under their headers, one chat line each.
+These stay in chat as one line and write nothing new to the console: `/qc check c999` (*No callout with
+id c999.*), `/qc check <id of a /raid callout>` while solo (*<id> -> not sent here (...)*), `/qc preview`
+(*Previewing: Current*), `/qc preview off`, `/qc preview nope`, `/qc probe clear`, `/qc probe bogus` and
+`/qc probe` in combat. `/qc help` and `/qc list` stay in chat as before. With LibKa0s removed
+(DEGRADED-1), `/qc why` prints its lines in chat with no pointer line. *Failure:* a report line in chat, a
+second chat line, a pointer count that does not match, logging turned on, a one-line answer in the
+console, or a Lua error. Result: owed
 
 ## Degraded
 
@@ -374,6 +392,27 @@ Result: 2026-10-25, pass (the owner's run; client build not recorded).
 **PAD-17. A rebuild that moved no line still sends (2026-10-25, F-006).** Change the pad's spacing
 (or any setting that changes no line) and press a button → it still sends its line.
 Result: 2026-10-25, pass (the owner's run; client build not recorded).
+
+**PAD-18. The collapse toggle is the header strip's (2026-11-17, AD-86-QC, LibKa0s#86).** On any pad, the
+header row's "-" sits 6 pixels in from the row's right edge (it sat 2 in) in an 18-pixel slot, still in the
+Header tab's face, on the row's middle. At rest it is the skin's icon color; under the pointer it lights the
+skin's link color (orange under Ka0s Default) and a one-line tooltip above it says **Collapse**. A click
+collapses the pad and the mark reads "+", its tooltip **Expand**; a click on the row still collapses too.
+The row carries no settings mark (a pad is a HUD display: its settings mark is on the drag strip, PAD-19).
+Repeat under Obsidian. Set Header height to 14: the "-" and its hover area stay inside the row. In
+combat (a target dummy), switch the skin on the Skin tab: the "-" keeps the same face as the situation text
+beside it until and after combat ends. Fail: the "-" in the gold header color at rest, no tooltip or one
+under the pointer, a settings or close mark on the row, the "-" or its hover area running past the row's
+edge at Header height 14, or the "-" changing face on its own during the in-combat skin switch.
+Result: owed
+
+**PAD-19. The drag strip's settings mark (2026-11-17, AD-86-QC, LibKa0s#86).** `/qc unlock` → each pad's
+drag strip shows a settings mark left of its "?" mark, the same size and tint as it; under the pointer it
+lights and a one-line tooltip says **Open settings**. A left click opens the Quick Comms settings (as a
+right-click on the strip does); dragging from the mark still moves the pad; a right-click on it still opens
+settings. The pad's name on the strip is not cut off by the extra mark. `/qc lock` → the strip and its
+marks are gone. Fail: no settings mark, a click that opens nothing, or the pad's tooltip on the mark.
+Result: owed
 
 ## Editors
 
@@ -738,6 +777,14 @@ and Dials pages' General tabs, each delete button ends in an ellipsis (Delete gr
 Delete dial…) and opens its confirm; the Groups page's copy button reads Duplicate group.
 Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
+**EDIT-35. The callout popup's close is the header strip's (2026-11-17, AD-86-QC, LibKa0s#86).** Groups →
+pick a group → Edit callout (or New callout) → the popup's close X sits on the title band's middle at its
+right, rests in the skin's icon color, lights red under the pointer with a **Close** tooltip above it, and
+cancels the popup. The popup has no settings mark (it is a modal opened from the settings panel, which is
+already beneath it). Repeat under Obsidian and WoW Default. Fail: a settings mark, a tooltip missing or
+under the pointer, or a close that does not cancel.
+Result: owed
+
 ## Preview window
 
 The "Preview as…" selector window (`modules/PreviewWindow.lua`, 2026-10-23): a small window titled
@@ -782,10 +829,10 @@ Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-8. Bare `/qc preview` and `list`.** In the open world with no preview on: `/qc preview` →
 chat `Previewing: Current`, the window opens on Current and the pads show PREVIEW. `/qc preview list`
-→ the menu prints and nothing changes. `/qc preview nope` → the line points at `/qc preview list`.
+→ the menu is written to the debug console (DIAG-3; amended by AD-79-QC, 2026-11-18) and nothing changes. `/qc preview nope` → the line points at `/qc preview list`.
 `/qc help` → the preview line reads "Preview the pads and dials as another situation in a small
 window — …".
-Result: 2026-10-23, pass (the owner's run; client build not recorded).
+Result: owed (the expected result changed: AD-79-QC, 2026-11-18, moved `/qc preview list` to the debug console; it passed on 2026-10-23, the owner's run, client build not recorded, when the menu was in chat).
 
 **PREVIEW-9. Every preview looks like live (2026-10-23, run item QC-05, SM-QC-8).** In the open
 world, solo, note how the pad's buttons and the dial's wedge icons look in a live situation (or
@@ -839,6 +886,16 @@ slice prints its line and the dial stays open. On the Groups page with Preview w
 slice of the edited group prints and the dial stays open. `/qc preview off`, open the dial with its
 key, click a slice → it sends and the dial closes, as before; the same in combat.
 Result: 2026-10-24, pass (the owner's run; client build not recorded).
+
+**PREVIEW-13. The window's settings mark (2026-11-17, AD-86-QC, LibKa0s#86).** `/qc preview arena` → the
+window's title band carries, at its right, a settings mark then the close X, 6 pixels apart, both on the
+band's middle, the title clear of both. The settings mark rests in the skin's icon color and lights the
+skin's link color under the pointer, with an **Open settings** tooltip above it; a click opens the Quick
+Comms settings and the preview and the window stay up. Over the edit preview (PREVIEW-11) the settings
+mark is dimmed and off with the rest, and hovering it shows the locked tooltip. Repeat under Obsidian.
+Fail: no settings mark, the order close · settings, the title running under a mark, or a click that ends
+the preview.
+Result: owed
 
 ## Dial
 
@@ -990,12 +1047,16 @@ in the hub is bigger and sits further out so it never covers the hub's circle; P
 Use class color → your class color. Untick Show pointer → no pointer while the dial is open, and its
 size and color are grayed out. Defaults → the gold 20-pixel chevron. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
-**DIAL-21. The tooltip outside the dial (dial slices, 2026-10-21).** Hover a wedge → its tooltip
-(name, line, channel) shows above the dial, over the ring's title, never over the slices or a label;
-hover the hub → Why is this showing? shows there too. Slice labels → Tooltip side Below → under the page
-arrows (or under the bottom label on a one-page ring); Left → left of the disc, clear of the longest
-label on that side; Right → mirrored. Tooltip offset 40 → each 40 pixels further out. Ring radius
-160 → the tooltip still clears the bigger dial. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+**DIAL-21. The tooltip outside the dial (dial slices, 2026-10-21; rewritten 2026-11-18 by AD-92-QC,
+LibKa0s#92: beside the dial, never above or below it).** Hover a wedge → its tooltip (name, line, channel)
+opens beside the dial, right of the disc and its widest label, its top level with the hovered wedge, never
+over the slices, a label or the ring's title; hover the hub → Why is this showing? opens there too, its top
+level with the hub. Labels → Tooltip offers Beside the dial (the default) and Beside, prefer left, and no
+longer Above or Below; Beside, prefer left → each tooltip opens left of the dial, clear of the longest label
+on that side. Tooltip offset 40 → each 40 pixels further out. Ring radius 160 → the tooltip still clears the
+bigger dial. Fail: a tooltip over the dial, above or below it, or following the pointer as it moves round
+the disc.
+Result: owed (rewritten by AD-92-QC; the 2026-10-21 pass was of Above, the old default)
 
 **DIAL-22. The hub draws over the slices (2026-10-21).** Open the dial with the default Slices look,
 then Background alpha 100% → the hub's backdrop and circle stay bright on top; the pointer is drawn over
@@ -2414,7 +2475,7 @@ The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compa
 
 - **FOREVER-22. `/qc probe` where you are, beside the ids record.** Out of combat, once in the open
   world and in any Forever dungeon, raid or battleground you happen to enter (no visit is owed: the ids
-  are FOREVER-16's and FOREVER-25's), type `/qc probe` → four chat lines: *Probe N saved for forever (...)*, then the place (its name, type, difficulty id and name,
+  are FOREVER-16's and FOREVER-25's), type `/qc probe` → four lines in the debug console under its `[Probe] /qc probe` header, and one chat pointer line (DIAG-3; amended by AD-79-QC, 2026-11-18): *Probe N saved for forever (...)*, then the place (its name, type, difficulty id and name,
   max players and instance id), then the content kind, group and role, then the spec, the talent
   groups with their points and the emote count (a few hundred). In combat → one line, *The probe is
   not available in combat.*, and nothing is recorded. Then `/qc probe ids` (FOREVER-25). Log out, then
@@ -2422,11 +2483,11 @@ The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compa
   `global.probes.forever` holds one record per probe, oldest first, the place records (no `kind`, each
   with every `GetInstanceInfo` value, the situation, the role and source, the spec and the emote
   tokens) and the ids record (`kind = "ids"`) in one list. Record any place whose content kind or
-  instance id differs from `defaults/GameIds_Clients.lua`. Result: passed (owner, 2026-11-10)
+  instance id differs from `defaults/GameIds_Clients.lua`. Result: owed (the expected result changed: AD-79-QC, 2026-11-18, moved the report lines to the debug console; it passed on 2026-11-10, owner, when they were in chat)
 - **FOREVER-23. `/qc probe` on Retail, and `probe clear`.** On Retail, type `/qc probe` in the open world
-  → the same four lines, *saved for retail*, with no talent groups (*none*). Then `/qc probe clear` →
+  → the same four lines in the debug console, *saved for retail*, with no talent groups (*none*). Then `/qc probe clear` →
   *Probes cleared: N removed.*, N being the probes taken on this client; after a /reload the
-  file has no `probes` table. `/qc help` lists `probe`. Result: passed (owner, 2026-11-10)
+  file has no `probes` table. `/qc help` lists `probe`. Result: owed (the expected result changed: AD-79-QC, 2026-11-18, moved the report lines to the debug console; it passed on 2026-11-10, owner, when they were in chat)
 
 The Dungeon set on Forever (QFE-C7, the lead's call; **code:** `defaults/GameIds_Clients.lua`
 `BUILTIN_WHEN`, `defaults/BuiltIns.lua` `WhenOf`, `modules/Library.lua` `seedGroup`).
@@ -2444,7 +2505,7 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
 `ProbeBattlegrounds`, `ProbeGroupFinder`). Anywhere on Forever; no travel.
 
 - **FOREVER-25. `/qc probe ids` sweeps the client's names with no travel.** Out of combat, anywhere on
-  Forever, type `/qc probe ids` → no Lua error, and five chat lines: *Ids probe N saved for forever
+  Forever, type `/qc probe ids` → no Lua error, and five lines in the debug console under its `[Probe] /qc probe ids` header, with one chat pointer line (DIAG-3; amended by AD-79-QC, 2026-11-18): *Ids probe N saved for forever
   (...)*; *map names read: M of ids 0 to 4000; dungeon finder: L entries; battlegrounds: B*, with M at
   least 45 (the ids Forever ships); *shipped ids the client does not name: none* (FOREVER-16);
   *dungeon finder names no shipped id carries:* followed by *none*, by names, or by *not checked, the
@@ -2467,7 +2528,7 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
   `battlegrounds` (each with its `name`, `battlegroundID` and `mapID`) and `groupFinder` (each activity
   with its `id`, `name`, `categoryID`, `mapID`, `maxNumPlayers` and `isPvp`); Darkspear Islands is among
   the group finder's activities and gets no set of its own (D3-R), and Battle for Gilneas is not listed
-  by the group finder. Result: passed (owner, 2026-11-10)
+  by the group finder. Result: owed (the expected result changed: AD-79-QC, 2026-11-18, moved the report lines to the debug console; it passed on 2026-11-10, owner, when they were in chat)
 - **FOREVER-26. The combined-actions core on Forever.** On WoW Forever, run ACTION-1 (one press sends a
   line, an emote, a ping and a marker), PING-2 (a ping in a party, in combat), MARK-2 (a mark in a party
   as a non-leader) and MARK-7 (marking in combat and during a boss encounter) → each as its check
@@ -2729,6 +2790,64 @@ character or a stranger who can cast a long buff on you.
   stranger's does. This confirms `C_FriendList.IsFriend(guid)` and `IsGuildMember(guid)` answer for a
   GUID. Result: passed (owner, 2026-11-13)
 
+## Tooltip placement
+
+AD-92-QC (LibKa0s#92, WowAddonStandards standalone-windows *Tooltip placement*, 2026-11-18). A body
+element's tooltip opens beside its window group, outside its outer edge (right when it fits, else left), its
+top level with the hovered element and 2 pixels off; a chrome element's is centered 2 pixels above its
+control, below it only at the screen's top. No tooltip follows the pointer or sits off a corner of its
+control. Run each with the window near the screen's right edge and again near its left edge.
+
+**TIP-1. A pad button's tooltip opens beside the pad (2026-11-18, AD-92-QC).** Hover a Comms Pad button →
+its tooltip (name, line, channel) opens right of the whole pad, its top level with the button's top, a hair
+off the pad's edge, covering no other button. Move the pad to the screen's right edge → the tooltip opens
+left of the pad instead. Hover a section title → its "Right-click to edit this group." opens the same way,
+level with the title. `/qc unlock` → with the drag strip shown, a tooltip still sits outside the pad and the
+strip. Fail: a tooltip over the pad, above a button, or on the pointer.
+Result: owed
+
+**TIP-2. The pad header's tooltips open above it (2026-11-18, AD-92-QC).** Hover a pad's header row (the
+situation text) → Why is this showing? opens centered above the header row, a hair off it; with the pad at
+the screen's top it opens below the row instead. With Groups as Tabs, enter combat and roll the mouse wheel
+over the header → "Tabs switch after combat." opens in the same place. Fail: either at a corner of the row
+or on the pointer.
+Result: owed
+
+**TIP-3. A dial's tooltips open beside the dial, near each edge (2026-11-18, AD-92-QC).** Open the Comms
+Dial in the screen's middle → hover each wedge in turn: every tooltip opens right of the dial and its labels,
+its top level with that wedge (so it moves down as you go from N round to S), and stays put while the pointer
+moves inside one wedge. Hover the hub and a page arrow → the same side. Set Open at to At the cursor and open the
+dial with the pointer near the screen's right edge → the tooltips open on the left. Labels → Tooltip side
+Beside, prefer left → on the left in the middle of the screen. Then the wide cases (review fix, 2026-11-18):
+rename a group shown as a ring to a long name (wider than the dial and its labels) and untick Show slice
+labels → the tooltip opens clear of the ring's title; on a paged ring at the smallest Ring radius, set Paging
+→ Arrow spacing 60 and Current page width 60 → the tooltip opens clear of the outer page arrow, its top level
+with the hovered wedge. Fail: a tooltip over a slice, a label, the ring's title or the page row, or one that
+follows the pointer.
+Result: owed
+
+**TIP-4. The Preview as window's tooltips (2026-11-18, AD-92-QC).** `/qc preview arena` → hover the
+situation dropdown → its tooltip opens beside the window (right, or left at the screen's right edge), its
+top level with the dropdown; End preview → the same. The settings and close marks → their one-line tooltips
+centered above each mark. Turn on Preview while editing on the Groups page (the window locks) → hover the
+dropdown → the locked tooltip opens beside the window; hover the close mark → the locked tooltip opens above
+the mark. Fail: any of them on a corner of its control or on the pointer.
+Result: owed
+
+**TIP-5. The callout popup's token tooltip opens beside the popup (2026-11-18, AD-92-QC).** Groups → Edit
+callout → hover the info glyph beside Text → the Tokens tooltip opens right of the popup window (left of it
+when the popup is near the screen's right edge), its top level with the glyph, covering none of the popup's
+fields. Fail: the tooltip off the glyph's top-right corner over the Text box, or over the dimmed screen
+in the popup's middle.
+Result: owed
+
+**TIP-6. An existing dial moves off Above once (2026-11-18, AD-92-QC, schema step 21).** On a profile saved
+before this build with a dial on Tooltip side Above and the default offset → after login, Dials → Labels →
+Tooltip reads Beside the dial and Tooltip offset 0; a dial on Left reads Beside, prefer left; an offset other
+than 8 is kept. `/qc diag` shows `tooltip=right/0` for the first. Fail: an empty Tooltip side, or Above still
+offered.
+Result: owed
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -2813,3 +2932,9 @@ Owed from combined actions M2 (QuickComms#16, CA-M2-1 to CA-M2-11, the same desi
 Owed from combined actions M3 (QuickComms#20, CA-M3-1 to CA-M3-5, the same design §8 and §10): EMOTE-9 and EMOTE-10, new, each owed.
 
 Owed from combined actions M4 (QuickComms#19, CA-M4-1 to CA-M4-14, the same design §9 and §13): THANK-1 to THANK-12 and FOREVER-26, new, each owed.
+
+Owed from the LibKa0s v1.105.0 adoption, wave B (AD-86-QC, LibKa0s#86, Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`): PAD-18, PAD-19, EDIT-35 and PREVIEW-13, new, each owed.
+
+Owed from the LibKa0s v1.105.0 adoption, wave C (AD-92-QC, LibKa0s#92, Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`): TIP-1 to TIP-6, new, each owed; DIAL-21 (rewritten for the tooltip beside the dial, so it lost its pass mark).
+
+Owed from the LibKa0s v1.105.0 adoption, wave D (AD-79-QC, LibKa0s#79, the same bundle): DIAG-3, new, owed. PREVIEW-8, FOREVER-22, FOREVER-23 and FOREVER-25 now read their report lines in the debug console rather than chat; each has a changed expected result, so it lost its pass mark and is owed again (AD-79-QC review fixes).

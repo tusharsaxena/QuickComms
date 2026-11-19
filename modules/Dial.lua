@@ -280,16 +280,24 @@ local function placeWedges(inst, ring, spec, icfg, look)
     return wedges
 end
 
--- The widest label the rebuild drew on a wedge that reads sideways (the tooltip clears it at either
--- side, R.PlaceTips).
-local function widestLabel(inst)
-    local w = 0
+-- How wide the rebuild drew the dial past its disc, for the tooltip group (R.PlaceTips): the widest
+-- wedge label (`label`, read sideways from the reach), the widest ring title (`title`, centered) and
+-- the widest page row's half, arrows included (`row`, DL.Nav), across every ring it loaded.
+local function drawnWidths(inst, look)
+    local label, title, row = 0, 0, 0
+    local g = DL.Geometry(look.radius, look.line, look.labelReach)
     for _, ring in ipairs(inst.rings.active) do
         for _, wedge in ipairs(ring.qcWedges.active) do
-            w = math.max(w, tonumber(wedge.qcLabel:GetStringWidth()) or 0)
+            label = math.max(label, tonumber(wedge.qcLabel:GetStringWidth()) or 0)
+        end
+        title = math.max(title, tonumber(ring.qcTitle:GetStringWidth()) or 0)
+        local spec = ring.qcSpec or {}
+        if (spec.pages or 1) > 1 then
+            local nav = DL.Nav(spec.pages, spec.page, g, look.paging)
+            row = math.max(row, nav.arrow + look.paging.arrowSize / 2, nav.total / 2)
         end
     end
-    return w
+    return { label = label, title = title, row = row }
 end
 
 -- The place's instance now draws dial `id`: the dial it drew before, when another, no longer names it.
@@ -359,7 +367,7 @@ function Dial.Apply(index, id, plan)
     local frames = {}
     for r, l in ipairs(loaded) do frames[r] = l.frame end
     R.RaiseFront(inst.header, frames)
-    R.PlaceTips(inst.header, look, widestLabel(inst))
+    R.PlaceTips(inst.header, look, drawnWidths(inst, look))
     DS.Load(inst.header, loaded, { openRing = plan.openRing, openAt = plan.test and "center" or dial.openAt,
         screen = inst.screen, preview = plan.test == true })
     applyPoint(inst)

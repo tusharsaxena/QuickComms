@@ -22,7 +22,8 @@ end)
 test("diagnostics: the report names the schema, the profile, the holds and the launcher", function()
     local NS = T.enableAddon()
     local text = report(NS)
-    assertTrue(text:find("schema stored=20 code=20", 1, true) ~= nil, "identity")
+    -- re-pinned 20 -> 21 by AD-92-QC (step 21, the dial's tooltip side)
+    assertTrue(text:find("schema stored=21 code=21", 1, true) ~= nil, "identity")
     assertTrue(text:find("profile=Default", 1, true) ~= nil, text)
     assertTrue(text:find("feature events registered=true", 1, true) ~= nil, "registration")
     assertTrue(text:find("launcher: registered=true", 1, true) ~= nil, "integrations")
@@ -132,7 +133,8 @@ test("diagnostics: [dial rework] the report names the pads' hidden state, each d
     assertTrue(text:find("d2 shown=closed", 1, true) ~= nil, text)
     assertTrue(text:find("d2 look mode=categories slices=0 radius=120 iconOffset=0 openAt=center", 1, true) ~= nil, text)
     -- red under: keep border= (the retired slice border) in modules/Diagnostics.lua dialLook
-    assertTrue(text:find("d2 slices gap=0 pointer=true size=24 offset=24 labels=true size=12 offset=0 tooltip=top/8", 1, true)
+    -- tooltip=right/0 re-pinned from top/8 by AD-92-QC (Beside the dial, the offset a nudge from 0)
+    assertTrue(text:find("d2 slices gap=0 pointer=true size=24 offset=24 labels=true size=12 offset=0 tooltip=right/0", 1, true)
         ~= nil, text)
     assertTrue(text:find("d2 paging offset=6 arrow=24 gap=10 dot=8 pill=18 dotGap=6 back=true pad=4 border=2", 1, true) ~= nil, text)
     -- red under: drop the hub line or the group labels' show from modules/Diagnostics.lua dialLook
@@ -175,14 +177,14 @@ test("diagnostics: [shine] the pad's button line and the dial's slices line prin
     local text = report(NS)
     -- red under: no button line in modules/Diagnostics.lua surfaces, or no shine= on dialLook's slices line
     assertTrue(text:find("p1 button shine=glossfade 80", 1, true) ~= nil, text)
-    assertTrue(text:find("d2 slices gap=0 pointer=true size=24 offset=24 labels=true size=12 offset=0 tooltip=top/8 shine=orb 85",
+    assertTrue(text:find("d2 slices gap=0 pointer=true size=24 offset=24 labels=true size=12 offset=0 tooltip=right/0 shine=orb 85",
         1, true) ~= nil, text)
     NS.SchemaRuntime.Set("pad.button.shineLook", "orb", "p1")
     NS.SchemaRuntime.Set("pad.button.shineStrength", 40, "p1")
     NS.SchemaRuntime.Set("dial.slice.shineLook", "bevel", "d2")
     text = report(NS)
     assertTrue(text:find("p1 button shine=orb 40", 1, true) ~= nil, text)
-    assertTrue(text:find("tooltip=top/8 shine=bevel 85", 1, true) ~= nil, text)
+    assertTrue(text:find("tooltip=right/0 shine=bevel 85", 1, true) ~= nil, text)
 end)
 
 test("diagnostics: [CA-M2-5] a combined macro shows each newline as \\n, on one Send row", function()

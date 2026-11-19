@@ -14,6 +14,27 @@ logging flag is `NS.State.debug`: session-only, default off, never saved, indepe
 
 No other name runs the report: there is no `diag`, `dump` or other alias.
 
+## Reports: chat or console (AD-79-QC, LibKa0s#79)
+
+The owner's ruling of 2026-11-08. A **report**, a multi-line read-out the player asks for to inspect or
+share, is written to this console through LibKa0s's `D:Report` (`settings/SlashVerbs.lua` `V.Answer`):
+
+| Verb | Tag | Header |
+|---|---|---|
+| `/qc why` | `Why` | `/qc why` |
+| `/qc check <id>` | `Check` | `/qc check <id>` |
+| `/qc probe`, `/qc probe ids` | `Probe` | `/qc probe`, `/qc probe ids` |
+| `/qc preview list` | `Preview` | `/qc preview list` |
+
+A report is written through the console's ungated append, so it lands whether or not logging is on, and
+it never turns logging on. A hidden console is shown, and chat gets exactly one line,
+`<verb>: N lines written to the debug console. Use Copy to share it.`, N counting the header. **Copy**
+is plain text. One line is not a report: an acknowledgment, a short answer, a refusal or a usage line
+is said in chat and writes nothing (`probe clear`, a gone id, the combat refusal, a one-line `check`
+verdict, `preview off`). `help` and the reserved `list` stay in chat. Without LibKa0s the stub in
+`core/DebugLogSetup.lua` prints a report's lines in chat with no pointer. The diagnostics report below
+is the library's own and is unchanged.
+
 ## The diagnostics report (debug-logging-§14)
 
 Both forms run the same report, also reachable from the console's orange **Diagnostics** link. It

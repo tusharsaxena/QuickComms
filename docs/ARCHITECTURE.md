@@ -60,7 +60,8 @@ lists the toolchain):
 | Env | `core/EnvSetup.lua` | the addon's own TOC metadata and version |
 | Pool | `core/PoolSetup.lua` | the frame pool (one array pool per pad for its buttons; per dial, one for its ring containers and one per container for its wedges) |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver (`NS.GlowLib`): `modules/Glow.lua` starts and stops the icon and button glows through it under its two keys |
-| Widgets | `core/WidgetsSetup.lua` | the one file that leases the major: the drag strip (`NS.MakeDragHandle`) above each pad, the reorder lists on the editor pages (`NS.MakeReorderList`), the icon browser's Wowhead address window (`NS.MakeCopyWindow`, the library's `CopyWindow`), the Preview as window's dropdown (`NS.MakeDropdown`) and the callout popup's emote menu (`NS.OpenContextMenu`, `NS.CloseMenu`); `NS.HasWidget` asks whether one is there |
+| Widgets | `core/WidgetsSetup.lua` | the one file that leases the major: the drag strip (`NS.MakeDragHandle`) above each pad, every own window's title-bar marks (`NS.HeaderButtons`, `W.HeaderButtons` with this owner, and `NS.HEADER`, the strip's figures), the reorder lists on the editor pages (`NS.MakeReorderList`), the icon browser's Wowhead address window (`NS.MakeCopyWindow`, the library's `CopyWindow`), the Preview as window's dropdown (`NS.MakeDropdown`) and the callout popup's emote menu (`NS.OpenContextMenu`, `NS.CloseMenu`); `NS.HasWidget` asks whether one is there |
+| Tooltip | `core/TooltipSetup.lua` | the one file that leases `LibKa0s-Tooltip-1.0` (AD-92-QC, LibKa0s#92): where every tooltip the addon places itself opens, `NS.Tip.Beside` for a body element and `NS.Tip.Attached` for a chrome element ([Tooltip placement](#tooltip-placement)); no stub, since each seam degrades inline to a plain attach above the element (`tests/test_tooltips.lua` holds every other file off the major) |
 | Bus | `core/Bus.lua` | the strict message catalog and the tracked receivers |
 | Lifecycle | `core/LifecycleSetup.lua` | the stand-down latch |
 | Perf | `core/PerfSetup.lua` | the performance harness |
@@ -73,7 +74,7 @@ lists the toolchain):
 
 `LibKa0s-Compat-1.0` is wired for its two secret guards only (`IsSecret`, `IsSafeKey`, assigned in
 `core/Compat.lua` with a library-absent body); `LibKa0s-Role-1.0` is wired in `core/Compat.lua` too (the role and the class's specializations, QFE-F4, each with a library-absent fallback); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
-`DragHandle`, `ReorderList`, `CopyWindow`, `Dropdown`, `ContextMenu` (the callout popup's emote menu) and
+`DragHandle`, `HeaderButtons`, `ReorderList`, `CopyWindow`, `Dropdown`, `ContextMenu` (the callout popup's emote menu) and
 `CloseMenu` are used, every one through `core/WidgetsSetup.lua` (`tests/test_setup.lua` holds every other
 file off the major). Each
 setup file holds a descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every
@@ -192,6 +193,18 @@ the Lock frame row's path through the seam) and the feature verbs `check <id>`, 
 line a callout would send under the current situation and never sends, `test` (test mode), `toggle` (hide or show every Comms Pad, remembered per character in `db.char.padsHidden`, also the launcher's Show window entry), `preview` ("Preview as…": bare opens the preview window on where you are, or keeps the preview on; a name switches it, `off` ends it and `list` prints the menu) `why` ("Why is this showing?", for every built pad and dial) and `probe` (QFE-F5: records the place, the situation, the role, the talent groups and the client's emote tokens in `global.probes`, out of combat; `probe ids` records the client's map, dungeon finder and battleground names there with no travel, QuickComms#21; `probe clear` empties it). The full table, the live-while-disabled set
 and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). `enable` and `disable` call the
 same handler as the Master controls row and the launcher entry.
+
+**Chat or console** (the owner's ruling of 2026-11-08, LibKa0s#79, AD-79-QC). A **report**, a
+multi-line read-out the player asks for to inspect or share, goes to the debug console through
+LibKa0s's `D:Report` (`settings/SlashVerbs.lua` `V.Answer`): `why`, `check <id>`, `probe`, `probe ids`
+and `preview list`, plus `diagnostics`, which was already the library's. A report is written whether
+or not logging is on, under its own tag (`Why`, `Check`, `Probe`, `Preview`) and a `/qc <verb>` header,
+a hidden console is shown, logging is left as it was, and chat gets exactly one pointer line,
+`<verb>: N lines written to the debug console. Use Copy to share it.` Acknowledgments and one-line
+answers, refusals and usage lines stay in chat and write nothing: `lock`, `unlock`, bare `preview`, a
+preview name and `off`, `probe clear`, a gone id, the combat refusal and a one-line `check` verdict
+(`<id> -> not sent here (<reason>)`); so do `help` and the reserved `list`. Without LibKa0s the
+DebugLog stub prints a report's lines in chat with no pointer. No `DevTools_Dump` call exists.
 
 ## Event Subscriptions
 
@@ -316,8 +329,33 @@ the settings pages and the library's own windows.
   (`skin.outline`) decides; a picked flag wins. Schema step 11 (`Library.MigrateFontFlags`) moved
   every stored OUTLINE, the old default, to From skin once. A block that follows the skin's face
   draws at `NS.Skin.HudFontSize(stored)`, and the pad's cells grow with the drawn size.
-- **The windows.** The Preview as window is the owner's `Shell`, its title and close mark in the
-  skin's top bar (D9). The callout popup and the icon browser are built from Blizzard's
+- **The windows.** The Preview as window is the owner's `Shell`, its title and marks in the
+  skin's top bar (D9).
+- **The header strip** (AD-86-QC, LibKa0s#86, standalone-windows *Title-bar controls*, v2.113.0). Every
+  title-bar mark the addon builds is `W.HeaderButtons`' (through `NS.HeaderButtons`, owner `QuickComms`,
+  the launcher descriptor's `name`), right-aligned, extras · settings · close, placed on the band by
+  `S.Header` from the strip's `right` list:
+  - **The Preview as window:** settings · close. The close is built through `NS.MakeCloseButton` (the
+    strip's `makeClose`) and ends the preview; the settings mark opens the settings through the
+    launcher's registered opener. No `hideOnSettings`: the window is small, sits clear of the
+    settings panel, and hiding it ends the preview (the edit preview runs with the panel open). Over
+    the edit preview both marks lock with the rest of the window and show its locked tooltip.
+  - **The callout popup's modal window** (`settings/ModalWindow.lua`): close alone, the template's X
+    adopted (`closeButton`) or the fallback's built through the wrapper. Settings opted out
+    (`MW.SETTINGS_OPT_OUT`): a modal opened from a settings row with the settings panel already
+    beneath it, under its catcher.
+  - **A Comms Pad's header row:** the collapse toggle as the strip's one extra, a word mark ("-" / "+")
+    in the Header tab's face, its tooltip Collapse / Expand (`__tip`, set by `PaintHeader`). No close.
+    Settings opted out (`PadRender.HEADER_SETTINGS_OPT_OUT`): a pad is a HUD display and its settings
+    mark rides the drag strip. The toggle sits at the strip's 18 px and 6 px inset (`NS.HEADER`), so
+    `HeaderMinWidth` grew by 6 px over the hand-built 16 at 2. Its height is the slot's, or the row's
+    where the row is shorter (`PadRender.FitCollapse`, from `sizeRoot`), so at Header height 14 the
+    mark never overhangs the row. The library fonts the word on a recorded skin paint (the body face);
+    `buildCollapse` drops that record (`NS.SkinUntrack`), so a skin switch in combat, whose pad
+    rebuild waits, leaves the word in the Header tab's face (`R.ApplyHeaderLook`) as the rest of the
+    header. Its rest and hover colors still follow the skin.
+  - **A Comms Pad's drag strip** carries the drag handle's settings mark (DragHandle minor 14,
+    `spec.settings`), opening the settings as the strip's right-click does, its tooltip Open settings. The callout popup and the icon browser are built from Blizzard's
   `SettingsFrameTemplate` and wear the skin's window under every skin, Ka0s Default included: LibKa0s
   v1.81.0 retired the stock look (R-2, Ka0sAddonsCommonTasks D-06), so the WoW Default skin is the way
   to Blizzard's settings window ([Documented deviations](#documented-deviations)); the browser's
@@ -359,6 +397,59 @@ the settings pages and the library's own windows.
   `tests/test_skinsetup.lua` holds the copy to the live library. `test_skin_windows.lua` (with the
   color-literal gate over the window, HUD and settings files), `test_skin_hud.lua`,
   `test_skin_picker.lua` and `test_skin_tools.lua` pin the rest.
+
+## Tooltip placement
+
+Every tooltip this addon places itself goes through `core/TooltipSetup.lua` onto `LibKa0s-Tooltip-1.0`
+(AD-92-QC, LibKa0s#92; WowAddonStandards standalone-windows, *Tooltip placement*). It is owned at
+`ANCHOR_NONE`, filled, shown, then placed; none is on the cursor, none at a corner of its control. With
+the library absent, or a geometry read that is not a plain number, it is attached centered 2 pixels
+above its element. `tests/test_tooltips.lua` pins each surface (the placer, the element and the group)
+and holds every `SetOwner` in the source at `ANCHOR_NONE`, the out-of-scope file below excepted.
+
+| Element | Kind | Where its tooltip opens |
+|---|---|---|
+| A Comms Pad button (`modules/Pad_Render.lua` `R.ShowTooltip`) | body | beside the whole pad and its drag strip while it shows (`inst.tipGroup`, carried as `qcTipGroup`), right then left, top level with the button |
+| A pad's section title (`modules/Pad.lua` `newTitleHit`) | body | the same, top level with the title |
+| A pad's header row: Why is this showing? and the combat refusal of a tab switch (`Pad.ShowWhy`, `Pad.Wheel`) | chrome | attached above the header row, below it only without room above |
+| A Comms Dial wedge, page arrow or hub (`modules/Dial_Render.lua` `R.ShowTip`) | body | beside the whole drawn dial (`qcTipSpan`: at either side the widest of the disc, its widest label, half the widest ring title and half the widest page row, arrows included; widened by the Labels tab's Tooltip offset), right then left, or left first under Beside, prefer left; top level with the hovered element |
+| The Preview as window's dropdown and End preview (`modules/PreviewWindow.lua`) | body | beside the window, top level with the control (its content is controls, a body element) |
+| The Preview as window's settings and close marks, locked over the edit preview | chrome | attached above the mark (unlocked, the library's `AttachTitleTip` shows them above too) |
+| The callout popup's token glyph (`settings/CalloutPopup.lua` `showTokenHelp`) | body | beside the popup window (`Pop.frame`, named: its outermost ancestor is the full-screen catcher), top level with the glyph, clear of the fields being typed into |
+
+The dial is a HUD display, so its group is the whole display and never the hovered wedge. Its span is a
+frame-like box on the header's center (`newSpan`), so no frame is made or moved and nothing touches the
+secure header's geometry; the per-frame `GetCursorPosition` read in `R.PointerUpdate` aims the pointer
+and picks the hovered slice, and never moves a tooltip. The Labels tab's Tooltip side is Beside the
+dial (`right`, the default) or Beside, prefer left (`left`); Above and Below are retired by migration
+step 21, which also moves the old default offset 8 to 0 (`modules/Library_Migrate.lua`
+`MigrateDialTipSide`). The span's width is measured at each rebuild (`modules/Dial.lua` `drawnWidths`:
+the widest wedge label, ring title and page row across every loaded ring), so a title or a page row wider
+than the labels widens it too.
+
+**The Tooltip offset is a nudge (an inference, not a ruling).** A non-zero offset widens the span, so the
+tooltip then sits the 2-pixel gap plus the offset from the drawn dial, and standalone-windows *Tooltip
+placement* lists "a gap other than 2 px" as anti-pattern #119. The default is 0 and step 21 keeps only an
+offset the player chose (8, the old default, becomes 0), so out of the box the dial complies. Keeping the
+offset as a player's nudge follows the owner's wave C ruling for Multi Meters' `window.tooltip.anchor`
+(2026-11-17, "the offset X/Y settings stay as a nudge"); the owner has not ruled on the Quick Comms dial's
+offset itself, and the wave's execution record carries the question.
+
+Placed by the library, not here: the drag strip's and every title mark's tooltip (`W.DragHandle`,
+`W.HeaderButtons`, `AttachTitleTip`), the reorder handle, the Preview as window's open dropdown menu and
+the callout popup's emote menu (`LibKa0s-Widgets-1.0`), the icon browser (`LibKa0s-IconBrowser-1.0`)
+and the minimap button's tooltip (`LibKa0s-Launcher-1.0`'s `PlaceLauncher`; the broker plugin's
+`OnTooltipShow` only fills it).
+
+Left where they are, out of the rule's scope (standalone-windows, *What it does not bind*):
+
+- **The settings pages in Blizzard's Settings canvas.** `settings/Groups_When.lua`'s When-drawer
+  checkbox tooltips (`GameTooltip:SetOwner(w.frame, "ANCHOR_RIGHT")`, on the Groups page's When tab)
+  and every row tooltip the options library draws (`H.AttachTooltip`, on every page and in the callout
+  popup's rows) are options-ui's.
+- **A broker display's bar** (Titan Panel and the like): the display places the launcher's tooltip.
+- **Blizzard's own frames and the client's menus.** The addon writes no lines onto a unit or item
+  tooltip and draws no menu through the client's menu system.
 
 ## Known Limitations
 

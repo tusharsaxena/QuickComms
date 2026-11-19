@@ -3,10 +3,35 @@ local _, NS = ...
 -- call (spec §14). Today: `check`, `lock`, `unlock`, `toggle`, `preview` (bare, a name, `off`, `list`),
 -- `why` and `probe` (bare, `ids` or `clear`). The rows are positional triples; the work lives here so it
 -- can be tested without the dispatcher.
+--
+-- CHAT OR CONSOLE (the owner's ruling of 2026-11-08, LibKa0s#79, AD-79-QC). A REPORT, a multi-line
+-- read-out the player asks for to inspect or share, goes to the debug console through LibKa0s's
+-- `D:Report` (V.Answer below): written whether or not logging is on, a hidden console shown, one
+-- pointer line in chat. The report verbs are `why`, `check <id>`, `probe`, `probe ids` and
+-- `preview list`. An acknowledgment, a short one-line answer, a refusal or a usage line stays in chat
+-- and writes nothing: `lock`, `unlock`, `preview` (bare, a name, `off`), `probe clear`, a gone id, the
+-- combat refusal and a one-line `check` verdict ("not sent here (reason)"). Without the library the
+-- stub (core/DebugLogSetup.lua) prints a report's lines in chat with no pointer.
 
 NS.SlashVerbs = NS.SlashVerbs or {}
 local V = NS.SlashVerbs
 local L = NS.L
+
+--- Say a verb's lines: one line is a short answer, a refusal or a usage line, printed in chat; more
+--- is a report, written to the debug console under `tag`, headed `/qc <title>`, with one chat
+--- pointer line (DebugLog minor 23's `D:Report`).
+--- @param tag string the console tag (debug-logging-§3)
+--- @param title string the verb as typed, after the slash: `why`, `check c4`, `probe ids`
+--- @param lines string[]
+function V.Answer(tag, title, lines)
+    if #lines <= 1 then
+        for _, line in ipairs(lines) do NS.Print(line) end
+        return
+    end
+    NS.DebugLog:Report(tag, title, function(out)
+        for _, line in ipairs(lines) do out(line) end
+    end)
+end
 
 -- "{a}, {b}" from a list of raw token names.
 local function braced(list)
@@ -89,9 +114,11 @@ function V.CheckLines(id)
     return out
 end
 
---- `/qc check <id>`: print the lines.
+--- `/qc check <id>`: a report (the line, its channel and notes), or one line in chat (a gone id, or
+--- a one-line verdict).
 function V.Check(rest)
-    for _, line in ipairs(V.CheckLines(rest)) do NS.Print(line) end
+    local id = (rest or ""):match("^%s*(%S+)") or ""
+    V.Answer("Check", "check " .. id, V.CheckLines(rest))
 end
 
 --- `/qc lock|unlock` and the launcher's Locked entry: the Lock frame row's stored path through the
@@ -212,8 +239,10 @@ function V.PreviewLines(rest)
     return previewSwitchLines(P, key)
 end
 
+--- `/qc preview list` is a report (the menu); every other form answers in chat with one line.
 function V.Preview(rest)
-    for _, line in ipairs(V.PreviewLines(rest)) do NS.Print(line) end
+    local word = ((rest or ""):match("^%s*(%S+)") or ""):lower()
+    V.Answer("Preview", word == "" and "preview" or ("preview " .. word), V.PreviewLines(rest))
 end
 
 --- The lines `/qc why` prints (spec §14): the role the When editor's Role row matches and where it
@@ -244,8 +273,9 @@ function V.WhyLines()
     return out
 end
 
+--- `/qc why`: a report, always (the role line and at least one more).
 function V.Why()
-    for _, line in ipairs(V.WhyLines()) do NS.Print(line) end
+    V.Answer("Why", "why", V.WhyLines())
 end
 
 -- ── /qc probe (QFE-F5, design §4.5, C4) ─────────────────────────────────────────────────────
@@ -516,6 +546,9 @@ function V.ProbeLines(rest)
     return V.ProbeSummary(rec, #list)
 end
 
+--- `/qc probe` and `/qc probe ids`: a report (the summary); `clear`, the usage line and the refusals
+--- answer in chat with one line.
 function V.Probe(rest)
-    for _, line in ipairs(V.ProbeLines(rest)) do NS.Print(line) end
+    local word = ((rest or ""):match("^%s*(%S+)") or ""):lower()
+    V.Answer("Probe", word == "ids" and "probe ids" or "probe", V.ProbeLines(rest))
 end

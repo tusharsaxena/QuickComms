@@ -301,12 +301,13 @@ test("dials page: [slices] Slices writes the fill and highlight, Layout the gap,
     -- red under: no disabledIf on the pointer rows
     assertTrue(P.find(w, "Slider", "Pointer size").disabled)
     local l = P.tab("dials", "Labels")
-    P.find(l, "Dropdown", "Tooltip side"):__fire("OnValueChanged", "right")
-    assertEqual(NS.db.profile.dials.d2.label.tooltipSide, "right")
+    -- AD-92-QC re-pin: the sides are Beside the dial (right, the default) and Beside, prefer left.
+    P.find(l, "Dropdown", "Tooltip side"):__fire("OnValueChanged", "left")
+    assertEqual(NS.db.profile.dials.d2.label.tooltipSide, "left")
     P.ctx("dials").panel.defaultsOnClick()
     assertEqual(NS.db.profile.dials.d2.slice.gap, 0)
     assertTrue(NS.db.profile.dials.d2.slice.pointerShow)
-    assertEqual(NS.db.profile.dials.d2.label.tooltipSide, "top")
+    assertEqual(NS.db.profile.dials.d2.label.tooltipSide, "right")
 end)
 
 test("page dials: [polish] Slices tab has no Border heading; Slice gap is on Layout", function()

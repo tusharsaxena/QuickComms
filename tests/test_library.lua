@@ -605,13 +605,13 @@ test("library: [final 2] ValidWhen refuses a value its row can never match, and 
     assertFalse(Lib.ValidWhen({ spec = { [NS.Resolver.ALL] = true } }), "but not on the spec row")
     assertFalse(Lib.ValidWhen({ role = { [NS.Resolver.ALL] = true } }), "nor on a token row")
     -- [review] red under: ValidWhenValue's old characters pattern (any byte but a space or a minus)
-    assertFalse(Lib.ValidWhen({ characters = { ["Bob|T1:99|t-Area52"] = true } }), "no escape character")
-    assertFalse(Lib.ValidWhen({ characters = { ["Bo\1b-Area52"] = true } }), "no control character")
+    assertFalse(Lib.ValidWhen({ characters = { ["Bob|T1:99|t-Samplerealm"] = true } }), "no escape character")
+    assertFalse(Lib.ValidWhen({ characters = { ["Bo\1b-Samplerealm"] = true } }), "no control character")
     assertFalse(Lib.ValidWhen({ characters = { [string.rep("a", 60) .. "-" .. string.rep("b", 60)] = true } }), "at most 96 bytes")
     assertTrue(Lib.ValidWhen({ characters = { ["\208\154\208\176\208\190\209\129-\208\147\208\190\209\128\208\180\209\131\208\189\208\189"] = true } }), "a Cyrillic Name-Realm")
     assertTrue(Lib.ValidWhen({ role = { TANK = true }, class = { WARRIOR = true }, spec = { [71] = true },
         difficulty = { mythic = true }, group = { instance = true }, leadership = { assist = true },
-        instances = { [2526] = true }, battleground = { [2107] = true }, characters = { ["Bob-Area52"] = true },
+        instances = { [2526] = true }, battleground = { [2107] = true }, characters = { ["Bob-Samplerealm"] = true },
         content = { housing = true } }))
 end)
 

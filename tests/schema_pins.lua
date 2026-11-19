@@ -204,8 +204,9 @@ return {
     ["dial.label.useClassColorFont"] = "bool|false|nil|nil|nil|nil|false",
     ["dial.label.fontFlags"] = "string|\"@skin\"|nil|nil|nil|[]|false",
     ["dial.label.fontShadow"] = "bool|true|nil|nil|nil|nil|false",
-    ["dial.label.tooltipSide"] = "string|\"top\"|nil|nil|nil|[\"top\",\"bottom\",\"left\",\"right\"]|false",
-    ["dial.label.tooltipOffset"] = "number|8|0|80|1|nil|false",
+    -- AD-92-QC re-pin: Beside the dial (right) or Beside, prefer left; Above and Below retired, offset 0.
+    ["dial.label.tooltipSide"] = "string|\"right\"|nil|nil|nil|[\"right\",\"left\"]|false",
+    ["dial.label.tooltipOffset"] = "number|0|0|80|1|nil|false",
     ["dial.title.show"] = "bool|true|nil|nil|nil|nil|false",
     ["dial.title.font"] = "string|\"Ka0s Prototype\"|nil|nil|nil|<fn>|false",
     ["dial.title.fontFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin

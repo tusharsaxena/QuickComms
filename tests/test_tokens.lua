@@ -36,8 +36,8 @@ end)
 
 test("tokens: baked values come from ctx; absent ones are missing", function()
     local out, _, missing = tok().Expand("{me} at +{key} in {dungeon} as {spec}/{role}",
-        { me = "Traxex", key = 14, dungeon = "Windrunner Spire", spec = "Destruction" })
-    assertEqual(out, "Traxex at +14 in Windrunner Spire as Destruction/")
+        { me = "Samplehunter", key = 14, dungeon = "Windrunner Spire", spec = "Destruction" })
+    assertEqual(out, "Samplehunter at +14 in Windrunner Spire as Destruction/")
     assertEqual(#missing, 1)
     assertEqual(missing[1], "role")
 end)

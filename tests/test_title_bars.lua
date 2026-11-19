@@ -11,6 +11,8 @@
 --   - the modal window the callout popup is built in: its close X, the template's ClosePanelButton
 --     skinned by S.CloseButton, or Core.MakeCloseButton's on a client without the template;
 --   - a Comms Pad's header row: its collapse toggle ("-" / "+").
+-- Since AD-86-QC (LibKa0s#86) every one of them is W.HeaderButtons' (the header strip, at the end of
+-- this file), the Preview window gains a settings mark, and a pad's drag strip the drag handle's.
 -- The library's own windows (the debug console, the copy window, the perf and sim panels, the skin
 -- picker, the icon browser, a drag strip's marks) are pinned by LibKa0s itself.
 --
@@ -255,4 +257,118 @@ test("title bars: a pad header's collapse toggle rests in icon.tint and hovers i
         b:__fire("OnLeave")
         assertRGB(rawget(b.qcText, "__color"), tokenRGB(Skin, key, "icon.tint"), "back at rest under " .. key)
     end
+end)
+
+-- ── the header strip: W.HeaderButtons (AD-86-QC, LibKa0s#86, standalone-windows "Title-bar controls") ──
+--
+-- Every window's marks are LibKa0s-Widgets-1.0's HeaderButtons, right-aligned, left to right extras ·
+-- settings · close: the Preview window settings · close (settings opening this addon's settings
+-- through the opener its launcher registered); the callout popup's modal window close alone, opted out
+-- with its reason (a modal opened from a settings row, the panel beneath it); a Comms Pad's header row
+-- its collapse toggle alone, opted out with its reason (a HUD display: its settings mark rides the drag
+-- strip). A Comms Pad's drag strip carries the drag handle's settings mark (DragHandle minor 14).
+
+--- Count NS.addon:OpenSettings calls from here on (the launcher's registered opener calls it).
+local function spySettings(NS)
+    local n = { calls = 0 }
+    NS.addon.OpenSettings = function() n.calls = n.calls + 1 end
+    return n
+end
+
+--- A header mark's art color now: its icon's vertex tint, else its word's text color.
+local function markArt(m, b)
+    local art = rawget(b, "icon") or rawget(b, "label")
+    assertTrue(art ~= nil, "the mark has art or a word")
+    local p = m.__paint(art)
+    return p.vertex or p.textColor or rawget(art, "__color")
+end
+
+test("header strip: the Preview window's marks are HeaderButtons', settings then close", function()
+    local NS = boot()
+    local f = previewWindow(NS)
+    local hb = f.headerButtons
+    -- red under: the close alone, built by hand (NS.MakeCloseButton and S.Header)
+    assertTrue(type(hb) == "table", "the window's marks are W.HeaderButtons'")
+    assertEqual(table.concat(hb.order, ","), "settings,close")
+    assertTrue(hb.close == f.closeButton, "the close is the strip's")
+    assertTrue(hb.settings ~= nil and hb.settings == f.settingsButton, "a settings mark")
+    assertTrue(hb.optOut == nil, "no opt-out")
+end)
+
+test("header strip: the Preview window's settings mark opens settings and ends nothing", function()
+    local NS = boot()
+    local f = previewWindow(NS)
+    local spy = spySettings(NS)
+    f.settingsButton:__fire("OnClick", "LeftButton")
+    -- red under: a strip with no settings mark, or one opening nothing
+    assertEqual(spy.calls, 1, "the addon's settings opened once")
+    assertEqual(NS.Preview.PreviewAs(), "arena", "the preview stays on")
+    assertTrue(NS.PreviewWindow.IsShown(), "the window stays up (it covers no settings panel)")
+end)
+
+test("header strip: the Preview window's settings mark shows its tooltip and wears the title-bar colors", function()
+    local NS, m, Skin = boot()
+    local f = previewWindow(NS)
+    local said = checkTips(NS, m, { { "settings", f.settingsButton } }, "the Preview window")
+    assertEqual(said.settings, NS.L["Open settings"])
+    for _, key in ipairs(SKINS) do
+        Skin:SetChoice(OWNER, "ka0s", key)
+        local b = f.settingsButton
+        b:__fire("OnLeave")
+        assertRGB(markArt(m, b), tokenRGB(Skin, key, "icon.tint"), "settings at rest under " .. key)
+        b:__fire("OnEnter")
+        assertRGB(markArt(m, b), tokenRGB(Skin, key, "text.link"), "settings hovered under " .. key)
+        b:__fire("OnLeave")
+    end
+end)
+
+test("header strip: the modal window's close is the strip's, settings opted out with its reason", function()
+    local NS = boot()
+    local Pop = openPopup(NS)
+    local hb = Pop.frame.headerButtons
+    -- red under: the template's close placed by hand, no strip
+    assertTrue(type(hb) == "table", "the modal's marks are W.HeaderButtons'")
+    assertEqual(table.concat(hb.order, ","), "close")
+    assertTrue(hb.close == Pop.chrome.close, "the template's own close, adopted")
+    assertTrue(hb.settings == nil, "no settings mark")
+    assertTrue(type(hb.optOut) == "string" and hb.optOut ~= "", "the opt-out names its reason")
+end)
+
+test("header strip: the modal fallback's close is the strip's, settings opted out", function()
+    local NS, m = boot()
+    m.missingTemplates.SettingsFrameTemplate = true
+    local Pop = openPopup(NS)
+    local hb = Pop.chrome.bg.headerButtons
+    assertTrue(type(hb) == "table", "the fallback's marks are W.HeaderButtons'")
+    assertEqual(table.concat(hb.order, ","), "close")
+    assertTrue(hb.close == Pop.chrome.close, "the close is the strip's")
+    assertTrue(type(hb.optOut) == "string" and hb.optOut ~= "", "the opt-out names its reason")
+    assertTrue(Pop.IsOpen())
+    Pop.chrome.close:__fire("OnClick", "LeftButton")
+    assertFalse(Pop.IsOpen(), "the close still cancels the popup")
+end)
+
+test("header strip: a pad header's collapse toggle is the strip's, settings opted out", function()
+    local NS = livePad()
+    local header = NS.Pad.Instance("p1").header
+    local hb = header.headerButtons
+    -- red under: the collapse toggle built and placed by hand
+    assertTrue(type(hb) == "table", "the header row's marks are W.HeaderButtons'")
+    assertEqual(table.concat(hb.order, ","), "collapse")
+    assertTrue(hb.extras.collapse == collapseOf(NS), "the collapse toggle is the strip's extra")
+    assertTrue(hb.close == nil and hb.settings == nil, "no close, no settings mark")
+    assertTrue(type(hb.optOut) == "string" and hb.optOut ~= "", "the opt-out names its reason")
+    collapseOf(NS):__fire("OnClick", "LeftButton")
+    assertEqual(collapseOf(NS).qcText:GetText(), "+", "a click still collapses the pad")
+end)
+
+test("header strip: a pad's drag strip carries the settings mark, which opens settings", function()
+    local NS = livePad()
+    local inst = NS.Pad.Instance("p1")
+    local mark = inst.handle and inst.handle.settings
+    -- red under: MakeDragHandle without spec.settings
+    assertTrue(mark ~= nil, "the drag strip has a settings mark")
+    local spy = spySettings(NS)
+    mark:__fire("OnClick", "LeftButton")
+    assertEqual(spy.calls, 1, "a left click opens the addon's settings")
 end)
