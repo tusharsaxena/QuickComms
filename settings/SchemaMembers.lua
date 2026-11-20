@@ -616,7 +616,11 @@ local function shineRows(O, checks, spec)
     for _, p in ipairs(pairs3) do
         local rows = {}
         stampBlock(rows, O.ColorPair(blockSpec(prefix, spec.tab, SHINE, def,
-            { key = p[1], label = p[2], companionKey = p[3], extra = p[1] == "shineTint" and {
+            -- colorFromSkin = false (LibKa0s v1.108.0, OptionsCompose minor 20): Use the skin's shine
+            -- already draws the skin's tint and blooms, and these swatches are read only while it is
+            -- off, so a second companion per swatch would govern nothing (the skin-defaults audit's OK
+            -- row "Shine Fluid-glass bloom colors", LibKa0s#97, 2026-11-20).
+            { key = p[1], label = p[2], companionKey = p[3], colorFromSkin = false, extra = p[1] == "shineTint" and {
                 followRow(prefix, "shine", L["Use the skin's shine"], L["Shine look"]) } or nil })),
             prefix, checks, spec.instance)
         for _, r in ipairs(rows) do

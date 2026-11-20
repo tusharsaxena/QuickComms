@@ -189,11 +189,42 @@ Kit.diagnostics = {
     reset       = function() diagNS = enableAddon() end,
 }
 
--- The typed-value gate's consumer facts (skinning-§1).
+-- The typed-value gate's consumer facts (skinning-§1). The icon browser's two rows moved into the
+-- library with it (LibKa0s v1.86.0); kit revision 58 (LibKa0s v1.108.0) reads keyed, multi-assigned
+-- and returned triples too, and these are the hits it found that draw no skin look or that a ruling
+-- leaves alone (the skin-defaults audit, LibKa0s#97, 2026-11-20).
+local UNREACHABLE = "unreachable default"
+local CHAT_HUE = "WoW's chat colors, a channel's own hue, used when ChatTypeInfo cannot be read (skinning-§9 Meaning colors)"
 Kit.skinValues = {
-    -- None since LibKa0s v1.86.0: the two rows were the icon browser's (its combat chat line and the
-    -- Slider's thumb art), which moved into the library with it.
-    rows = {},
+    rows = {
+        { file = "core/Constants.lua", substring = "PARTY = {", cause = "MC", why = CHAT_HUE },
+        { file = "core/Constants.lua", substring = "RAID_WARNING = {", cause = "MC", why = CHAT_HUE },
+        { file = "core/Constants.lua", substring = "CHANNEL1 = {", cause = "MC", why = CHAT_HUE },
+        { file = "core/CoreSetup.lua", substring = "return 1, 1, 1, 1 end", category = UNREACHABLE,
+          why = "the library-absent stub's answer for a swatch that is no table; every color row has a default" },
+        { file = "core/IconBrowserSetup.lua", substring = "Tint = function() return 1, 1, 1 end", category = UNREACHABLE,
+          why = "the library-absent stub's tint, never asked: its IsGlyph answers nil, so Lib.IconTint returns first" },
+        { file = "modules/Anim_Ghost.lua", substring = "return 0, 1, 0, 0", category = "not a color",
+          why = "a ghost's turn, scale and offset with no place: motion, not a color" },
+        { file = "modules/Anim_Pose.lua", substring = "knots = {", category = "not a color",
+          why = "an animation's easing knots, fractions of its run" },
+        { file = "modules/Dial_Slices.lua", substring = "local BLACK = { 0, 0, 0 }", cause = "L10",
+          why = "the gloss and orb shines' dark rim on a slice, the dial's shape art (owner U-26, 2026-11-20)" },
+        { file = "modules/Library.lua", substring = "Lib.IsGlyph(icon) then return 1, 1, 1", category = "white base for tinting",
+          why = "an icon that is no glyph draws its own art, untinted" },
+        { file = "modules/Library.lua", substring = "borderColor = { r = 0, g = 0, b = 0, a = 1 }", cause = "D7",
+          why = "a new pad's stored Window border swatch, read only while its Use the skin's color is off (default on, R-2)" },
+        { file = "modules/Library.lua", substring = "background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }", cause = "D7",
+          why = "a new pad's stored Window background swatch, read only while its Use the skin's color is off (default on, R-2)" },
+        { file = "modules/Shine.lua", substring = "Sh.TINT = {", category = UNREACHABLE,
+          why = "the shine tint's fallback; every pad and dial stores its tint (defaults/PadStyle.lua)" },
+        { file = "modules/Shine.lua", substring = "Sh.BLOOM_A = {", category = UNREACHABLE,
+          why = "Fluid glass's bloom fallback; every pad and dial stores its blooms (defaults/PadStyle.lua)" },
+        { file = "modules/Shine.lua", substring = "Sh.BLOOM_B = {", category = UNREACHABLE,
+          why = "Fluid glass's bloom fallback; every pad and dial stores its blooms (defaults/PadStyle.lua)" },
+        { file = "settings/SchemaMembers.lua", substring = "Core.RGBA(v, 1, 1, 1, 1)", category = UNREACHABLE,
+          why = "the channel fallback for a color the row's validate already checked" },
+    },
 }
 
 -- The skin-switch test's consumer facts (skinning-§1): every surface this addon paints.
