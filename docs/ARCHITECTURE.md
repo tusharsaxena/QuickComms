@@ -318,6 +318,21 @@ the settings pages and the library's own windows.
   stored sizes and flags are under **Font flags and HUD sizes** below. The HUD's own chrome (the padlock, the veils, the hover wash, the flashes, the LOCKDOWN and
   stale tags, the PREVIEW and TEST MODE marks, the page arrows) reads tokens once per look change
   (`Pad_Render.Chrome`), never per frame.
+- **Every option default follows the skin** (LibKa0s v1.108.0, LibKa0s#97, the owner's R-2 of 2026-11-20,
+  skinning-§9). Every pad and dial block already carried its companions in its own `extra` rows, each
+  default on, so OptionsCompose minor 20's new defaults emit nothing twice and move no profile, and no
+  one-time step is owed. The Shine swatches (tint and the two blooms) pass `colorFromSkin = false`:
+  *Use the skin's shine* already draws the skin's tint, and they are read only while it is off. The pad's
+  window table carries `skinBands` while its background follows and no class color is set
+  (`Pad_Render.WindowLook`, SD-LK-97.16), so `NS.ApplySkin` draws the skin's window gradient (WoW Midnight,
+  WoW Forever) and background art (WoW Default) inside the pad's own edge. The thank toast's line and
+  note read `text.body` and `text.disabled`, and its Thank button and the Preview window's End preview
+  are the owner's push button, `S.Button` with `btn.*` (SD-SK-QC.1, SD-SK-QC.2, owner U-28). A dial's
+  slices and hub stay shape art, only their tint following (owner U-26), and the pad buttons keep the
+  texture-plus-shine look (U-27). The skin-switch guard (`tests/skin_surfaces.lua`, kit revision 58)
+  expects the texture family on the pad's window and a button's body, holds it on the dial's slices and
+  hub, and installs a LibSharedMedia fake whose statusbar paths differ per name, so a body that stopped
+  following its skin's bar texture is caught.
 - **The one-time reset** (the owner's O2). Schema step 10 (`Library.MigrateFollowSkin`) turns every
   stored pad's and dial's companions on, once, on every stored profile; the picks and the colors are
   kept. Under Ka0s Default that is a visible change (rollout X5, D11): the skin's HUD face (Prototype since

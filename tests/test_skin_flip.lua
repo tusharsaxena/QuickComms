@@ -503,16 +503,19 @@ test("skin fix: the hub's small labels wear the skin's HUD face and their tokens
     assertColor(h.qcTest.__color, color(NS, "qc.preview"), "the preview mark")
 end)
 
-test("skin fix: End preview's label takes the skin's body face", function()
+test("skin fix: End preview's label takes the skin's body face, through the owner's Button (U-28)", function()
     local NS = live()
-    local fonts = {}
-    local font = NS.Skin.Font
-    NS.Skin.Font = function(fs, ...)
-        fonts[#fonts + 1] = fs
-        return font(fs, ...)
+    local painted = {}
+    local realButton = NS.Skin.Button
+    NS.Skin.Button = function(b, ...)
+        painted[b] = true
+        return realButton(b, ...)
     end
     assertTrue(NS.Preview.SetPreviewAs("arena"))
-    assertTrue(#fonts >= 1, "red under: the string left on GameFontNormalSmall")
+    local f = NS.PreviewWindow.__frame()
+    -- S.Button paints its label's face and color; it reads the label from the button's Text field.
+    assertTrue(painted[f.endButton], "red under: the string left on GameFontNormalSmall")
+    assertTrue(f.endButton.Text == f.endButton.__label, "the label is the one S.Button reads")
 end)
 
 test("skin fix: the active dot is the client's while the panel is stock, the Ka0s mark with the Scope cleared", function()

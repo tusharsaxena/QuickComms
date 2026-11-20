@@ -38,7 +38,9 @@ local INSET = 12
 local BUTTON_W, BUTTON_H = 64, 22
 
 -- The icon, the line and the note under it (why the Thank button is not armed), made once per pool
--- frame and re-used on every draw.
+-- frame and re-used on every draw. The line and the note wear the skin (SD-SK-QC.1, LibKa0s#97): the
+-- skin's body face, the line in text.body and the note in text.disabled; the library's toast paints
+-- only its frame, and records both strings here so a skin switch repaints them.
 local function regions(frame)
     if frame.qcText then return end
     frame.qcIcon = frame:CreateTexture(nil, "ARTWORK")
@@ -52,12 +54,18 @@ local function regions(frame)
     frame.qcNote:SetPoint("TOPLEFT", frame.qcText, "BOTTOMLEFT", 0, -2)
     frame.qcNote:SetPoint("RIGHT", frame.qcText, "RIGHT", 0, 0)
     frame.qcNote:SetJustifyH("LEFT")
+    NS.Skin.Text(frame.qcText, "body")
+    NS.Skin.Text(frame.qcNote, "disabled")
 end
 
 -- ── the Thank button (D4) ───────────────────────────────────────────────────────────────────────
 -- SendEngine's secure button, made once per pool frame on its first draw and attached to the toast
 -- once (Attach hooks the button, so attaching it on every reuse would pile hooks up). Each draw
--- arms it with AT.Macro's macro for the payload's caster and buff, or disarms it and says why.
+-- arms it with AT.Macro's macro for the payload's caster and buff, or disarms it and says why. It is
+-- the owner's push button (SD-SK-QC.2, LibKa0s#97): S.Button draws its body and edge in btn.* and
+-- its label (`Text`, the field it reads) in btn.text and the body face, btn.hover under the pointer.
+-- S.Button adds a backdrop and hooks OnEnter, OnLeave, OnEnable and OnDisable, never a click
+-- script, and it runs at the build, which SE.NewButton allows only out of combat.
 
 TH.LOCK_TEXT = { whisperLockdown = L["Locked: whispers are blocked right now."] }
 
@@ -81,6 +89,8 @@ local function thankButton(frame)
     b.qcLabel = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     b.qcLabel:SetPoint("CENTER", b, "CENTER", 0, 0)
     b.qcLabel:SetText(L["Thank"])
+    b.Text = b.qcLabel
+    NS.Skin.Button(b)
     frame.qcThank = b
     TH.toast:Attach(b)
     return b

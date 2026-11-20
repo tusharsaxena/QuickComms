@@ -196,6 +196,10 @@ still the only secure writer), made once per pool frame on its first draw out of
 `AT.Macro`'s one or two lines (`/thank Name`, the whisper, or both) by `SE.Arm`. It registers left clicks
 alone (`qcLeftOnly`), so the toast's right-click dismiss never runs its macro; its press (`pressThank`)
 stamps no spam guard and reads its own locks (chat lockdown for the whisper, the emote's lock state).
+Its look is the owner's push button (`S.Button`, SD-SK-QC.2, LibKa0s#97), painted at that first draw:
+the library gives it a body and an edge of plain textures and `HookScript`s its OnEnter, OnLeave,
+OnEnable and OnDisable, never its click scripts, and a skin switch repaints only those regions and the
+label's color and face, none of them protected.
 
 Once the toast frame carries that secure child, a `Hide`, `SetPoint` or `StartMoving` on it in combat
 moves a protected frame, and the library does all three on its own (its timer, a reflow, a drag). So no
