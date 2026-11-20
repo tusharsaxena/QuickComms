@@ -2033,12 +2033,15 @@ Total.
 
 - launcher descriptor passes openSkinPicker, which runs the skin verb
 
-### test_skin_windows.lua (24)
+### test_skin_windows.lua (27)
 
 - skin windows: no color literal is left in the window files
 - skin windows: the literal gate is falsifiable: a planted literal of each shape is reported
 - skin windows: the Preview window is the owner's Shell, its title in the top bar
-- skin windows: End preview's label is the step panels' tokens at rest, hovered and locked
+- skin windows: [U-28] End preview is the owner's push button, its body and label in btn.*
+- skin windows: [SD-SK-QC.1] the thank toast's line and note are in text.body and text.disabled
+- skin windows: [SD-SK-QC.2] the toast's Thank button is the owner's push button, label in btn.*
+- skin windows: [SD-LK-97.16] a pad's window wears the skin's bands while its background follows
 - skin windows: the Preview window's tooltips write their lines in the tooltip tokens
 - skin windows: the modal window's template chrome is painted under every skin, no stock look
 - skin windows: the modal window's Bg is faded under the skin's window fill, Ka0s Default included
@@ -2129,7 +2132,7 @@ Total.
 - skin flip: the ghost wears a skinned string's font object, so its shadow comes along
 - skin fix: a tooltip's title takes gtip.title, on a button, a wedge and a titled tip
 - skin fix: the hub's small labels wear the skin's HUD face and their tokens
-- skin fix: End preview's label takes the skin's body face
+- skin fix: End preview's label takes the skin's body face, through the owner's Button (U-28)
 - skin fix: the active dot is the client's while the panel is stock, the Ka0s mark with the Scope cleared
 - skin fix: the remove mark is marked for the panel, its stock art kept as the way back
 - skin fix: the panel's tooltip lines take gtip.line, its stock gold under Ignore settings panel
@@ -2341,7 +2344,7 @@ Total.
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
-### test_skin_switch.lua (29)
+### test_skin_switch.lua (37)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
 - skin switch: the check is falsifiable, a bar whose texture never moves is reported
@@ -2371,6 +2374,14 @@ Total.
 - skin switch: a cell's hover art changes
 - skin switch: the thank toast's frame changes
 - skin switch: the thank toast's frame changes with the Scope ignored
+- skin switch: the thank toast's line changes
+- skin switch: the thank toast's line changes with the Scope ignored
+- skin switch: the thank toast's note changes
+- skin switch: the thank toast's note changes with the Scope ignored
+- skin switch: the thank toast's Thank button changes
+- skin switch: the thank toast's Thank button changes with the Scope ignored
+- skin switch: the Preview window's End preview changes
+- skin switch: the Preview window's End preview changes with the Scope ignored
 - skin switch: a settings row's remove mark changes
 
 ### test_client_globals.lua (3)
@@ -2455,7 +2466,7 @@ Total.
 | test_layout.lua | 31 |
 | test_skinsetup.lua | 25 |
 | test_launcher_skin_entry.lua | 1 |
-| test_skin_windows.lua | 24 |
+| test_skin_windows.lua | 27 |
 | test_title_bars.lua | 15 |
 | test_skin_hud.lua | 21 |
 | test_skin_flip.lua | 61 |
@@ -2473,7 +2484,7 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
-| test_skin_switch.lua | 29 |
+| test_skin_switch.lua | 37 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2094** |
+| **Total** | **2105** |

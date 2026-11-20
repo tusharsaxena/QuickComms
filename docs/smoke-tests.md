@@ -954,6 +954,17 @@ Fail: no settings mark, the order close · settings, the title running under a m
 the preview.
 Result: owed
 
+**PREVIEW-14. End preview is the skin's push button (2026-11-20, SD-SK-QC, owner U-28, LibKa0s#97).**
+`/qc preview arena` under **Ka0s Default** → **End preview** has the body, edge and label of the skin's
+other push buttons (compare the Skin tab's buttons, or the settings panel's), its label in the button text
+color at rest and the skin's button hover color under the pointer. Switch to **WoW Default** → it turns
+the skin's red button, and to Obsidian → Obsidian's button; each with no reload. Open the edit preview
+(PREVIEW-11) → End preview is dimmed and its label is the skin's disabled gray, and hovering it still shows
+the locked tooltip. Leave the edit preview → its label is back at rest. A click ends the preview, as before.
+Fail: the old step-box look (a window fill with no button edge), a label that stays light gray or gold in
+every skin, no hover change, or a locked button whose label is not grayed.
+Result: owed
+
 ## Dial
 
 **DIAL-1. Open and close (Relaxed).** Options → Keybindings → Ka0s Quick Comms → Open Comms Dial 1:
@@ -1935,11 +1946,12 @@ border* is grayed; with it on and the box ticked, *Border style* and *Border thi
 the edge is the skin's icon border; untick → yours. Switch skins with a box unticked → that pick is
 kept. (Amended by FS-QC-GATE, 2026-11-01, a skin's None defers.) Result: Passed (owner, 2026-11-02).
 
-**SKIN-7. The Preview as window (D8, D9).** Pick a situation in **Preview as…** under each skin →
-the window wears the skin: its fill, edge and top bar, the title and the close mark centered in the
-bar; **End preview** reads in the step panels' colors (light gray at rest, gold on hover, gray while
-the window is locked over the edit preview, PREVIEW-11), and its tooltip lines are readable. Switch
-the skin with the window open → it repaints with no reload. Result: pass (owner-marked 2026-10-30).
+**SKIN-7. The Preview as window (D8, D9; rewritten 2026-11-20, SD-SK-QC, owner U-28).** Pick a
+situation in **Preview as…** under each skin → the window wears the skin: its fill, edge and top bar,
+the title and the close mark centered in the bar; **End preview** is a push button like the skin's
+other buttons (PREVIEW-14), and its tooltip lines are readable. Switch the skin with the window open →
+it repaints with no reload. Result: owed (its expected result changed with U-28; it passed, owner-marked
+2026-10-30, as the step panels' colors).
 
 **SKIN-8. The callout popup and the icon browser (X10, D2, D3; rewritten by QC-02, 2026-10-30).**
 Open a callout (EDIT-9), then Choose icon… → under **Ka0s Default** both wear the **Ka0s window**: the
@@ -2357,6 +2369,19 @@ the band kept; switch to WoW Default: no edge (a skin's own style never draws on
 a band over the window edge or rule, a body-color strip around the band, a section band, an edge around the
 header, or the stored color drawn over a gradient.
 Result:
+
+**PLOOK-13. The pad's body wears the skin's window gradient and art (2026-11-20, SD-SK-QC, LibKa0s#97
+SD-LK-97.16).** Show a Comms Pad and `/qc preview arena` beside it (the Preview as window is the skin's own
+window). Under **WoW Midnight** and **WoW Forever** → the pad's body shows the same top-to-bottom window
+gradient as the Preview window's body; under **WoW Default** → the same background art (the dialog's
+marbled fill); under Ka0s Default and Obsidian → the flat fill, as before. In every skin the pad keeps its
+own edge (and the header its title band, PLOOK-12) over the gradient or art, nothing spills past the edge,
+and the buttons and labels stay readable on it. Pad → Window: untick *Use the skin's color* for the
+background → the gradient and art go and the picked color fills the body; tick it again → they are back.
+Tick *Use class color* for the background → the class color, no gradient or art. Switch skins with the
+pad shown → it repaints with no reload. Fail: a flat body under WoW Midnight, WoW Forever or WoW Default,
+art or a gradient drawn over the edge or past it, or a gradient left under a stored or class color.
+Result: owed
 
 ## The full skin
 
@@ -2846,6 +2871,16 @@ character or a stranger who can cast a long buff on you.
   guildmate's do. Set **Friends and guild**: a friend's buff and a guildmate's buff show no toast, a
   stranger's does. This confirms `C_FriendList.IsFriend(guid)` and `IsGuildMember(guid)` answer for a
   GUID. Result: passed (owner, 2026-11-13)
+- **THANK-13. The toast's text and Thank button wear the skin (2026-11-20, SD-SK-QC.1, SD-SK-QC.2,
+  LibKa0s#97).** Get a toast up (THANK-1) under **Ka0s Default** → its line ("X buffed you with Y") is in
+  the skin's body text color and face, the note under it (when Thank is not armed, for example with
+  Whisper picked and the thank-you text empty) in the skin's disabled gray, and the **Thank** button has the
+  body, edge and label of the skin's other push buttons, its label lighting the button hover color under the
+  pointer. Repeat under **WoW Default** (a red Thank button) and Obsidian, switching the skin with a toast on
+  screen: the text and the button repaint with no reload. A left click still thanks, and a right-click on
+  the toast still dismisses it without sending. Fail: the client's gold "Thank" with no button body or
+  edge, a line or note that keeps the same color in every skin, or a click that no longer sends.
+  Result: owed
 
 ## Tooltip placement
 
@@ -2997,3 +3032,5 @@ Owed from the LibKa0s v1.105.0 adoption, wave C (AD-92-QC, LibKa0s#92, Ka0sAddon
 Owed from the LibKa0s v1.105.0 adoption, wave D (AD-79-QC, LibKa0s#79, the same bundle): DIAG-3, new, owed. PREVIEW-8, FOREVER-22, FOREVER-23 and FOREVER-25 now read their report lines in the debug console rather than chat; each has a changed expected result, so it lost its pass mark and is owed again (AD-79-QC review fixes).
 
 Owed from the adoption feedback run (AF-RV-QC, AF-STRIP-QC, AF-HDR-QC, Ka0sAddonsCommonTasks `docs/2026-11-19-ADOPTION_FEEDBACK/`): PAD-19 (rewritten for the strip's new marks, still owed), PAD-20 and PAD-21, new, each owed. From AF-HDR-QC: PAD-18 (rewritten for the header's four marks, still owed), PAD-22 and PAD-23, new, each owed. From the AF-STRIP-QC review fixes: PAD-24, new, owed.
+
+Owed from the skin-defaults run (SD-SK-QC, LibKa0s#97, Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`): THANK-13, PREVIEW-14 and PLOOK-13, new, each owed; SKIN-7 (rewritten for End preview as a push button, owner U-28, so it lost its pass mark).

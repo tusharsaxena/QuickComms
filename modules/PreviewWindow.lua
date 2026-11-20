@@ -28,10 +28,10 @@ local _, NS = ...
 -- hideOnSettings: the window is small, sits clear of the settings panel, and hiding it would end the
 -- preview (the edit preview runs with the settings panel open by design). THE SKIN (QC-02, skinning-§1): the window is the owner's Shell, so it wears
 -- the skin's fill, edge and top bar, and the title and the close mark sit centered in that bar
--- (`title.height`, the same in every skin; D9). The End preview button is the step panels' box (a
--- Shell with no top bar) and its label their tokens: sem.stepReady at rest, btn.hover under the
--- pointer, sem.unknown while locked (D8: today's 0.9/0.9/0.92, gold and 0.6 under Ka0s Default),
--- repainted on every looks change. The tooltip lines are gtip.value, the typed command
+-- (`title.height`, the same in every skin; D9). The End preview button is the owner's push button,
+-- S.Button (owner U-28, 2026-11-20, LibKa0s#97): its body, edge and label in btn.*, btn.hover under the
+-- pointer and text.disabled while locked, like every other Ka0s push button (it was a copy of the
+-- library SimPanel's step box until then). The library repaints it on a looks change. The tooltip lines are gtip.value, the typed command
 -- sem.unknown. The position PERSISTS in the profile (standalone-windows'
 -- persist MUST): `previewWindow` (defaults/Profile.lua), written on drag stop, read on every show and
 -- on a profile switch. DEGRADED (LibKa0s absent): no window; the slash still previews and prints.
@@ -55,8 +55,6 @@ local NAME = "QuickCommsPreviewWindow"
 local PAD, ROW_H, GAP = 8, 22, 6
 local DROP_W, BUTTON_W = 240, 100
 local WIDTH = PAD + DROP_W + GAP + BUTTON_W + PAD
--- The End preview label's tokens, by state (the library's SimPanel step buttons').
-local LABEL = { rest = "sem.stepReady", hot = "btn.hover", locked = "sem.unknown" }
 -- The tooltip's typed-command line.
 local TYPED = "sem.unknown"
 
@@ -89,12 +87,6 @@ end
 local function tipLine(text, token, wrap)
     local r, g, b = NS.SkinColor(token)
     GameTooltip:AddLine(text, r, g, b, wrap)
-end
-
--- The End preview label in its state's token: locked, hovered or at rest.
-local function paintLabel(b, state)
-    local r, g, b2 = NS.SkinColor(LABEL[state or (locked() and "locked" or "rest")])
-    b.__label:SetTextColor(r, g, b2)
 end
 
 local function endPreview()
@@ -151,28 +143,26 @@ local function hideTip()
     GameTooltip:Hide()
 end
 
--- The host's flat button (the library's SimPanel makeButton is private): the step panels' box (the
--- owner's Shell with no top bar), a centered small label in the step tokens.
+-- The owner's push button (owner U-28, 2026-11-20): S.Button paints the body, the edge and the
+-- centered small label (`Text`, the field it reads a label from) in btn.*, hover and disabled
+-- included. Painted after the scripts are set: S.Button hooks OnEnter and OnLeave, and a later
+-- SetScript would drop its hooks.
 local function makeButton(parent, label, onClick)
     local b = CreateFrame("Button", nil, parent, "BackdropTemplate")
     b:SetSize(BUTTON_W, ROW_H)
-    NS.Skin.Shell(b, { noTopBar = true })
     local fs = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     fs:SetPoint("CENTER", 0, 0)
     fs:SetText(label)
-    NS.Skin.Font(fs)   -- the skin's body face; paintLabel's token is its color
-    b.__label = fs
-    paintLabel(b, "rest")
+    b.__label, b.Text = fs, fs
     b:SetScript("OnClick", onClick)
     b:SetScript("OnEnter", function(self)
         if locked() then return lockedTip(self) end
-        paintLabel(self, "hot")
         tip(self, label, L["End the preview: the pads and dials go back to live."], NS.SLASH .. " preview off")
     end)
-    b:SetScript("OnLeave", function(self)
-        paintLabel(self)
+    b:SetScript("OnLeave", function()
         hideTip()
     end)
+    NS.Skin.Button(b)
     return b
 end
 
@@ -263,16 +253,17 @@ local function ensure()
     return f
 end
 
--- Locked over the edit preview, live otherwise: each control on or off, dimmed, its label grayed. A
--- disabled Button runs no OnEnter in the client unless told to (SetMotionScriptsWhileDisabled, as
--- LibKa0s's SimPanel does), so it is: the tooltip says why it is off.
+-- Locked over the edit preview, live otherwise: each control on or off, dimmed, End preview's label
+-- in text.disabled (S.Button again, which reads the enabled state). A disabled Button runs no OnEnter
+-- in the client unless told to (SetMotionScriptsWhileDisabled, as LibKa0s's SimPanel does), so it
+-- is: the tooltip says why it is off.
 local function setLocked(f, on)
     for _, c in pairs({ f.dropdown, f.endButton, f.settingsButton, f.closeButton }) do
         if c.SetMotionScriptsWhileDisabled then c:SetMotionScriptsWhileDisabled(true) end
         if c.SetEnabled then c:SetEnabled(not on) end
         c:SetAlpha(on and DIM or 1)
     end
-    paintLabel(f.endButton, on and "locked" or "rest")
+    NS.Skin.Button(f.endButton)
     if on then NS.CloseMenu() end
 end
 
@@ -321,11 +312,10 @@ end
 -- edit preview: a When edited on the Groups page re-bakes the pads under a new preset with no
 -- announce, and the dropdown names what they show (QF-07). With the library absent there is no
 -- window, so no receiver; the library's tracked bus takes it down and up with the addon.
--- A skin switch: the label in the new skin's state token (the box and the window are the library's
--- recorded Shells, repainted before this fires).
+-- A skin switch: the window (a recorded Shell) and End preview (a recorded Button) are repainted by
+-- the library before this fires; the band's height may move, so the row is laid again.
 NS.Skin.OnLooksChanged(function()
     if not frame then return end
-    paintLabel(frame.endButton)
     layout(frame)
 end)
 

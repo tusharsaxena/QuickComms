@@ -7,13 +7,29 @@
 local OWNER = "QuickComms"
 local PAD, DIAL = "p1", "d2"
 
+-- A LibSharedMedia fake that answers every statusbar name with a path of its own (kit revision 58's
+-- advice, LibKa0s tests/fixture_skin_switch.lua): with none, NS.MediaFetch finds no bar texture under
+-- any skin, a pad button's body draws flat under both, and a body whose texture stopped following
+-- could not be told from one that followed. Fonts and borders stay unknown, as in every other suite.
+local function barMedia(mm)
+    local lsm = mm.LibStub:NewLibrary("LibSharedMedia-3.0", 1)
+    function lsm.Register() end
+    function lsm.IsValid() return true end
+    function lsm.HashTable() return {} end
+    function lsm.Fetch(_, kind, name)
+        if kind == "statusbar" and type(name) == "string" then return "Interface\\Probe\\statusbar\\" .. name end
+        return nil
+    end
+    lsm.MediaType = {}
+end
+
 return function(enableAddon)
     local NS, mock
 
     local function host()
         if NS then return NS, mock end
         local Dh = dofile("tests/dial_helpers.lua")
-        NS, mock = enableAddon()
+        NS, mock = enableAddon({ mock = barMedia })
         NS.Situation.ReadInputs = function() return Dh.MPLUS end
         NS.Situation.RefreshNow("test")
         return NS, mock
@@ -60,11 +76,16 @@ return function(enableAddon)
     end
 
     local surfaces = {
+        -- The window draws art on Textures (the edge art its border follows, and the skin's background
+        -- art through skinBands, SD-LK-97.16, which tests/test_skin_windows.lua pins), so the texture
+        -- family must move too.
         { name = "a pad's window", companion = padFollows("look", "backgroundFromSkin", "borderColorFromSkin"),
-            build = function() return padInstance().root end, paint = repaintPad },
+            expect = "texture", build = function() return padInstance().root end, paint = repaintPad },
         { name = "a pad's header", companion = padFollows("header", "backgroundFromSkin", "fontColorFromSkin"),
             build = function() return padInstance().header end, paint = repaintPad },
-        { name = "a pad button's body", companion = padFollows("button", "backgroundFromSkin"),
+        -- The body is a data fill on a plain Texture in the skin's bar texture (kit revision 58: a
+        -- texture that stops following would still pass on its tint without `expect`).
+        { name = "a pad button's body", companion = padFollows("button", "backgroundFromSkin"), expect = "texture",
             build = function() return firstButton().qcBg end, paint = repaintPad },
         { name = "a pad button's edge", companion = padFollows("button", "borderColorFromSkin"),
             build = function() return firstButton().qcEdge end, paint = repaintPad },
@@ -74,9 +95,11 @@ return function(enableAddon)
         { name = "a pad button's cooling veil", build = function() return firstButton().qcCool end, paint = repaintPad },
         { name = "a pad button's hover wash", build = function() return firstButton().qcHover end, paint = repaintPad },
         { name = "a pad button's padlock", build = function() return firstButton().qcLock end, paint = repaintPad },
-        { name = "a dial's slices", companion = dialFollows("slice", "backgroundFromSkin"),
+        -- A dial's slices and hub are shape art: only the tint follows, the disc and sector art stay
+        -- (owner U-26, 2026-11-20, the icon-shapes Leave class).
+        { name = "a dial's slices", companion = dialFollows("slice", "backgroundFromSkin"), hold = { "texture" },
             build = function() return dialInstance().rings.active[1].qcFills[1] end, paint = repaintDial },
-        { name = "a dial's hub", companion = dialFollows("hub", "backgroundFromSkin"),
+        { name = "a dial's hub", companion = dialFollows("hub", "backgroundFromSkin"), hold = { "texture" },
             build = function() return dialInstance().header.qcHub end, paint = repaintDial },
         { name = "a dial's pointer", companion = dialFollows("slice", "pointerColorFromSkin"),
             build = function() return dialInstance().header.qcPointer.qcArrow end, paint = repaintDial },
@@ -145,6 +168,27 @@ return function(enableAddon)
         local toast = NS.NewToast{ build = function() return 200, 40 end }
         toast:Show({})
         return toast:Frame()
+    end }
+
+    -- The thank toast's own strings and its Thank button (SD-SK-QC.1, SD-SK-QC.2): one toast up
+    -- through the library's Show, as the pump hands it a payload, the earlier ones cleared first (the
+    -- stack holds three, and a fourth would wait in the queue with no frame).
+    local function thankToast()
+        host()
+        local toast = NS.AutoThankToast.toast
+        toast:Clear()
+        toast:Show({ key = "skin", name = "Caster1", buff = "Arcane Intellect" }, { key = "skin" })
+        return toast:FrameFor("skin")
+    end
+    surfaces[#surfaces + 1] = { name = "the thank toast's line", build = function() return thankToast().qcText end }
+    surfaces[#surfaces + 1] = { name = "the thank toast's note", build = function() return thankToast().qcNote end }
+    surfaces[#surfaces + 1] = { name = "the thank toast's Thank button", build = function() return thankToast().qcThank end }
+
+    -- The Preview window's End preview, the owner's push button (owner U-28, 2026-11-20).
+    surfaces[#surfaces + 1] = { name = "the Preview window's End preview", build = function()
+        host()
+        NS.Preview.SetPreviewAs("arena")
+        return NS.PreviewWindow.__frame().endButton
     end }
 
     surfaces[#surfaces + 1] = { name = "a settings row's remove mark", scope = "panel", build = function()

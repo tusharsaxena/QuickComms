@@ -37,8 +37,10 @@ local FILES = {
     "modules/Dial_Slices.lua",
     "modules/IconStyle.lua",
     "modules/Glow.lua",
-    -- #19's toast seam: the library paints the toast in this addon's skin (d.owner)
+    -- #19's toast seam: the library paints the toast in this addon's skin (d.owner); the toast host
+    -- paints its own strings and its Thank button (SD-SK-QC.1, SD-SK-QC.2)
     "core/ToastSetup.lua",
+    "modules/AutoThank_Toast.lua",
     -- QC-04: the settings pages QuickComms draws rows on itself (tests/test_skin_tools.lua holds
     -- their AceGUI widgets; the schema files are data and carry no color)
     "settings/Panel.lua",
@@ -293,33 +295,91 @@ test("skin windows: the Preview window is the owner's Shell, its title in the to
     local shell = callOn(seen.Shell, f)
     assertTrue(shell ~= nil, "the window is painted by the owner's Shell")
     assertFalse(type(shell.opts) == "table" and shell.opts.noTopBar, "the window carries the top bar")
-    local button = callOn(seen.Shell, f.endButton)
-    assertTrue(button ~= nil and button.opts.noTopBar == true, "End preview is a Shell box with no top bar")
     -- Where the title and the close mark sit in that bar (on the band's middle, in every skin) is the
     -- R5-WIN case below; round 4 pinned them at CENTER of TOP -title.height/2, half a px high.
 end)
 
-test("skin windows: End preview's label is the step panels' tokens at rest, hovered and locked", function()
+test("skin windows: [U-28] End preview is the owner's push button, its body and label in btn.*", function()
     local NS, m, Skin = boot()
+    local seen = spy(NS, { "Shell", "Button" })
     local f = previewWindow(NS)
+    -- red under: makeButton's Shell box with no top bar, the step panels' look (owner U-28, 2026-11-20)
+    assertTrue(callOn(seen.Button, f.endButton) ~= nil, "End preview is painted by the owner's Button")
+    assertTrue(callOn(seen.Shell, f.endButton) == nil, "and is no Shell box")
     local label = f.endButton.__label
-    -- red under: REST = { 0.9, 0.9, 0.92 } typed (the same under every skin)
-    assertColor(m.__paint(label).textColor, now(NS, "sem.stepReady"), "rest")
-    assertColor(m.__paint(label).textColor, { 0.9, 0.9, 0.92, 1 }, "rest is today's pixel")
+    -- red under: the label in sem.stepReady at rest
+    assertColor(m.__paint(label).textColor, now(NS, "btn.text"), "rest")
     f.endButton:__fire("OnEnter")
     assertColor(m.__paint(label).textColor, now(NS, "btn.hover"), "hovered")
     f.endButton:__fire("OnLeave")
-    assertColor(m.__paint(label).textColor, now(NS, "sem.stepReady"), "back at rest")
+    assertColor(m.__paint(label).textColor, now(NS, "btn.text"), "back at rest")
+    -- Locked over the edit preview: off, so the label is text.disabled (sem.unknown until U-28).
     local editGroup = NS.Preview.EditGroup
     NS.Preview.EditGroup = function() return "g1" end
-    f.endButton:__fire("OnLeave")
+    NS.PreviewWindow.Sync()
+    assertFalse(f.endButton:IsEnabled(), "locked: End preview is off")
+    assertColor(m.__paint(label).textColor, now(NS, "text.disabled"), "locked")
     NS.Preview.EditGroup = editGroup
-    assertColor(m.__paint(label).textColor, now(NS, "sem.unknown"), "locked")
-    assertColor(m.__paint(label).textColor, { 0.6, 0.6, 0.6, 1 }, "locked is today's pixel")
-    -- red under: no OnLooksChanged repaint (the label keeps the old skin's color until hovered)
-    f.endButton:__fire("OnLeave")
+    NS.PreviewWindow.Sync()
+    assertColor(m.__paint(label).textColor, now(NS, "btn.text"), "live again")
+    -- The library repaints its recorded Button on a skin switch.
     Skin:SetChoice(OWNER, "ka0s", OTHER)
-    assertColor(m.__paint(label).textColor, Skin:ResolveSkin(OTHER)["sem.stepReady"], "rest under " .. OTHER)
+    assertColor(m.__paint(label).textColor, Skin:ResolveSkin(OTHER)["btn.text"], "rest under " .. OTHER)
+end)
+
+-- ── the thank toast (SD-SK-QC.1, SD-SK-QC.2) and a pad's window bands (SD-LK-97.16) ─────────────
+
+-- One toast up through the library's own Show, as the pump hands it a payload (no caster: the
+-- Thank button is built and disarmed, its note says why).
+local function toastFrame(NS)
+    local TH = NS.AutoThankToast
+    TH.toast:Show({ key = "k1", name = "Caster1", buff = "Arcane Intellect" }, { key = "k1" })
+    return TH.toast:FrameFor("k1")
+end
+
+test("skin windows: [SD-SK-QC.1] the thank toast's line and note are in text.body and text.disabled", function()
+    local NS, m, Skin = boot()
+    local f = toastFrame(NS)
+    assertTrue(f ~= nil and f.qcText ~= nil, "the toast is up")
+    -- red under: GameFontHighlight's and GameFontDisableSmall's own colors, never painted
+    assertColor(m.__paint(f.qcText).textColor, now(NS, "text.body"), "the line")
+    assertColor(m.__paint(f.qcNote).textColor, now(NS, "text.disabled"), "the note")
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    local other = Skin:ResolveSkin(OTHER)
+    assertColor(m.__paint(f.qcText).textColor, other["text.body"], "the line under " .. OTHER)
+    assertColor(m.__paint(f.qcNote).textColor, other["text.disabled"], "the note under " .. OTHER)
+end)
+
+test("skin windows: [SD-SK-QC.2] the toast's Thank button is the owner's push button, label in btn.*", function()
+    local NS, m, Skin = boot()
+    local seen = spy(NS, { "Button" })
+    local f = toastFrame(NS)
+    local b = f and f.qcThank
+    assertTrue(b ~= nil, "the Thank button is built")
+    -- red under: a bare SecureActionButtonTemplate, no body or edge, its label the client's gold
+    assertTrue(callOn(seen.Button, b) ~= nil, "painted by the owner's Button")
+    assertColor(m.__paint(b.qcLabel).textColor, now(NS, "btn.text"), "the label at rest")
+    b:__fire("OnEnter")
+    assertColor(m.__paint(b.qcLabel).textColor, now(NS, "btn.hover"), "hovered")
+    b:__fire("OnLeave")
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    assertColor(m.__paint(b.qcLabel).textColor, Skin:ResolveSkin(OTHER)["btn.text"], "the label under " .. OTHER)
+end)
+
+test("skin windows: [SD-LK-97.16] a pad's window wears the skin's bands while its background follows", function()
+    local NS, m = boot()
+    local R = NS.PadRender
+    local seen = spy(NS, { "Shell" })
+    local follows = R.WindowLook({ backgroundFromSkin = true, useClassColorBackground = false })
+    assertTrue(follows.skin.skinBands == true, "red under: a host table with no skinBands")
+    assertFalse(R.WindowLook({ backgroundFromSkin = true, useClassColorBackground = true }).skin.skinBands,
+        "a class-colored background draws no bands")
+    assertFalse(R.WindowLook({ backgroundFromSkin = false }).skin.skinBands, "a stored background draws none")
+    local root = m.CreateFrame("Frame", nil, nil, "BackdropTemplate")
+    R.ApplyWindowLook(root, follows)
+    local shell = callOn(seen.Shell, root)
+    assertTrue(shell ~= nil and type(shell.opts) == "table" and shell.opts.keepEdge == true,
+        "the owner's Shell keeps the pad's edge and draws the bands")
 end)
 
 test("skin windows: the Preview window's tooltips write their lines in the tooltip tokens", function()

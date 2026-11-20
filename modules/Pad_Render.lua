@@ -682,12 +682,16 @@ end
 
 --- The window's look, from the pad's `look` table: { skin (R.SkinFor), edge (the header's inset), sig }.
 --- `prev`, the look the last rebuild built, is answered again while its signature still holds, as
---- R.HeaderLook's.
+--- R.HeaderLook's. While the background follows the skin and no class color is set, the skin table
+--- carries `skinBands` (LibKa0s v1.108.0, Core minor 19, SD-LK-97.16): NS.ApplySkin then draws the
+--- skin's window gradient and background art inside the pad's own edge, and a later table without it
+--- takes them away.
 function R.WindowLook(look, prev)
     look = type(look) == "table" and look or {}
     local sig = lookSig(look)
     if type(prev) == "table" and prev.sig == sig then return prev end
     local skin = R.SkinFor(look)
+    skin.skinBands = look.backgroundFromSkin == true and look.useClassColorBackground ~= true
     return { sig = sig, skin = skin, edge = edgeInset(skin) }
 end
 
