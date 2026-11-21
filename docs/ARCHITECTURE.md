@@ -48,7 +48,7 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time by LibKa0s-Glow-1.0 and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.108.0 payload, of which eighteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.109.0 payload, of which eighteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -528,6 +528,7 @@ them get no row each.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | Always, from standard v2.102.0: the vendored client-quirks catalog (client-quirks-§1); the addon's own section holds the ping and marker quirk and the auto-thank quirk |
+| `forever-quirks.md` | Present | Clients value `Retail · Forever` (forever-quirks-§1): the vendored Forever quirks catalog; the addon's own section measures nothing on Forever alone and points at the two-client entries in `midnight-quirks.md` |
 | `compat-layer.md` | Present | `core/Compat.lua` publishes three or more shims (the count and its grep are in the page) |
 | `taint.md` | Present | The hub's Taint Notes passed ~60 lines (documentation-§3 spill) |
 | `known-limitations.md` | Present | The hub's Known Limitations passed ~60 lines (documentation-§3 spill) |
