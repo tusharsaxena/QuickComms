@@ -48,7 +48,7 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time by LibKa0s-Glow-1.0 and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.105.0 payload, of which seventeen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.108.0 payload, of which eighteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -85,7 +85,7 @@ On screen: the settings panel, the editor pages, the minimap button, the Comms P
 ## Module Map
 
 Every file, its kind, its TOC position and what it does is in [`module-map.md`](module-map.md). In
-short: `core/` holds the identity, thirteen of the setup files, the session state, the addon object and
+short: `core/` holds the identity, fourteen of the setup files, the session state, the addon object and
 its lifecycle, and the migration runner; `defaults/` the default values and the shipped built-in sets
 (seed data); `modules/` the modules and the diagnostics sections; `settings/` the schema, the panel
 pages and the slash table and its verb bodies. `locales/` holds the base locale, `enUS.lua` (the only
@@ -524,7 +524,7 @@ them get no row each.
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | `NS.COMMANDS` carries eight or more commands (23 as measured on 2026-11-15) |
+| `slash-dispatch.md` | Present | `NS.COMMANDS` carries eight or more commands (24 as measured on 2026-11-21) |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | Always, from standard v2.102.0: the vendored client-quirks catalog (client-quirks-§1); the addon's own section holds the ping and marker quirk and the auto-thank quirk |
