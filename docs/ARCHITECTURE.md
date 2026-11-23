@@ -356,9 +356,10 @@ the settings pages and the library's own windows.
     settings panel, and hiding it ends the preview (the edit preview runs with the panel open). Over
     the edit preview both marks lock with the rest of the window and show its locked tooltip.
   - **The callout popup's modal window** (`settings/ModalWindow.lua`): close alone, the template's X
-    adopted (`closeButton`) or the fallback's built through the wrapper. Settings opted out
-    (`MW.SETTINGS_OPT_OUT`): a modal opened from a settings row with the settings panel already
-    beneath it, under its catcher.
+    adopted (`closeButton`) or the fallback's built through the wrapper. No settings mark: it is a
+    companion (`companion = true`, WidgetsHeader minor 2, LibKa0s v1.112.0; standalone-windows *A
+    companion window carries no settings mark*, v2.119.0), a modal opened only from a settings row,
+    bound to that row's callout, with the settings panel already beneath it, under its catcher.
   - **A Comms Pad's header row:** collapse · lock · settings · close (AF-HDR-QC; standalone-windows
     *Which marks a window owes*, v2.115.0: the pads are this addon's primary display, so their header
     carries close, settings and lock). The collapse toggle is a word mark ("-" / "+") in the Header

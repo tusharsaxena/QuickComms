@@ -322,7 +322,7 @@ test("header strip: the Preview window's settings mark shows its tooltip and wea
     end
 end)
 
-test("header strip: the modal window's close is the strip's, settings opted out with its reason", function()
+test("header strip: the modal window's close is the strip's, a companion with no settings mark", function()
     local NS = boot()
     local Pop = openPopup(NS)
     local hb = Pop.frame.headerButtons
@@ -331,10 +331,12 @@ test("header strip: the modal window's close is the strip's, settings opted out 
     assertEqual(table.concat(hb.order, ","), "close")
     assertTrue(hb.close == Pop.chrome.close, "the template's own close, adopted")
     assertTrue(hb.settings == nil, "no settings mark")
-    assertTrue(type(hb.optOut) == "string" and hb.optOut ~= "", "the opt-out names its reason")
+    -- red under: settings = false + settingsOptOut (the waiver path, before standard v2.119.0)
+    assertTrue(hb.companion == true, "a companion of the settings row that opens it (WidgetsHeader minor 2)")
+    assertTrue(hb.optOut == nil, "no waiver: a companion needs no opt-out reason")
 end)
 
-test("header strip: the modal fallback's close is the strip's, settings opted out", function()
+test("header strip: the modal fallback's close is the strip's, a companion with no settings mark", function()
     local NS, m = boot()
     m.missingTemplates.SettingsFrameTemplate = true
     local Pop = openPopup(NS)
@@ -342,7 +344,8 @@ test("header strip: the modal fallback's close is the strip's, settings opted ou
     assertTrue(type(hb) == "table", "the fallback's marks are W.HeaderButtons'")
     assertEqual(table.concat(hb.order, ","), "close")
     assertTrue(hb.close == Pop.chrome.close, "the close is the strip's")
-    assertTrue(type(hb.optOut) == "string" and hb.optOut ~= "", "the opt-out names its reason")
+    assertTrue(hb.settings == nil, "no settings mark")
+    assertTrue(hb.companion == true and hb.optOut == nil, "a companion, no waiver")
     assertTrue(Pop.IsOpen())
     Pop.chrome.close:__fire("OnClick", "LeftButton")
     assertFalse(Pop.IsOpen(), "the close still cancels the popup")
