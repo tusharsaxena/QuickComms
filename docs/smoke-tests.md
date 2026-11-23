@@ -23,7 +23,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SEND-1..7 | Send | Secure sends in keys and on bosses, the spam guard, General (/1) with its Say fallback, the lockdown lift after an encounter or a key |
 | TOKEN-1 | Tokens | `{coordinates}`: your map position, read at the press, in a preview echo and in combat |
 | PAD-1..25 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text, the header strip's collapse toggle, the drag strip's settings mark and its right-click |
-| EDIT-1..35 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its look on the skin and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion, the callout popup's close on the header strip |
+| EDIT-1..36 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its look on the skin and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion, the callout popup's close on the header strip, the popup as a companion (close alone) |
 | PREVIEW-1..13 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick; the window's settings mark |
 | TIP-1..6 | [Tooltip placement](#tooltip-placement) | AD-92-QC (LibKa0s#92): a pad button's and a section title's tooltip beside the whole pad, the header row's above it, a wedge's beside the whole dial near each screen edge, the Preview as window's controls beside it and its locked marks above, the callout popup's token tooltip beside the popup, an existing profile's dial moved off Above |
 | DIAL-1..43 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
@@ -46,10 +46,10 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | FOREVER-1..26 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, Forever's place ids against the client's own names and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone; `/qc probe ids`, the no-travel sweep of the client's map, dungeon finder and battleground names; the combined-actions core re-run |
 | EMOTE-1..10 | [Emotes](#emotes) | Retail, then Forever: a custom emote callout (`/e`) and its lock, a game emote callout, the emote picker's order and voice marks, preview, throttle and an unknown token, a game emote during an encounter, the Emotes set in the open world and an existing profile gaining it once, the shipped callouts that emote with their line and the two Heal me callouts, and an existing profile gaining them (step 20) |
 | ACTION-1..8 | [Combined actions](#combined-actions) | Retail, then Forever: one press that sends a line, an emote, a ping and a marker (#16), in combat, with no target, the 255-byte macro cap, Say and an emote outdoors, a boss encounter, a locked Line beside a marker, a legacy game-emote callout |
-| THANK-1..12 | [Auto-thank](#auto-thank) | Retail, then Forever: a stranger's buff toasted and thanked (#19), whether the caster reads, the whisper and the emote at a cross-realm caster, a buff mid-fight, a burst throttled, raid buffs only, where it stays quiet, combat with a toast up, a right-click, the spam guard, the mute modes |
+| THANK-1..14 | [Auto-thank](#auto-thank) | Retail, then Forever: a stranger's buff toasted and thanked (#19), whether the caster reads, the whisper and the emote at a cross-realm caster, a buff mid-fight, a burst throttled, raid buffs only, where it stays quiet, combat with a toast up, a right-click, the spam guard, the mute modes, the skinned toast, `/qc test`'s sample toast |
 | PING-1..5 | [Pings](#pings) | Retail, then Forever: a callout's ping on the target (#17), solo and grouped, in combat, Forever's server delivery, an encounter lockdown, pings off and on cooldown |
 | MARK-1..7 | [Raid markers](#raid-markers) | Retail, then Forever: a callout's raid target marker on the target (#18), solo, in a party and in a raid with and without assist, a second press, no target and an unmarkable one, Forever's `/tm`, marking in combat and during an encounter |
-| SKIN-1..35 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker; no line under any window title |
+| SKIN-1..36 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker; no line under any window title; High Contrast's 1 px HUD shadow |
 
 ## Before you start
 
@@ -851,6 +851,14 @@ cancels the popup. The popup has no settings mark (it is a modal opened from the
 already beneath it). Repeat under Obsidian and WoW Default. Fail: a settings mark, a tooltip missing or
 under the pointer, or a close that does not cancel.
 Result: owed
+
+**EDIT-36. The callout popup is a companion: close alone (2026-11-24, FB-QC-01, standard v2.119.0,
+LibKa0s v1.112.0).** Groups → pick a group → Edit callout → the popup's title band carries the close X
+alone, as in EDIT-35, now as a companion window (it opens only from its settings row and edits only that
+row's callout). The Preview as window, a Comms Pad's header row and its drag strip still carry the
+settings gear, and each gear opens Quick Comms' settings. Fail: a gear on the popup, or a gear missing
+from the Preview as window, a pad header or a drag strip.
+Result:
 
 ## Preview window
 
@@ -2209,6 +2217,12 @@ mode left on after a close the picker turned it on for, left off after a close t
 for, the picker behind a pad or the dial, or a second chat line at the close in combat.
 Result:
 
+**SKIN-36. High Contrast's HUD shadow is 1 px (2026-11-24, FB-QC-01, LibKa0s v1.112.0).** Pick **High
+Contrast** (`/qc skin`), `/qc test` → the pad buttons' and the dial wedges' labels, with their font's shadow
+following the skin, draw a 1 px black shadow down and to the right, the same offset as under Obsidian, with
+no heavy second copy of each letter. Fail: a 2 px shadow block, or no shadow at all.
+Result:
+
 ## Animations
 
 The issue is #13; the rulings are in `docs/superpowers/specs/2026-11-01-open-close-animations-design.md`.
@@ -2891,6 +2905,19 @@ character or a stranger who can cast a long buff on you.
   the toast still dismisses it without sending. Fail: the client's gold "Thank" with no button body or
   edge, a line or note that keeps the same color in every skin, or a click that no longer sends.
   Result: owed
+- **THANK-14. `/qc test` shows a sample toast (2026-11-24, FB-QC-02, the owner's feedback "Toast does not
+  show in /qc test").** Out of combat, `/qc test` → besides the placeholder pads and dial, one toast shows
+  at the toast's spot: a question-mark icon, "A stranger buffed you with a sample buff", the note "Test
+  mode: a placeholder that sends nothing." and a **Thank** button in the skin's push-button look. It does
+  not fade while test mode is on, and it can be dragged to place the toast (the spot is kept). Click
+  **Thank** → chat prints "Thank (test-mode placeholder: nothing sent)" and nothing is said or emoted.
+  Turn **Auto-thank** off on the Auto-thank page and run `/qc test` again → the sample still shows. Turn
+  test mode off (`/qc test`, the checkbox or the launcher) → the sample goes; switch to **Preview as...**
+  → no sample. With test mode on, pull a target dummy → test mode ends and the sample goes, with no Lua
+  error or blocked-action warning. A real stranger's buff during test mode still toasts beside the sample,
+  with an armed Thank button. Fail: no toast in test mode, a Thank click that sends, a sample left up after
+  test mode ends, or a blocked-action warning at the pull.
+  Result:
 
 ## Tooltip placement
 
@@ -3046,3 +3073,5 @@ Owed from the adoption feedback run (AF-RV-QC, AF-STRIP-QC, AF-HDR-QC, Ka0sAddon
 Owed from the skin-defaults run (SD-SK-QC, LibKa0s#97, Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`): THANK-13, PREVIEW-14 and PLOOK-13, new, each owed; SKIN-7 (rewritten for End preview as a push button, owner U-28, so it lost its pass mark).
 
 Owed from the strip right-click run (SRC-QC-01, SRC-QC-02, LibKa0s v1.111.0, Ka0sAddonsCommonTasks `docs/2026-11-23-STRIP_RIGHT_CLICK/`): PAD-25, new, owed; PAD-19 (amended: the strip's right-click now opens the pad's page, as its gear does, still owed).
+
+Owed from the feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-24-FEEDBACK_BATCH/`, LibKa0s v1.112.0, standard v2.119.0): EDIT-36 and SKIN-36 (FB-QC-01), THANK-14 (FB-QC-02), new, each owed.

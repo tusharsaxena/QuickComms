@@ -1128,6 +1128,19 @@ Total.
 - autothank: [CA-M4-12] a click removes its toast through SE.RunOrQueue
 - autothank: [CA-M4-12] #19: a stranger's UNIT_AURA gives exactly one toast, naming the caster and the buff
 
+### test_autothank_testmode.lua (10)
+
+- autothank test mode: /qc test shows one sample toast, its Thank button a placeholder
+- autothank test mode: a frame that carried a real toast hides and disarms its secure button for the sample
+- autothank test mode: test mode ended after lockdown began takes the sample down unblocked
+- autothank test mode: the sample shows whether Auto-thank is on or off
+- autothank test mode: ending test mode takes the sample down
+- autothank test mode: Preview as shows no sample, and switching to it takes one down
+- autothank test mode: the sample never fades away while test mode is on
+- autothank test mode: real offers, the pump and the cooldowns are untouched
+- autothank test mode: a reused pool frame is armed again for a real offer after the sample
+- autothank test mode: test mode refused in combat shows no sample
+
 ### test_dial_secure.lua (20)
 
 - dial secure: the header is QuickCommsDial<n>, hidden until the toggle opens it; open, the dial owns Escape and 1-8
@@ -2076,8 +2089,8 @@ Total.
 - header strip: the Preview window's marks are HeaderButtons', settings then close
 - header strip: the Preview window's settings mark opens settings and ends nothing
 - header strip: the Preview window's settings mark shows its tooltip and wears the title-bar colors
-- header strip: the modal window's close is the strip's, settings opted out with its reason
-- header strip: the modal fallback's close is the strip's, settings opted out
+- header strip: the modal window's close is the strip's, a companion with no settings mark
+- header strip: the modal fallback's close is the strip's, a companion with no settings mark
 - header strip: a pad header's marks are the strip's, collapse · lock · settings · close
 - title bars: a pad header's lock, settings and close show their tooltips
 - header strip: a pad's drag strip carries the settings mark, which opens settings
@@ -2436,6 +2449,7 @@ Total.
 | test_send_guard.lua | 13 |
 | test_sendengine.lua | 49 |
 | test_autothank.lua | 68 |
+| test_autothank_testmode.lua | 10 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
@@ -2488,4 +2502,4 @@ Total.
 | test_skin_switch.lua | 37 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2106** |
+| **Total** | **2116** |
