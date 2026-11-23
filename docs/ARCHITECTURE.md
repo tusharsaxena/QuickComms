@@ -379,8 +379,9 @@ the settings pages and the library's own windows.
   - **A Comms Pad's drag strip** carries all three marks, `?` · settings · close left to right
     (DragHandle minor 15, LibKa0s v1.107.0; standalone-windows *The drag strip's marks*, v2.115.0;
     AF-STRIP-QC). The settings mark opens this pad's own page with the pad picked (`Pad.OpenSettings`,
-    `QC:EditPad`, settings/Pads.lua `PD.Edit`), its tooltip Open settings; the strip's right-click still
-    opens the addon's settings. The close hides that pad on this character and keeps its settings
+    `QC:EditPad`, settings/Pads.lua `PD.Edit`), its tooltip Open settings; the strip passes no `onRightClick`, so its right-click, on the band and
+    on every mark, runs that same function (DragHandle minor 17, LibKa0s v1.111.0; standalone-windows *A
+    right-click opens what the gear opens*, v2.118.0; SRC-QC-02). The close hides that pad on this character and keeps its settings
     (`SlashVerbs.ClosePad`, `db.char.padsClosed[profileKey][id]`: per profile, since pad ids repeat across
     profiles, and forgotten on a profile reset, copy or delete and on the pad's deletion), its tooltip Hide this pad and the three ways back:
     `/qc show`, the launcher's Show window (which reads off once every enabled pad is closed, and shows

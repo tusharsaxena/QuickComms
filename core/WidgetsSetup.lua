@@ -26,7 +26,7 @@ NS.HEADER = (W and W.HEADER) or { SIZE = 18, ART = 12, PAD = 6, GAP = 6 }
 NS.DRAG_GAP = (W and W.DRAG_HANDLE and W.DRAG_HANDLE.GAP) or 2
 
 --- A drag strip over `parent`, or nil when the library is absent.
---- @param spec table LibKa0s DragHandle spec: label, moveFrame, canDrag, onDragStop, onRightClick, tooltip
+--- @param spec table LibKa0s DragHandle spec: label, moveFrame, canDrag, onDragStop, settings, tooltip
 --- @return table|nil
 function NS.MakeDragHandle(parent, spec)
     if not (W and W.DragHandle) then return nil end

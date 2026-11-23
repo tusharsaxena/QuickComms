@@ -365,7 +365,9 @@ local function build(id)
             inst.dragging = nil
             savePoint(inst)
         end,
-        onRightClick = function() NS.addon:OpenSettings() end,
+        -- NO onRightClick (SRC-QC-02; standalone-windows, *A right-click opens what the gear opens*,
+        -- standard v2.118.0): DragHandle minor 17 answers a right-click on the strip and every mark
+        -- with `settings` below, this pad's page. Through SRC-QC-01 it opened the root page.
         -- The strip's marks, [?][settings][close] (DragHandle minor 15; standalone-windows, *The drag
         -- strip's marks*, v2.115.0; AF-STRIP-QC). Settings opens this pad's own page (Pad.OpenSettings);
         -- the X hides this pad on this character and keeps its settings (SlashVerbs.ClosePad), the

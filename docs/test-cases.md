@@ -1481,12 +1481,13 @@ Total.
 - pad: [F-006] a rebuild that moved no line rewrites no button's type or macrotext
 - pad: [F-006] after a rebuild, every button outside the active set carries no type and is not armed
 
-### test_pad_close.lua (19)
+### test_pad_close.lua (20)
 
 - pad close: a pad's drag strip carries all three marks, [?][settings][close]
 - pad close: each strip mark says its own words, never the strip's description
 - pad close: the strip's X hides that pad, keeps its settings and says how to bring it back
 - pad close: the strip's settings mark opens this pad's own page, the pad picked
+- pad close: a right-click anywhere on the strip opens what its gear opens, this pad's page
 - pad close: the Pad page's Edit picks the pad and opens the page
 - pad close: /qc show brings a closed pad back as it was
 - pad close: /qc show also ends /qc toggle's hide
@@ -2448,7 +2449,7 @@ Total.
 | test_pad_looks.lua | 21 |
 | test_pad_header.lua | 11 |
 | test_pad.lua | 47 |
-| test_pad_close.lua | 19 |
+| test_pad_close.lua | 20 |
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
@@ -2487,4 +2488,4 @@ Total.
 | test_skin_switch.lua | 37 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2105** |
+| **Total** | **2106** |
