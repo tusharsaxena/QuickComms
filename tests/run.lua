@@ -287,6 +287,7 @@ Kit.run{
         "test_send_guard",
         "test_sendengine",
         "test_autothank",
+        "test_autothank_testmode",
         "test_dial_secure",
         "test_preview",
         "test_edit_preview",

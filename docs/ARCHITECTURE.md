@@ -183,7 +183,7 @@ tracked registration down and replay it.
 | `SURFACE_REBUILT` | `SurfaceRebuilt` | `modules/Surfaces.lua`: `true` when a rebuild is held for combat, `false` when it ran | surfaceId (a pad's or a dial's), stale | none |
 | `SEND_RESULT` | `SendResult` | `modules/SendEngine.lua`: `guarded` at the press, then `sent` or `dropped` from the echo, so one press can yield two | calloutId, surfaceId, result | `modules/Pad.lua` (the flash, the sound); `modules/Dial.lua` (the wedges' flash) |
 | `COMBAT_QUEUE_DRAINED` | `CombatQueueDrained` | `modules/SendEngine.lua` `Drain` | count | `modules/Surfaces.lua` (clears the stale hints) |
-| `TEST_MODE_CHANGED` | `TestModeChanged` | `modules/Preview.lua` `SetTestMode`, `SetPreviewAs` and `SetEditPreview` | on (test mode, Preview as… or the edit preview) | `modules/Surfaces.lua` (`Request`, and opens dial 1); the editor pages (repaint). The preview window is not a listener: Preview calls `PreviewWindow.Sync` directly beside every send, and at the silent stand-down |
+| `TEST_MODE_CHANGED` | `TestModeChanged` | `modules/Preview.lua` `SetTestMode`, `SetPreviewAs` and `SetEditPreview` | on (test mode, Preview as… or the edit preview) | `modules/Surfaces.lua` (`Request`, and opens dial 1); the editor pages (repaint); the thank toast host (`modules/AutoThank_Toast.lua` `ShowTest`/`HideTest`: test mode proper puts up one sample toast through the library's `Toast:Preview`, whether Auto-thank is on or off, its Thank button a plain placeholder that prints the test echo; off, Preview as or the edit preview take it down, FB-QC-02). The preview window is not a listener: Preview calls `PreviewWindow.Sync` directly beside every send, and at the silent stand-down |
 
 ## Slash Commands
 
@@ -266,6 +266,9 @@ attribute. Auto-thank's toast carries a secure child, its Thank button (`SE.NewT
 click only, so the toast's right-click dismiss never runs it), so the toast is never shown, moved or
 hidden in combat: every Show waits for the end of combat, and a toast on screen at the pull is held
 back into the library's queue at the still-writable `PLAYER_REGEN_DISABLED` edge and released after it.
+Test mode's sample toast (FB-QC-02) carries no secure child: its Thank button is a plain placeholder
+(`frame.qcSample`), and a pool frame that hosted a real toast has its secure button disarmed and hidden
+while it carries the sample, so a test mode ended after lockdown began still takes the sample down.
 The full notes, frame by frame: [`taint.md`](taint.md).
 
 Every strata and frame level the addon sets is named once, in `core/Constants.lua`

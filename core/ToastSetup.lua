@@ -12,6 +12,10 @@ local addonName, NS = ...
 
 local Toast = LibStub and LibStub("LibKa0s-Toast-1.0", true)
 
+-- The key Toast:Preview queues under (lib.PREVIEW), for a host's Remove of its test-mode sample. The
+-- library's own string when it is absent too, so the stub's Remove takes the same argument.
+NS.TOAST_PREVIEW = Toast and Toast.PREVIEW or "LibKa0s-Toast-preview"
+
 local function none() end
 
 --- The library-absent toast: a live toast's members, doing nothing.

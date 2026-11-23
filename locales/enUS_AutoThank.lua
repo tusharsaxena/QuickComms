@@ -19,3 +19,7 @@ L["%s buffed you with %s"] = "%s buffed you with %s"
 -- (modules/AutoThank_Toast.lua)
 L["Thank"] = "Thank"
 L["Locked: whispers are blocked right now."] = "Locked: whispers are blocked right now."
+
+-- The test-mode sample toast's caster and buff (modules/AutoThank_Toast.lua, /qc test)
+L["A stranger"] = "A stranger"
+L["a sample buff"] = "a sample buff"
