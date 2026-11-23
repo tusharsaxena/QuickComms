@@ -108,6 +108,26 @@ test("pad close: the strip's settings mark opens this pad's own page, the pad pi
     assertEqual(got[1], "p1")
 end)
 
+test("pad close: a right-click anywhere on the strip opens what its gear opens, this pad's page", function()
+    -- SRC-QC-02 (standalone-windows, *A right-click opens what the gear opens*, standard v2.118.0): red
+    -- under the spec's old `onRightClick = NS.addon:OpenSettings()`, the addon's root page, while the
+    -- gear opened the pad's own page. With no onRightClick, DragHandle minor 17 answers a right-click
+    -- on the band and on every mark with the gear's own action.
+    local NS = live()
+    local got, root = {}, 0
+    NS.addon.EditPad = function(_, id) got[#got + 1] = id end
+    NS.addon.OpenSettings = function() root = root + 1 end
+    local h = inst(NS).handle
+    h:__fire("OnClick", "RightButton")
+    h.help:__fire("OnClick", "RightButton")
+    h.settings:__fire("OnClick", "RightButton")
+    h.close:__fire("OnClick", "RightButton")
+    assertEqual(#got, 4, "the band, the ?, the gear and the X each answer the right-click")
+    for i = 1, 4 do assertEqual(got[i], "p1", "right-click " .. i .. " opens this pad's page") end
+    assertEqual(root, 0, "no right-click opens the root page")
+    assertFalse(NS.SlashVerbs.PadClosed("p1"), "the X's right-click closes nothing")
+end)
+
 test("pad close: the Pad page's Edit picks the pad and opens the page", function()
     local NS = live()
     local Ed = NS.addon.Settings.Editors

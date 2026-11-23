@@ -22,7 +22,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DEGRADED-1..2 | Degraded | The install with LibKa0s missing, and its help rows |
 | SEND-1..7 | Send | Secure sends in keys and on bosses, the spam guard, General (/1) with its Say fallback, the lockdown lift after an encounter or a key |
 | TOKEN-1 | Tokens | `{coordinates}`: your map position, read at the press, in a preview echo and in combat |
-| PAD-1..19 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text, the header strip's collapse toggle and the drag strip's settings mark |
+| PAD-1..25 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text, the header strip's collapse toggle, the drag strip's settings mark and its right-click |
 | EDIT-1..35 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its look on the skin and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion, the callout popup's close on the header strip |
 | PREVIEW-1..13 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick; the window's settings mark |
 | TIP-1..6 | [Tooltip placement](#tooltip-placement) | AD-92-QC (LibKa0s#92): a pad button's and a section title's tooltip beside the whole pad, the header row's above it, a wedge's beside the whole dial near each screen edge, the Preview as window's controls beside it and its locked marks above, the callout popup's token tooltip beside the popup, an existing profile's dial moved off Above |
@@ -412,8 +412,8 @@ each is the skin's icon color, like the "-" on the pad's header row; under the p
 light the skin's link color (orange under Ka0s Default) and the X lights red. Hover the strip's label →
 its tooltip opens centered above the strip (below it only with the pad at the screen's top), never beside
 the pad. Hover the gear → **Open settings**; a left click opens the settings on the **Pad** page with this
-pad picked in its dropdown (with two pads, try each strip). A right-click on the strip still opens the
-Quick Comms settings. The pad's name on the strip is not cut off. Repeat under Obsidian. `/qc lock` → the
+pad picked in its dropdown (with two pads, try each strip). A right-click on the strip opens the same
+page (PAD-25; amended 2026-11-23, SRC-QC-02). The pad's name on the strip is not cut off. Repeat under Obsidian. `/qc lock` → the
 strip and its marks are gone. Fail: the marks in the old order, the gear opening the main page, a mark
 showing the strip's "Drag to move" tooltip, or the strip's tooltip beside the pad.
 Result: owed
@@ -470,6 +470,16 @@ stays up for test mode and chat says it hides when test mode ends; click the X a
 `/qc test` off → the pad goes. Fail: a pad hidden in a profile where it was never closed, a reset or new
 pad that never shows, or a test-mode X click with no chat line.
 Result: owed
+
+**PAD-25. A right-click anywhere on the drag strip opens what its gear opens (2026-11-23, SRC-QC-02,
+LibKa0s v1.111.0; Ka0sAddonsCommonTasks SRC-S6).** With two pads (Pad page → New pad), `/qc unlock`, out
+of combat, the settings closed. Right-click the second pad's strip label → the settings open on the
+**Pad** page with that pad picked in its dropdown, exactly where a left click on its gear lands. Close
+the settings and right-click the strip's **?**, then the gear, then the **X** → each opens the same page,
+and the X's right-click hides nothing. Repeat on the first pad's strip → its own pad is picked. `/qc test`
+with `/qc lock` (the strip shows for test mode) → a right-click on the strip still opens that pad's page.
+Fail: a right-click that opens the landing page or another pad, opens nothing, or hides the pad.
+Result:
 
 ## Editors
 
@@ -3034,3 +3044,5 @@ Owed from the LibKa0s v1.105.0 adoption, wave D (AD-79-QC, LibKa0s#79, the same 
 Owed from the adoption feedback run (AF-RV-QC, AF-STRIP-QC, AF-HDR-QC, Ka0sAddonsCommonTasks `docs/2026-11-19-ADOPTION_FEEDBACK/`): PAD-19 (rewritten for the strip's new marks, still owed), PAD-20 and PAD-21, new, each owed. From AF-HDR-QC: PAD-18 (rewritten for the header's four marks, still owed), PAD-22 and PAD-23, new, each owed. From the AF-STRIP-QC review fixes: PAD-24, new, owed.
 
 Owed from the skin-defaults run (SD-SK-QC, LibKa0s#97, Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`): THANK-13, PREVIEW-14 and PLOOK-13, new, each owed; SKIN-7 (rewritten for End preview as a push button, owner U-28, so it lost its pass mark).
+
+Owed from the strip right-click run (SRC-QC-01, SRC-QC-02, LibKa0s v1.111.0, Ka0sAddonsCommonTasks `docs/2026-11-23-STRIP_RIGHT_CLICK/`): PAD-25, new, owed; PAD-19 (amended: the strip's right-click now opens the pad's page, as its gear does, still owed).
