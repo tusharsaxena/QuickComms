@@ -994,7 +994,7 @@ the skin's red button, and to Obsidian → Obsidian's button; each with no reloa
 the locked tooltip. Leave the edit preview → its label is back at rest. A click ends the preview, as before.
 Fail: the old step-box look (a window fill with no button edge), a label that stays light gray or gold in
 every skin, no hover change, or a locked button whose label is not grayed.
-Result: owed
+Result: passed (owner, 2026-11-24)
 
 **PREVIEW-15. The Preview as dropdown's current situation reads apart (2026-11-24, FB2-QC-01, LibKa0s
 v1.113.0 WidgetsDropdown minor 4, standard v2.120.0 skinning-§4; amended FB2-QC-02, the owner's ruling
@@ -1992,7 +1992,7 @@ kept. (Amended by FS-QC-GATE, 2026-11-01, a skin's None defers.) Result: Passed 
 situation in **Preview as…** under each skin → the window wears the skin: its fill, edge and top bar,
 the title and the close mark centered in the bar; **End preview** is a push button like the skin's
 other buttons (PREVIEW-14), and its tooltip lines are readable. Switch the skin with the window open →
-it repaints with no reload. Result: owed (its expected result changed with U-28; it passed, owner-marked
+it repaints with no reload. Result: passed (owner, 2026-11-24; before U-28 changed its expected result it passed, owner-marked
 2026-10-30, as the step panels' colors).
 
 **SKIN-8. The callout popup and the icon browser (X10, D2, D3; rewritten by QC-02, 2026-10-30).**
@@ -2429,7 +2429,7 @@ background → the gradient and art go and the picked color fills the body; tick
 Tick *Use class color* for the background → the class color, no gradient or art. Switch skins with the
 pad shown → it repaints with no reload. Fail: a flat body under WoW Midnight, WoW Forever or WoW Default,
 art or a gradient drawn over the edge or past it, or a gradient left under a stored or class color.
-Result: owed
+Result: passed (owner, 2026-11-24)
 
 ## The full skin
 
@@ -2928,7 +2928,7 @@ character or a stranger who can cast a long buff on you.
   screen: the text and the button repaint with no reload. A left click still thanks, and a right-click on
   the toast still dismisses it without sending. Fail: the client's gold "Thank" with no button body or
   edge, a line or note that keeps the same color in every skin, or a click that no longer sends.
-  Result: owed
+  Result: passed (owner, 2026-11-24)
 - **THANK-14. `/qc test` shows a sample toast (2026-11-24, FB-QC-02, the owner's feedback "Toast does not
   show in /qc test").** Out of combat, `/qc test` → besides the placeholder pads and dial, one toast shows
   at the toast's spot: a question-mark icon, "<the sample caster> buffed you with a sample buff" (the library's sample name, THANK-15; "A stranger" before FB2-QC-01), the note "Test
@@ -3104,6 +3104,8 @@ Owed from the LibKa0s v1.105.0 adoption, wave D (AD-79-QC, LibKa0s#79, the same 
 Owed from the adoption feedback run (AF-RV-QC, AF-STRIP-QC, AF-HDR-QC, Ka0sAddonsCommonTasks `docs/2026-11-19-ADOPTION_FEEDBACK/`): PAD-19 (rewritten for the strip's new marks, still owed), PAD-20 and PAD-21, new, each owed. From AF-HDR-QC: PAD-18 (rewritten for the header's four marks, still owed), PAD-22 and PAD-23, new, each owed. From the AF-STRIP-QC review fixes: PAD-24, new, owed.
 
 Owed from the skin-defaults run (SD-SK-QC, LibKa0s#97, Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`): THANK-13, PREVIEW-14 and PLOOK-13, new, each owed; SKIN-7 (rewritten for End preview as a push button, owner U-28, so it lost its pass mark).
+
+On 2026-11-24 the owner reported that all four passed (run SKIN 11-20 of the owner's smoke sheet, a copy of `Ka0sPendingSmoke-2026-11-23.csv`), recorded on the owner's word on each `Result:` line as `passed (owner, 2026-11-24)`: THANK-13, PREVIEW-14, PLOOK-13 and SKIN-7.
 
 Owed from the strip right-click run (SRC-QC-01, SRC-QC-02, LibKa0s v1.111.0, Ka0sAddonsCommonTasks `docs/2026-11-23-STRIP_RIGHT_CLICK/`): PAD-25, new, owed; PAD-19 (amended: the strip's right-click now opens the pad's page, as its gear does, still owed).
 
