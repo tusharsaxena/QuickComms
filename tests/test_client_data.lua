@@ -237,9 +237,10 @@ test("client data: [QFE-F3] the token help leaves {dungeon} and {key} out on For
     assertEqual(joined(help):find("{key}", 1, true) ~= nil, not FOREVER)
 end)
 
--- Forever's own ChrClasses rows (bundle docs/seed-research/2026-11-15-forever/), in class order.
+-- Retail's ChrClasses tokens, in class order (G.ALL_CLASSES too).
 local RETAIL_CLASSES = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MAGE",
     "WARLOCK", "MONK", "DRUID", "DEMONHUNTER", "EVOKER" }
+-- Forever's own ChrClasses rows (bundle docs/seed-research/2026-11-15-forever/), in class order.
 local FOREVER_CLASSES = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "DRUID" }
 
 test("client data: [SF-QC-01] CLASSES is the client's, and both lists are pinned", function()

@@ -1,18 +1,18 @@
 {
   "shipped:gone:classes:DEATHKNIGHT": {
-    "reason": "owner ruling 2026-11-25 (split per client, SF-QC-01): Forever's own ChrClasses has no DEATHKNIGHT, so Forever's class list is now FOREVER_CLASSES in defaults/GameIds_Clients.lua (BY_CLIENT.forever.CLASSES), picked by Compat.ClientKey, without it; Retail's G.CLASSES keeps it, and G.ALL_CLASSES keeps a stored When that names it valid on Forever; removed by hand, as the contract required of the shared list",
+    "reason": "owner ruling 2026-11-25 (split per client, SF-QC-01): Forever's own ChrClasses has no DEATHKNIGHT, so Forever's class list is now FOREVER_CLASSES in defaults/GameIds_Clients.lua (BY_CLIENT.forever.CLASSES), picked by Compat.ClientKey, without it; the token was taken out of that list by hand when the list split (apply could not write the old shared CLASSES), and this ruling was recorded through seeds.py rule; Retail's G.CLASSES keeps it, and G.ALL_CLASSES keeps a stored When that names it valid on Forever; kept while the frozen 2026-11-15 forever bundle still flags it",
     "ruling": "remove"
   },
   "shipped:gone:classes:DEMONHUNTER": {
-    "reason": "owner ruling 2026-11-25 (split per client, SF-QC-01): Forever's own ChrClasses has no DEMONHUNTER, so Forever's class list is now FOREVER_CLASSES in defaults/GameIds_Clients.lua (BY_CLIENT.forever.CLASSES), picked by Compat.ClientKey, without it; Retail's G.CLASSES keeps it, and G.ALL_CLASSES keeps a stored When that names it valid on Forever; removed by hand, as the contract required of the shared list",
+    "reason": "owner ruling 2026-11-25 (split per client, SF-QC-01): Forever's own ChrClasses has no DEMONHUNTER, so Forever's class list is now FOREVER_CLASSES in defaults/GameIds_Clients.lua (BY_CLIENT.forever.CLASSES), picked by Compat.ClientKey, without it; the token was taken out of that list by hand when the list split (apply could not write the old shared CLASSES), and this ruling was recorded through seeds.py rule; Retail's G.CLASSES keeps it, and G.ALL_CLASSES keeps a stored When that names it valid on Forever; kept while the frozen 2026-11-15 forever bundle still flags it",
     "ruling": "remove"
   },
   "shipped:gone:classes:EVOKER": {
-    "reason": "owner ruling 2026-11-25 (split per client, SF-QC-01): Forever's own ChrClasses has no EVOKER, so Forever's class list is now FOREVER_CLASSES in defaults/GameIds_Clients.lua (BY_CLIENT.forever.CLASSES), picked by Compat.ClientKey, without it; Retail's G.CLASSES keeps it, and G.ALL_CLASSES keeps a stored When that names it valid on Forever; removed by hand, as the contract required of the shared list",
+    "reason": "owner ruling 2026-11-25 (split per client, SF-QC-01): Forever's own ChrClasses has no EVOKER, so Forever's class list is now FOREVER_CLASSES in defaults/GameIds_Clients.lua (BY_CLIENT.forever.CLASSES), picked by Compat.ClientKey, without it; the token was taken out of that list by hand when the list split (apply could not write the old shared CLASSES), and this ruling was recorded through seeds.py rule; Retail's G.CLASSES keeps it, and G.ALL_CLASSES keeps a stored When that names it valid on Forever; kept while the frozen 2026-11-15 forever bundle still flags it",
     "ruling": "remove"
   },
   "shipped:gone:classes:MONK": {
-    "reason": "owner ruling 2026-11-25 (split per client, SF-QC-01): Forever's own ChrClasses has no MONK, so Forever's class list is now FOREVER_CLASSES in defaults/GameIds_Clients.lua (BY_CLIENT.forever.CLASSES), picked by Compat.ClientKey, without it; Retail's G.CLASSES keeps it, and G.ALL_CLASSES keeps a stored When that names it valid on Forever; removed by hand, as the contract required of the shared list",
+    "reason": "owner ruling 2026-11-25 (split per client, SF-QC-01): Forever's own ChrClasses has no MONK, so Forever's class list is now FOREVER_CLASSES in defaults/GameIds_Clients.lua (BY_CLIENT.forever.CLASSES), picked by Compat.ClientKey, without it; the token was taken out of that list by hand when the list split (apply could not write the old shared CLASSES), and this ruling was recorded through seeds.py rule; Retail's G.CLASSES keeps it, and G.ALL_CLASSES keeps a stored When that names it valid on Forever; kept while the frozen 2026-11-15 forever bundle still flags it",
     "ruling": "remove"
   },
   "shipped:renamed:raids:531": {
