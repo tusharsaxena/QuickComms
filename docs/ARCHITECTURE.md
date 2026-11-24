@@ -48,7 +48,7 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time by LibKa0s-Glow-1.0 and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.109.0 payload, of which eighteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.113.0 payload, of which eighteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -73,7 +73,9 @@ lists the toolchain):
 | Slash | `settings/Slash.lua` | the `/qc` dispatcher |
 
 `LibKa0s-Compat-1.0` is wired for its two secret guards only (`IsSecret`, `IsSafeKey`, assigned in
-`core/Compat.lua` with a library-absent body); `LibKa0s-Role-1.0` is wired in `core/Compat.lua` too (the role and the class's specializations, QFE-F4, each with a library-absent fallback); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
+`core/Compat.lua` with a library-absent body); `LibKa0s-Sim-1.0` is read at call time for one thing, the sample
+crowd (`Sim.SampleCrowd`) that names test mode's sample toast caster (`modules/AutoThank_Toast.lua`
+`TH.SampleName`, FB2-QC-01, LibKa0s#104), and this addon runs no sim; `LibKa0s-Role-1.0` is wired in `core/Compat.lua` too (the role and the class's specializations, QFE-F4, each with a library-absent fallback); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
 `DragHandle`, `HeaderButtons`, `ReorderList`, `CopyWindow`, `Dropdown`, `ContextMenu` (the callout popup's emote menu) and
 `CloseMenu` are used, every one through `core/WidgetsSetup.lua` (`tests/test_setup.lua` holds every other
 file off the major). Each
@@ -269,6 +271,9 @@ back into the library's queue at the still-writable `PLAYER_REGEN_DISABLED` edge
 Test mode's sample toast (FB-QC-02) carries no secure child: its Thank button is a plain placeholder
 (`frame.qcSample`), and a pool frame that hosted a real toast has its secure button disarmed and hidden
 while it carries the sample, so a test mode ended after lockdown began still takes the sample down.
+Its caster is the first person of the library's seeded sample crowd (`TH.SAMPLE_SEED`), named as a real
+caster reads (the bare name on Retail, "First Surname" on WoW Forever), so every Ka0s addon's previews
+show the same sample people (LibKa0s#104, FB2-QC-01); without the Sim major it reads "A stranger".
 The full notes, frame by frame: [`taint.md`](taint.md).
 
 Every strata and frame level the addon sets is named once, in `core/Constants.lua`
