@@ -128,8 +128,12 @@ Then update the README's `[tests]` badge to the new Total, in the same commit.
 
 ```sh
 D="$(mktemp -d)/tables"
-python3 -I tools/derive-gameids.py --fetch "$D" && python3 -I tools/derive-gameids.py "$D"
+B="$(python3 -I tools/seeds/seeds.py status --flavor retail | awk '{print $2}')"   # the live build, pinned
+python3 -I tools/derive-gameids.py --fetch "$D" --build "$B" && python3 -I tools/derive-gameids.py "$D"
 ```
+
+The Retail fetch always names its build (`?build=`; it refuses without `--build`), so a re-run reads
+the same export. On 2026-11-25 Retail's live build was 12.1.5.70961.
 
 For a new season or patch: change `SEASON`, `LAUNCH` (and `CURRENT_TIER` if the journal renumbers it) at the top of `tools/derive-gameids.py`, run it, and read every `MISMATCH:`, `NOT SHIPPED:` and `DROPPED:` line (`DROPPED_ARENAS` at the top of the script lists the legacy arena maps left out; a new arena map that shares a shipped one's name fails until it is listed there or replaces it); change the shipped lists and the test's rows to match only after reading them, then run it again until it prints `OK`. A new shipped id gets its `CLIENT_MAPS` row from the block the script prints (an `INSTANCES` or `ARENAS` id without one is a `MISMATCH:` line carrying the row to paste). Update the build named in the headers (`defaults/GameIds.lua`, `defaults/GameIds_Instances.lua`, `tests/test_gameids.lua`) with the build `--fetch` printed. A match is not an in-game confirmation: the headers say "matched" until smoke checks BG-2 and IDS-1 pass.
 

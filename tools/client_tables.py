@@ -30,7 +30,7 @@ def fetch(directory, tables, build=None):
     pinned = build
     for t in tables:
         url = URL.format(t) + ("?build=" + urllib.parse.quote(pinned) if pinned else "")
-        req = urllib.request.Request(url, headers={"User-Agent": "QuickComms-tools"})
+        req = urllib.request.Request(url, headers={"User-Agent": "QuickComms-seed-check"})
         with urllib.request.urlopen(req, timeout=120) as r:
             m = re.search(r'filename="[^.]+\.([0-9.]+)\.csv"', r.headers.get("Content-Disposition") or "")
             if not m:
