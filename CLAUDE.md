@@ -38,7 +38,9 @@ Start here, then read the docs:
 Green gate before every commit: `lua tests/run.lua`, `KA0S_KIT_CLIENT=forever lua tests/run.lua` (the
 addon serves Retail and WoW Forever, so the suite runs under both kit profiles, clients-§6) and
 `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` (0/0; the kit bounds the suite on load, and
-`luacheck` loads no kit, so it runs through the bounded runner, testing-§15). Never edit `libs/` or
+`luacheck` loads no kit, so it runs through the bounded runner, testing-§15), plus
+`python3 -m pytest -q tools/seeds` (the seed tool's offline tests, the contract's `## Gate` in
+`docs/validate-seeds.md`). Never edit `libs/` or
 `tests/_kit/` (vendored; re-vendor instead). Never auto-stage/commit/push and never bump the version
 without an explicit instruction.
 
