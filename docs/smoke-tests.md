@@ -861,14 +861,16 @@ from the Preview as window, a pad header or a drag strip.
 Result:
 
 **EDIT-37. The emote menu's ticked row reads apart (2026-11-24, FB2-QC-01, LibKa0s v1.113.0 WidgetsDropdown
-minor 4, standard v2.120.0 skinning-§4).** Groups → pick a group → Add callout → click the **Emote
+minor 4, standard v2.120.0 skinning-§4; amended FB2-QC-02, the owner's ruling of 2026-11-24: gold in every
+skin).** Groups → pick a group → Add callout → click the **Emote
 (optional)** dropdown → the menu opens with **None** ticked, and its text is gold, apart from the light
 gray letter rows under it (the settings panel keeps the client's look out of the box). Pick an emote, open
 the menu again and walk to that emote's leaf → its row is gold and ticked, the others gray. On the Skin
 tab untick **Ignore settings panel**, pick **Azeroth**, and open the menu again → the ticked row is gold,
-apart from Azeroth's parchment rows; pick **Obsidian** → the ticked row is Obsidian's accent, apart from
-its plain rows. Tick **Ignore settings panel** again afterwards. Fail: a tick beside text the same color
-as the other rows, in any skin.
+apart from Azeroth's parchment rows; pick **Obsidian** → the ticked row is gold too, apart from its plain
+rows; on WoW Forever, under its default **WoW Forever** skin → gold, not the skin's tan accent. Tick
+**Ignore settings panel** again afterwards. Fail: a tick beside text the same color as the other rows, or a
+ticked row in a skin's own accent rather than gold, in any skin.
 Result:
 
 ## Preview window
@@ -995,13 +997,14 @@ every skin, no hover change, or a locked button whose label is not grayed.
 Result: owed
 
 **PREVIEW-15. The Preview as dropdown's current situation reads apart (2026-11-24, FB2-QC-01, LibKa0s
-v1.113.0 WidgetsDropdown minor 4, standard v2.120.0 skinning-§4).** `/qc preview arena` under **Ka0s
+v1.113.0 WidgetsDropdown minor 4, standard v2.120.0 skinning-§4; amended FB2-QC-02, the owner's ruling
+of 2026-11-24: gold in every skin).** `/qc preview arena` under **Ka0s
 Default** → open the window's dropdown → the **Arena** row is gold, apart from every other row's light
 text. Switch the skin to **Azeroth** (Skin tab, or `/qc skin`) and open it again → Arena is gold, apart
-from Azeroth's parchment rows (Azeroth's own accent stood too near its text, so it takes Ka0s Default's
-gold); to **Obsidian** → Arena is Obsidian's accent, apart from its plain rows. Pick **Solo** → the next
-open marks Solo the same way and Arena is plain again. Fail: a selected row that reads like the rest in
-any skin, or two rows marked.
+from Azeroth's parchment rows; to **Obsidian** → Arena is gold too, apart from its plain rows. On WoW
+Forever, under its default **WoW Forever** skin → Arena is gold, not the skin's tan accent. Pick **Solo** →
+the next open marks Solo the same way and Arena is plain again. Fail: a selected row that reads like the
+rest, or a selected row in a skin's own accent rather than gold, in any skin, or two rows marked.
 Result:
 
 ## Dial

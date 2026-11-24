@@ -4,8 +4,10 @@
 -- LibKa0s WidgetsDropdown minor 4). The addon builds no menu of its own and paints no row color: its
 -- two menus are the library's, the Preview as window's situation dropdown (W.Dropdown, through
 -- NS.MakeDropdown) and the callout popup's emote menu (W.ContextMenu radio rows, through
--- NS.OpenContextMenu), so both follow the library's rule. Each is walked under Ka0s Default, Obsidian
--- and Azeroth (whose own accent stands too near its text and takes Ka0s Default's gold).
+-- NS.OpenContextMenu), so both follow the library's rule. Each is walked under Ka0s Default, Obsidian,
+-- Azeroth and WoW Forever (the default skin on Forever): the owner's ruling of 2026-11-24 on round 2
+-- (FB2-LK-04, FB2-QC-02) makes the selected row Ka0s Default's gold in every skin, where round 2 had
+-- kept a skin's own accent (Forever's tan) and sent only Azeroth to the gold.
 --
 -- Not covered here: the settings panel's AceGUI dropdowns (the schema's `values` rows, the General
 -- tab's Parent group in settings/Groups.lua) open an AceGUI pull-out, which LibKa0s's SkinAce paints
@@ -16,7 +18,7 @@ local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
 
 local OWNER = "QuickComms"
-local SKINS = { "ka0s", "obsidian", "azeroth" }
+local SKINS = { "ka0s", "obsidian", "azeroth", "forever" }
 local GOLD = "1.000,0.820,0.000"
 
 local function rgb(c) return ("%.3f,%.3f,%.3f"):format(c[1], c[2], c[3]) end
@@ -86,10 +88,10 @@ test("menu selected: the Preview as dropdown's current situation stands off the 
         assertTrue(sel ~= nil and plain ~= nil, key .. ": a selected row and a plain row: " .. labels(m, menu))
         local t = Skin:ResolveSkin(key)
         assertEqual(painted(m, plain), rgb(t["menu.text"]), key .. ": a plain row is menu.text")
-        -- red under: a selected row in a skin's own textSel where it sits near its text (Azeroth)
         assertEqual(painted(m, sel), selected(W), key .. ": the selected row is the library's selected color")
         assertTrue(painted(m, sel) ~= painted(m, plain), key .. ": and differs from a plain row")
-        if key == "azeroth" then assertEqual(painted(m, sel), GOLD, "Azeroth takes Ka0s Default's gold") end
+        -- red under: round 2's rule, which kept a skin's own accent (Forever's tan #C9A07A)
+        assertEqual(painted(m, sel), GOLD, key .. ": the selected row is Ka0s Default's gold")
         NS.CloseMenu()
     end
 end)
@@ -125,6 +127,6 @@ test("menu selected: the emote menu's ticked row paints selected, not a tick bes
     for _, key in ipairs(SKINS) do
         Skin:SetChoice(OWNER, "ka0s", key)
         check(key, rgb(Skin:ResolveSkin(key)["menu.text"]), selected(W))
-        if key == "azeroth" then assertEqual(selected(W), GOLD, "Azeroth takes Ka0s Default's gold") end
+        assertEqual(selected(W), GOLD, key .. ": the selected color is Ka0s Default's gold")
     end
 end)
