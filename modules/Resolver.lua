@@ -25,7 +25,8 @@ R.LABEL = LABEL   -- the When editor's row labels (settings/Groups_When.lua)
 
 --- The tokens each token row takes, in the When editor's order: the values modules/Situation.lua
 --- puts in a snapshot. Library.ValidWhen refuses any other; the When editor and the CLI offer these.
---- The class row takes NS.GameIds.CLASSES; the id rows take ids (spec §5.3).
+--- The class row takes NS.GameIds.ALL_CLASSES (the editor offers the client's NS.GameIds.CLASSES);
+--- the id rows take ids (spec §5.3).
 R.TOKENS = {
     content = { "openWorld", "dungeon", "mythicPlus", "raid", "delve", "scenario", "battleground", "arena", "housing" },
     difficulty = { "normal", "heroic", "mythic", "keystone", "lfr", "story", "follower" },

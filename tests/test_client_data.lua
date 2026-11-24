@@ -236,3 +236,43 @@ test("client data: [QFE-F3] the token help leaves {dungeon} and {key} out on For
     assertEqual(joined(help):find("{dungeon}", 1, true) ~= nil, not FOREVER)
     assertEqual(joined(help):find("{key}", 1, true) ~= nil, not FOREVER)
 end)
+
+-- Forever's own ChrClasses rows (bundle docs/seed-research/2026-11-15-forever/), in class order.
+local RETAIL_CLASSES = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MAGE",
+    "WARLOCK", "MONK", "DRUID", "DEMONHUNTER", "EVOKER" }
+local FOREVER_CLASSES = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "DRUID" }
+
+test("client data: [SF-QC-01] CLASSES is the client's, and both lists are pinned", function()
+    local NS = T.newAddon({ clientData = true })
+    local G = NS.GameIds
+    -- red under: one shared CLASSES (BY_CLIENT with no CLASSES, or KEYS without it)
+    assertTrue(G.CLASSES == G.BY_CLIENT[CLIENT].CLASSES, "CLASSES is " .. CLIENT .. "'s")
+    assertEqual(joined(G.BY_CLIENT.retail.CLASSES), joined(RETAIL_CLASSES), "Retail's thirteen")
+    -- red under: Forever offering DEATHKNIGHT, MONK, DEMONHUNTER or EVOKER
+    assertEqual(joined(G.BY_CLIENT.forever.CLASSES), joined(FOREVER_CLASSES), "Forever's nine")
+    assertEqual(joined(G.ALL_CLASSES), joined(RETAIL_CLASSES), "every token either client has")
+    G.UseClient("forever")
+    assertEqual(joined(G.CLASSES), joined(FOREVER_CLASSES))
+    G.UseClient("retail")
+    assertEqual(joined(G.CLASSES), joined(RETAIL_CLASSES))
+end)
+
+test("client data: [SF-QC-01] the class picker offers the client's classes; a Retail When still loads", function()
+    local NS = T.bootAddon({ clientData = true })
+    local W, Lib = NS.addon.Settings.GroupsWhen, NS.Library
+    -- red under: classValues reading ALL_CLASSES (Forever's picker offering a Death Knight)
+    assertEqual(joined(values(W.Values("class", {}), "value")), joined(FOREVER and FOREVER_CLASSES or RETAIL_CLASSES))
+    local dk = { class = { DEATHKNIGHT = true } }
+    -- red under: ValidWhenValue reading the client's CLASSES (a profile copied from Retail refused on Forever)
+    assertTrue(Lib.ValidWhen(dk), "a stored Death Knight When is valid on both clients")
+    assertTrue(NS.Resolver.Matches(dk, { classFile = "DEATHKNIGHT" }), "and it matches")
+    -- a picked class the client does not offer stays listed, so it can be cleared
+    local listed = joined(values(W.Values("class", dk), "value"))
+    assertTrue(listed:find("DEATHKNIGHT", 1, true) ~= nil, "a stored pick stays listed")
+    if FOREVER then
+        assertEqual(listed, joined(FOREVER_CLASSES) .. ",DEATHKNIGHT", "after the client's nine")
+        local _, why = W.ResolveValue("class", "Monk")
+        assertTrue(why ~= nil, "typing a class Forever lacks is refused in the editor")
+    end
+    assertEqual(W.ResolveValue("class", "druid"), "DRUID", "a class both clients have, by token")
+end)

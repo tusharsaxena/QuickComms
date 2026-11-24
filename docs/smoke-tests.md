@@ -43,7 +43,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | PLOOK-1..12 | [The pad's look per skin](#the-pads-look-per-skin) | The pad in each skin: edges, buttons and shine (the owner's findings of 2026-11-01) |
 | FSKIN-1..14 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost, a stored pick of the deleted Friz |
 | ROLE-1..3 | [Role and character](#role-and-character) | The Role row on General → Behavior and its Automatic phrase, the group's assigned role winning over the spec, the Character and Specialization rows of the When editor (Retail; FOREVER-18 to FOREVER-21 re-run them on Forever) |
-| FOREVER-1..26 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, Forever's place ids against the client's own names and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone; `/qc probe ids`, the no-travel sweep of the client's map, dungeon finder and battleground names; the combined-actions core re-run |
+| FOREVER-1..27 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, Forever's place ids against the client's own names and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone; `/qc probe ids`, the no-travel sweep of the client's map, dungeon finder and battleground names; the combined-actions core re-run; the class picker's nine classes |
 | EMOTE-1..10 | [Emotes](#emotes) | Retail, then Forever: a custom emote callout (`/e`) and its lock, a game emote callout, the emote picker's order and voice marks, preview, throttle and an unknown token, a game emote during an encounter, the Emotes set in the open world and an existing profile gaining it once, the shipped callouts that emote with their line and the two Heal me callouts, and an existing profile gaining them (step 20) |
 | ACTION-1..8 | [Combined actions](#combined-actions) | Retail, then Forever: one press that sends a line, an emote, a ping and a marker (#16), in combat, with no target, the 255-byte macro cap, Say and an emote outdoors, a boss encounter, a locked Line beside a marker, a legacy game-emote callout |
 | THANK-1..15 | [Auto-thank](#auto-thank) | Retail, then Forever: a stranger's buff toasted and thanked (#19), whether the caster reads, the whisper and the emote at a cross-realm caster, a buff mid-fight, a burst throttled, raid buffs only, where it stays quiet, combat with a toast up, a right-click, the spam guard, the mute modes, the skinned toast, `/qc test`'s sample toast and its library sample caster |
@@ -2664,6 +2664,20 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
   as a non-leader) and MARK-7 (marking in combat and during a boss encounter) → each as its check
   describes; record any that differs from Retail. Result: passed (owner, 2026-11-13)
 
+The class picker per client (SF-QC-01, owner ruling 2026-11-25 "split per client"; **code:**
+`defaults/GameIds_Clients.lua` `FOREVER_CLASSES`, `settings/Groups_When.lua` `classValues`).
+
+- **FOREVER-27. The When editor's class picker offers Forever's nine classes.** On WoW Forever,
+  Groups → pick any group → When → open **Class** → it lists exactly Warrior, Paladin, Hunter, Rogue,
+  Priest, Shaman, Mage, Warlock and Druid, in that order, by the client's own names: no Death Knight,
+  Monk, Demon Hunter or Evoker. **Select all** ticks those nine only. With that group selected,
+  `/qc set group.when class monk` → it is refused, and the message lists the nine; `/qc set
+  group.when class druid` is taken (then clear it with `/qc set group.when class`). On Retail the same row
+  lists all thirteen (unchanged). Then, with FOREVER-17's copied Retail profile (or a group whose
+  Class ticks Death Knight on Retail, copied over while the client is closed), log in on Forever →
+  zero Lua errors, the group loads, and its Class row still shows Death Knight ticked after the nine,
+  so it can be cleared. Result: owed
+
 ## Emotes
 
 **Client: Retail, then WoW Forever**, every check here (QuickComms#15, Ka0sAddonsCommonTasks
@@ -3112,3 +3126,5 @@ Owed from the strip right-click run (SRC-QC-01, SRC-QC-02, LibKa0s v1.111.0, Ka0
 Owed from the feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-24-FEEDBACK_BATCH/`, LibKa0s v1.112.0, standard v2.119.0): EDIT-36 and SKIN-36 (FB-QC-01), THANK-14 (FB-QC-02), new, each owed.
 
 Owed from round 2 of the feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-24-FEEDBACK_BATCH/R2_SMOKE_FEEDBACK.md`, LibKa0s v1.113.0, standard v2.120.0): EDIT-37, PREVIEW-15 and THANK-15 (FB2-QC-01), new, each owed; THANK-14 (amended: the sample caster's name is now the library's, still owed). Quick Comms has no sim mode, so no sim-start check is owed.
+
+Owed from the seeds and ForeverDB run (SF-QC-01, LibKa0s#102, Ka0sAddonsCommonTasks `docs/2026-11-25-SEEDS_AND_FOREVERDB/`): FOREVER-27, new, owed.

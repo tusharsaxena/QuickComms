@@ -1,19 +1,19 @@
 {
   "shipped:gone:classes:DEATHKNIGHT": {
-    "reason": "needs owner review: CLASSES is one list for both clients (BY_CLIENT has no CLASSES), and Forever's own ChrClasses has no DEATHKNIGHT, so Forever's class row offers a class it has no players of; a per-client CLASSES is a code change in defaults/GameIds_Clients.lua (BY_CLIENT, KEYS), and removing the token here would remove it from Retail too",
-    "ruling": "keep"
+    "reason": "owner ruling 2026-11-25 (split per client, SF-QC-01): Forever's own ChrClasses has no DEATHKNIGHT, so Forever's class list is now FOREVER_CLASSES in defaults/GameIds_Clients.lua (BY_CLIENT.forever.CLASSES), picked by Compat.ClientKey, without it; Retail's G.CLASSES keeps it, and G.ALL_CLASSES keeps a stored When that names it valid on Forever; removed by hand, as the contract required of the shared list",
+    "ruling": "remove"
   },
   "shipped:gone:classes:DEMONHUNTER": {
-    "reason": "needs owner review: CLASSES is one list for both clients (BY_CLIENT has no CLASSES), and Forever's own ChrClasses has no DEMONHUNTER, so Forever's class row offers a class it has no players of; a per-client CLASSES is a code change in defaults/GameIds_Clients.lua (BY_CLIENT, KEYS), and removing the token here would remove it from Retail too",
-    "ruling": "keep"
+    "reason": "owner ruling 2026-11-25 (split per client, SF-QC-01): Forever's own ChrClasses has no DEMONHUNTER, so Forever's class list is now FOREVER_CLASSES in defaults/GameIds_Clients.lua (BY_CLIENT.forever.CLASSES), picked by Compat.ClientKey, without it; Retail's G.CLASSES keeps it, and G.ALL_CLASSES keeps a stored When that names it valid on Forever; removed by hand, as the contract required of the shared list",
+    "ruling": "remove"
   },
   "shipped:gone:classes:EVOKER": {
-    "reason": "needs owner review: CLASSES is one list for both clients (BY_CLIENT has no CLASSES), and Forever's own ChrClasses has no EVOKER, so Forever's class row offers a class it has no players of; a per-client CLASSES is a code change in defaults/GameIds_Clients.lua (BY_CLIENT, KEYS), and removing the token here would remove it from Retail too",
-    "ruling": "keep"
+    "reason": "owner ruling 2026-11-25 (split per client, SF-QC-01): Forever's own ChrClasses has no EVOKER, so Forever's class list is now FOREVER_CLASSES in defaults/GameIds_Clients.lua (BY_CLIENT.forever.CLASSES), picked by Compat.ClientKey, without it; Retail's G.CLASSES keeps it, and G.ALL_CLASSES keeps a stored When that names it valid on Forever; removed by hand, as the contract required of the shared list",
+    "ruling": "remove"
   },
   "shipped:gone:classes:MONK": {
-    "reason": "needs owner review: CLASSES is one list for both clients (BY_CLIENT has no CLASSES), and Forever's own ChrClasses has no MONK, so Forever's class row offers a class it has no players of; a per-client CLASSES is a code change in defaults/GameIds_Clients.lua (BY_CLIENT, KEYS), and removing the token here would remove it from Retail too",
-    "ruling": "keep"
+    "reason": "owner ruling 2026-11-25 (split per client, SF-QC-01): Forever's own ChrClasses has no MONK, so Forever's class list is now FOREVER_CLASSES in defaults/GameIds_Clients.lua (BY_CLIENT.forever.CLASSES), picked by Compat.ClientKey, without it; Retail's G.CLASSES keeps it, and G.ALL_CLASSES keeps a stored When that names it valid on Forever; removed by hand, as the contract required of the shared list",
+    "ruling": "remove"
   },
   "shipped:renamed:raids:531": {
     "reason": "the same map: Forever's Map and its GroupFinderActivity both name 531 'Ahn'Qiraj Temple' (raid, instance type 2, listed by the group finder, D5); only the review comment's wording differed, corrected by hand to the client's name",

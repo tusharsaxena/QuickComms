@@ -14,7 +14,8 @@ WHAT THIS IS
         retail   GameIds.lua           DUNGEONS, RAIDS (the season's: existence only), CLASSES, SPECS
                  GameIds_Instances.lua INSTANCES (every journal dungeon and raid), ARENAS
         forever  GameIds_Clients.lua   FOREVER_DUNGEONS, FOREVER_RAIDS (BY_CLIENT.forever; its
-                                       INSTANCES is the two concatenated), and the shared CLASSES
+                                       INSTANCES is the two concatenated), FOREVER_CLASSES (its
+                                       own class list since the 2026-11-25 split, SF-QC-01)
 
     Candidates (key `<list>:<id>`, ruled accept or reject), only where a mechanical rule exists:
         retail  instances  a JournalInstance on a party or raid map (Map InstanceType 1 or 2), its
@@ -25,7 +26,7 @@ WHAT THIS IS
         forever dungeons   a party map Forever's GroupFinderActivity lists (the forever-ids design's D5)
                 raids      a raid map it lists
                 arenas     any arena map Forever's Map holds (D4: none today)
-                classes    a ChrClasses token CLASSES lacks
+                classes    a ChrClasses token FOREVER_CLASSES lacks
         DUNGEONS and RAIDS on Retail are the season's choice: checked, never proposed.
 
     Flags (key `shipped:<kind>:<list>:<id>`, ruled keep or remove), over every shipped id:
@@ -82,7 +83,7 @@ CACHE = HERE / ".cache"
 
 BUILDS_URL = "https://wago.tools/api/builds"
 TABLE_URL = "https://wago.tools/db2/{}/csv?build={}"
-USER_AGENT = "ka0s-seed-validation"
+USER_AGENT = "QuickComms-seed-check"
 CHUNK = 1 << 20
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -156,14 +157,17 @@ LISTS = {
     ("forever", "raids"): {"file": "GameIds_Clients.lua", "start": "local FOREVER_RAIDS = {",
                            "want": (RAID,)},
 }
-CLASSES_FILE = "GameIds.lua"
+# Each flavor's class list: (file, the declaration before `= {`). Forever's is its own since the
+# 2026-11-25 split (SF-QC-01, owner ruling "split per client"). SPECS is Retail's alone.
+CLASSES = {"retail": ("GameIds.lua", "G.CLASSES"), "forever": ("GameIds_Clients.lua", "local FOREVER_CLASSES")}
+SPECS_FILE = "GameIds.lua"
 LIST_KEYS = {
     "retail": ("dungeons", "raids", "instances", "arenas", "classes", "specs"),
     "forever": ("dungeons", "raids", "arenas", "classes"),
 }
-# Lists whose accepted candidates or removals need a hand change (a new per-client table, or the
-# shared CLASSES list Retail also reads): apply refuses rather than guess.
-HAND_ONLY = {("forever", "arenas"), ("forever", "classes")}
+# Lists whose accepted candidates or removals need a hand change (a new per-client table): apply
+# refuses rather than guess.
+HAND_ONLY = {("forever", "arenas")}
 
 CANDIDATE_RULINGS = ("accept", "reject")
 FLAG_RULINGS = ("keep", "remove")
@@ -312,16 +316,19 @@ def read_list(path: Path, start: str) -> list[dict]:
     return rows
 
 
-CLASSES_RE = re.compile(r"G\.CLASSES\s*=\s*\{(?P<body>[^}]*)\}")
+def classes_re(decl: str):
+    return re.compile(re.escape(decl) + r"\s*=\s*\{(?P<body>[^}]*)\}")
+
+
 SPECS_RE = re.compile(r"G\.SPECS\s*=\s*\{(?P<body>.*?)\n\}", re.S)
 SPEC_ENTRY = re.compile(r"(?P<token>[A-Z]+)\s*=\s*\{(?P<ids>[\d,\s]*)\}")
 
 
-def read_classes(path: Path) -> list[str]:
+def read_classes(path: Path, decl: str = "G.CLASSES") -> list[str]:
     text, _eol = read_text(path)
-    m = CLASSES_RE.search(text)
+    m = classes_re(decl).search(text)
     if not m or re.search(r'[^"A-Z,\s]', m.group("body")):
-        fail("no G.CLASSES = { \"TOKEN\", ... } of plain tokens in " + path.name)
+        fail("no %s = { \"TOKEN\", ... } of plain tokens in %s" % (decl, path.name))
     return re.findall(r'"([A-Z]+)"', m.group("body"))
 
 
@@ -344,9 +351,10 @@ def shipped(flavor: str, defaults: Path) -> dict:
     for (fl, key), spec in LISTS.items():
         if fl == flavor:
             out[key] = read_list(defaults / spec["file"], spec["start"])
-    out["classes"] = read_classes(defaults / CLASSES_FILE)
+    name, decl = CLASSES[flavor]
+    out["classes"] = read_classes(defaults / name, decl)
     if flavor == "retail":
-        out["specs"] = read_specs(defaults / CLASSES_FILE)
+        out["specs"] = read_specs(defaults / SPECS_FILE)
     return out
 
 
@@ -672,8 +680,8 @@ def edit_list(text: str, start: str, path: Path, add: list[tuple[int, str]], dro
     return "\n".join(lines[:first] + out + lines[close:]), changes
 
 
-def edit_classes(text: str, add: list[str], drop: set[str]) -> tuple[str, list[str]]:
-    m = CLASSES_RE.search(text)
+def edit_classes(text: str, add: list[str], drop: set[str], decl: str = "G.CLASSES") -> tuple[str, list[str]]:
+    m = classes_re(decl).search(text)
     tokens = re.findall(r'"([A-Z]+)"', m.group("body"))
     changes = ["-" + t for t in tokens if t in drop] + ["+" + t for t in add if t not in tokens]
     if not changes:
@@ -745,10 +753,11 @@ def apply_bundle(doc: dict, rulings: dict, defaults: Path) -> list[str]:
     add_c = [c["id"] for c in adds if c["list"] == "classes"]
     drop_c = {f["id"] for f in drops if f["list"] == "classes"}
     if add_c or drop_c:
-        new, ch = edit_classes(text_of(CLASSES_FILE), add_c, drop_c)
-        files[CLASSES_FILE] = (new, files[CLASSES_FILE][1])
+        name, decl = CLASSES[flavor]
+        new, ch = edit_classes(text_of(name), add_c, drop_c, decl)
+        files[name] = (new, files[name][1])
         if ch:
-            log_lines.append("%s classes: %s" % (CLASSES_FILE, " ".join(ch)))
+            log_lines.append("%s classes: %s" % (name, " ".join(ch)))
     add_s: dict[str, list[int]] = {}
     for c in adds:
         if c["list"] == "specs":
@@ -756,10 +765,10 @@ def apply_bundle(doc: dict, rulings: dict, defaults: Path) -> list[str]:
             add_s.setdefault(token, []).append(c["id"])
     drop_s = {f["id"] for f in drops if f["list"] == "specs"}
     if add_s or drop_s:
-        new, ch = edit_specs(text_of(CLASSES_FILE), add_s, drop_s)
-        files[CLASSES_FILE] = (new, files[CLASSES_FILE][1])
+        new, ch = edit_specs(text_of(SPECS_FILE), add_s, drop_s)
+        files[SPECS_FILE] = (new, files[SPECS_FILE][1])
         if ch:
-            log_lines.append("%s specs: %s" % (CLASSES_FILE, " ".join(ch)))
+            log_lines.append("%s specs: %s" % (SPECS_FILE, " ".join(ch)))
     for name, (text, eol) in files.items():
         before, _ = read_text(defaults / name)
         if text != before:
