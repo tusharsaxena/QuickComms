@@ -1141,6 +1141,14 @@ Total.
 - autothank test mode: a reused pool frame is armed again for a real offer after the sample
 - autothank test mode: test mode refused in combat shows no sample
 
+### test_sample_names.lua (5)
+
+- sample names: the test-mode toast's caster is the library crowd's first person, seeded
+- sample names: the sample toast's line names the crowd person
+- sample names: with no LibKa0s-Sim-1.0 the toast falls back to the plain label
+- sample names: no Sample*/Mock* name literal lives in the shipped code
+- sample names: the guard is falsifiable, a planted name is flagged and an identifier is not
+
 ### test_dial_secure.lua (20)
 
 - dial secure: the header is QuickCommsDial<n>, hidden until the toggle opens it; open, the dial owns Escape and 1-8
@@ -1255,6 +1263,11 @@ Total.
 - preview window: [QF-02] Escape ends the edit preview for the session, the setting kept, until a new start
 - preview window: [QF-02] the settings window closing hides it; a hidden UIParent ends nothing
 - preview window: [QF-02] `/qc preview off` ends the edit preview too; with nothing on it writes nothing
+
+### test_menu_selected.lua (2)
+
+- menu selected: the Preview as dropdown's current situation stands off the other rows
+- menu selected: the emote menu's ticked row paints selected, not a tick beside plain text
 
 ### test_coordinates.lua (11)
 
@@ -2450,10 +2463,12 @@ Total.
 | test_sendengine.lua | 49 |
 | test_autothank.lua | 68 |
 | test_autothank_testmode.lua | 10 |
+| test_sample_names.lua | 5 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
 | test_preview_window.lua | 25 |
+| test_menu_selected.lua | 2 |
 | test_coordinates.lua | 11 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
@@ -2502,4 +2517,4 @@ Total.
 | test_skin_switch.lua | 37 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2116** |
+| **Total** | **2123** |
