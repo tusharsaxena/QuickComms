@@ -6,6 +6,11 @@
 -- NS.MakeDropdown) and the callout popup's emote menu (W.ContextMenu radio rows, through
 -- NS.OpenContextMenu), so both follow the library's rule. Each is walked under Ka0s Default, Obsidian
 -- and Azeroth (whose own accent stands too near its text and takes Ka0s Default's gold).
+--
+-- Not covered here: the settings panel's AceGUI dropdowns (the schema's `values` rows, the General
+-- tab's Parent group in settings/Groups.lua) open an AceGUI pull-out, which LibKa0s's SkinAce paints
+-- (its paintPullout), not WidgetsDropdown. In v1.113.0 a checked pull-out item keeps `menu.text` and is
+-- told apart by its check mark alone, so D3 there is the library's to close (FB2-QC-REV).
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue

@@ -271,6 +271,11 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   first open before that the Game icons tab says so and fills on a later visit.
 - A glyph's color applies to LibKa0s glyphs only (white on transparent); a raid marker, a game icon or
   a typed texture is drawn as it is, and choosing one clears the member's color.
+- A settings dropdown (a schema row with choices, the General tab's Parent group) marks its current
+  choice with a check only: its list is AceGUI's pull-out, which LibKa0s's skin paints in the menu's
+  plain text color, checked or not (LibKa0s v1.113.0 `SkinAce`), and the client's own look does the same.
+  The Preview as dropdown and the emote menu are the library's own menus and color their selected row
+  apart (FB2-QC-01). The pull-out's selected color is the library's to add (FB2-QC-REV).
 
 ## Art, measurement and the library
 
