@@ -23,3 +23,4 @@ L["Locked: whispers are blocked right now."] = "Locked: whispers are blocked rig
 -- The test-mode sample toast's caster and buff (modules/AutoThank_Toast.lua, /qc test)
 L["A stranger"] = "A stranger"
 L["a sample buff"] = "a sample buff"
+L["Test mode: sends nothing."] = "Test mode: sends nothing."

@@ -2908,14 +2908,14 @@ character or a stranger who can cast a long buff on you.
 - **THANK-14. `/qc test` shows a sample toast (2026-11-24, FB-QC-02, the owner's feedback "Toast does not
   show in /qc test").** Out of combat, `/qc test` → besides the placeholder pads and dial, one toast shows
   at the toast's spot: a question-mark icon, "A stranger buffed you with a sample buff", the note "Test
-  mode: a placeholder that sends nothing." and a **Thank** button in the skin's push-button look. It does
+  mode: sends nothing." on one line and a **Thank** button in the skin's push-button look. It does
   not fade while test mode is on, and it can be dragged to place the toast (the spot is kept). Click
   **Thank** → chat prints "Thank (test-mode placeholder: nothing sent)" and nothing is said or emoted.
   Turn **Auto-thank** off on the Auto-thank page and run `/qc test` again → the sample still shows. Turn
   test mode off (`/qc test`, the checkbox or the launcher) → the sample goes; switch to **Preview as...**
   → no sample. With test mode on, pull a target dummy → test mode ends and the sample goes, with no Lua
   error or blocked-action warning. A real stranger's buff during test mode still toasts beside the sample,
-  with an armed Thank button. Fail: no toast in test mode, a Thank click that sends, a sample left up after
+  with an armed Thank button. Fail: no toast in test mode, a note that wraps to a second line, a Thank click that sends, a sample left up after
   test mode ends, or a blocked-action warning at the pull.
   Result:
 

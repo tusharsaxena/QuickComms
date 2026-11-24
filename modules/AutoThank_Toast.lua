@@ -127,7 +127,7 @@ end
 -- The sample (payload.test): its plain button up and the secure one, when the frame already has one
 -- from an earlier real toast, disarmed and hidden. Out of combat only, as every Build is.
 local function showSample(frame)
-    frame.qcNote:SetText(L["Test mode: a placeholder that sends nothing."])
+    frame.qcNote:SetText(L["Test mode: sends nothing."])
     if frame.qcThank then
         NS.SendEngine.Disarm(frame.qcThank)
         frame.qcThank:Hide()
