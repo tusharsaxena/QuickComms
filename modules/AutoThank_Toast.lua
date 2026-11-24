@@ -322,12 +322,32 @@ AT.ReleaseToast = function() TH.Release() end
 -- do not. Test mode is refused in combat and ends at the combat edge while secure writes are still
 -- allowed, so the sample's secure child is never on screen in lockdown.
 
+-- The sample's caster is a stranger, so it is the first of LibKa0s-Sim-1.0's seeded crowd (Sim.SampleCrowd,
+-- minor 5), beyond the five protagonists that stand for the player's own party: every Ka0s addon draws its
+-- sample people from the library (LibKa0s#104, FB2-QC-01), never a name of its own. It reads as a real
+-- caster's name does (Compat.AuraCaster): the bare name on Retail, "First Surname" where names are
+-- regional. Without the library's Sim major (a degraded install) the toast says L["A stranger"].
+
 TH.SAMPLE_ICON = 134400   -- INV_Misc_QuestionMark: a sample, not any real buff
+TH.SAMPLE_SEED = 1        -- the crowd's seed: the same stranger on every run
 TH.PREVIEW_KEY = NS.TOAST_PREVIEW
 
---- The sample's payload: a stranger and a sample buff, flagged `test`.
+--- The sample caster's name: the library crowd's first person on this client, or the plain label.
+--- @return string
+function TH.SampleName()
+    local Sim = LibStub and LibStub("LibKa0s-Sim-1.0", true)
+    if not (Sim and Sim.SampleCrowd) then return L["A stranger"] end
+    local client = NS.Compat.ClientKey()
+    local ok, crowd = pcall(Sim.SampleCrowd, client, 1, TH.SAMPLE_SEED)
+    local row = ok and type(crowd) == "table" and crowd[1] or nil
+    if not row then return L["A stranger"] end
+    return client == "forever" and row.fullName or row.name
+end
+
+--- The sample's payload: a stranger from the library's crowd and a sample buff, flagged `test`.
 function TH.SamplePayload()
-    return { key = TH.PREVIEW_KEY, test = true, caster = { name = L["A stranger"] }, name = L["A stranger"],
+    local who = TH.SampleName()
+    return { key = TH.PREVIEW_KEY, test = true, caster = { name = who }, name = who,
         buff = L["a sample buff"], icon = TH.SAMPLE_ICON }
 end
 

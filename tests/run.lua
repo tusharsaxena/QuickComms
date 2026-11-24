@@ -288,6 +288,7 @@ Kit.run{
         "test_sendengine",
         "test_autothank",
         "test_autothank_testmode",
+        "test_sample_names",
         "test_dial_secure",
         "test_preview",
         "test_edit_preview",

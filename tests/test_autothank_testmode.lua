@@ -30,7 +30,7 @@ test("autothank test mode: /qc test shows one sample toast, its Thank button a p
     -- red under: nothing in test mode raises a toast (the owner's report)
     assertTrue(f ~= nil, "the sample toast is on screen")
     assertEqual(TH.toast:Stats().visible, 1)
-    assertEqual(f.qcText:GetText(), NS.L["%s buffed you with %s"]:format(NS.L["A stranger"], NS.L["a sample buff"]))
+    assertEqual(f.qcText:GetText(), NS.L["%s buffed you with %s"]:format(TH.SampleName(), NS.L["a sample buff"]))
     -- short enough for one line on the toast (the owner's feedback, 2026-11-24)
     assertEqual(f.qcNote:GetText(), "Test mode: sends nothing.")
     local b = f.qcSample
