@@ -19,3 +19,9 @@ L["%s buffed you with %s"] = "%s buffed you with %s"
 -- (modules/AutoThank_Toast.lua)
 L["Thank"] = "Thank"
 L["Locked: whispers are blocked right now."] = "Locked: whispers are blocked right now."
+
+-- The test-mode sample toast's buff, and its caster where LibKa0s-Sim-1.0 is absent (modules/AutoThank_Toast.lua,
+-- /qc test; with the library the caster is its sample crowd's first person)
+L["A stranger"] = "A stranger"
+L["a sample buff"] = "a sample buff"
+L["Test mode: sends nothing."] = "Test mode: sends nothing."

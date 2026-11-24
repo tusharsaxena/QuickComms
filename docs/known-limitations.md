@@ -271,6 +271,11 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   first open before that the Game icons tab says so and fills on a later visit.
 - A glyph's color applies to LibKa0s glyphs only (white on transparent); a raid marker, a game icon or
   a typed texture is drawn as it is, and choosing one clears the member's color.
+- A settings dropdown (a schema row with choices, the General tab's Parent group) marks its current
+  choice with a check only: its list is AceGUI's pull-out, which LibKa0s's skin paints in the menu's
+  plain text color, checked or not (LibKa0s v1.113.0 `SkinAce`), and the client's own look does the same.
+  The Preview as dropdown and the emote menu are the library's own menus and color their selected row
+  apart (FB2-QC-01). The pull-out's selected color is the library's to add (FB2-QC-REV).
 
 ## Art, measurement and the library
 
@@ -292,7 +297,7 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   a change to the art is a re-run of the generator, never a hand edit (`DEPENDENCIES.md`).
 - `tests/perf.lua`'s byte ceilings are the headless mock's figures (its catch-all methods allocate per
   call); compare them run to run, never with the client.
-- Quick Comms bundles LibKa0s v1.109.0. LibStub keeps the highest minor of each module, so when another
+- Quick Comms bundles LibKa0s v1.113.0. LibStub keeps the highest minor of each module, so when another
   Ka0s addon loaded beside it carries a newer LibKa0s, those modules run the newer code, whatever the
-  load order. The headless suite measures v1.109.0 only. The remedy is this addon's own re-vendor
+  load order. The headless suite measures v1.113.0 only. The remedy is this addon's own re-vendor
   (`/dev-copilot:wow-revendor-libka0s`), never an edit under `libs/` (F-010).

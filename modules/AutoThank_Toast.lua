@@ -105,9 +105,43 @@ local function actionsOf(send, whisper)
     return actions
 end
 
--- Arm the frame's Thank button for `payload`, or disarm it with the reason on the toast.
+-- The test-mode sample's Thank button: a plain button (no secure child, so the sample's frame never
+-- needs one and the combat edge can always take it down), drawn as the owner's push button. A click
+-- prints the placeholder echo every test-mode placeholder prints, and sends nothing. Made once per
+-- pool frame, shown only while that frame carries the sample.
+local function sampleButton(frame)
+    if frame.qcSample then return frame.qcSample end
+    local b = CreateFrame("Button", nil, frame)
+    b:SetSize(BUTTON_W, BUTTON_H)
+    b:SetPoint("RIGHT", frame, "RIGHT", -INSET, 0)
+    b.qcLabel = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    b.qcLabel:SetPoint("CENTER", b, "CENTER", 0, 0)
+    b.qcLabel:SetText(L["Thank"])
+    b.Text = b.qcLabel
+    NS.Skin.Button(b)
+    b:SetScript("OnClick", function() NS.Print(NS.Preview.TestEcho(L["Thank"])) end)
+    frame.qcSample = b
+    return b
+end
+
+-- The sample (payload.test): its plain button up and the secure one, when the frame already has one
+-- from an earlier real toast, disarmed and hidden. Out of combat only, as every Build is.
+local function showSample(frame)
+    frame.qcNote:SetText(L["Test mode: sends nothing."])
+    if frame.qcThank then
+        NS.SendEngine.Disarm(frame.qcThank)
+        frame.qcThank:Hide()
+    end
+    sampleButton(frame):Show()
+end
+
+-- Arm the frame's Thank button for `payload`, or disarm it with the reason on the toast. The test-mode
+-- sample is never armed (showSample).
 local function armThank(frame, payload)
+    if payload.test then return showSample(frame) end
+    if frame.qcSample then frame.qcSample:Hide() end
     local b = thankButton(frame)
+    if b then b:Show() end
     local settings = thankSettings() or {}
     local macro, why, whisper = AT.Macro(payload.caster, payload.buff, settings)
     NS.Debug("Thank", "arm %s: send=%s button=%s macro=[%s] why=%s", tostring(payload.key),
@@ -158,15 +192,16 @@ end
 local function dragStart() TH.dragging = true end
 local function dragStop() TH.dragging = nil end
 
--- Hooked once per pool frame, on its first draw; every draw starts the fade's clock again.
-local function startFade(frame)
+-- Hooked once per pool frame, on its first draw; every draw starts the fade's clock again. The
+-- test-mode sample is sticky and keeps no clock, so it stays at full alpha until test mode ends.
+local function startFade(frame, sticky)
     if not frame.qcFadeHooked then
         frame.qcFadeHooked = true
         frame:HookScript("OnUpdate", fade)
         frame:HookScript("OnDragStart", dragStart)
         frame:HookScript("OnDragStop", dragStop)
     end
-    frame.qcDue = GetTime() + C.THANK.DURATION
+    frame.qcDue = not sticky and GetTime() + C.THANK.DURATION or nil
     frame.qcHovered = nil
     frame:SetAlpha(1)
 end
@@ -177,7 +212,7 @@ end
 --- library's size.
 function TH.Build(frame, payload)
     regions(frame)
-    startFade(frame)
+    startFade(frame, payload.test)
     armThank(frame, payload)
     frame.qcIcon:SetTexture(payload.icon)
     frame.qcText:SetText(L["%s buffed you with %s"]:format(payload.name or "", payload.buff or ""))
@@ -278,6 +313,60 @@ end
 
 AT.ReleaseToast = function() TH.Release() end
 
+-- ── the test-mode sample (FB-QC-02, owner feedback 2026-11-24) ────────────────────────────────
+-- /qc test puts up one sample "buffed you" toast so the toast can be seen and placed, whether
+-- Auto-thank is on or off (a preview writes nothing). It goes through the library's Toast:Preview:
+-- sticky, at the head, under Toast.PREVIEW, presented directly, so the pump, the GAP, the cooldown
+-- stamps and the host's pending list are never touched. Its Thank button is disarmed (armThank) and
+-- its note says it is a placeholder. Only test mode proper shows it: Preview as and the edit preview
+-- do not. Test mode is refused in combat and ends at the combat edge while secure writes are still
+-- allowed, so the sample's secure child is never on screen in lockdown.
+
+-- The sample's caster is a stranger, so it is the first of LibKa0s-Sim-1.0's seeded crowd (Sim.SampleCrowd,
+-- minor 5), beyond the five protagonists that stand for the player's own party: every Ka0s addon draws its
+-- sample people from the library (LibKa0s#104, FB2-QC-01), never a name of its own. It reads as a real
+-- caster's name does (Compat.AuraCaster): the bare name on Retail, "First Surname" where names are
+-- regional. Without the library's Sim major (a degraded install) the toast says L["A stranger"].
+
+TH.SAMPLE_ICON = 134400   -- INV_Misc_QuestionMark: a sample, not any real buff
+TH.SAMPLE_SEED = 1        -- the crowd's seed: the same stranger on every run
+TH.PREVIEW_KEY = NS.TOAST_PREVIEW
+
+--- The sample caster's name: the library crowd's first person on this client, or the plain label.
+--- @return string
+function TH.SampleName()
+    local Sim = LibStub and LibStub("LibKa0s-Sim-1.0", true)
+    if not (Sim and Sim.SampleCrowd) then return L["A stranger"] end
+    local client = NS.Compat.ClientKey()
+    local ok, crowd = pcall(Sim.SampleCrowd, client, 1, TH.SAMPLE_SEED)
+    local row = ok and type(crowd) == "table" and crowd[1] or nil
+    if not row then return L["A stranger"] end
+    return client == "forever" and row.fullName or row.name
+end
+
+--- The sample's payload: a stranger from the library's crowd and a sample buff, flagged `test`.
+function TH.SamplePayload()
+    local who = TH.SampleName()
+    return { key = TH.PREVIEW_KEY, test = true, caster = { name = who }, name = who,
+        buff = L["a sample buff"], icon = TH.SAMPLE_ICON }
+end
+
+--- Put the sample up while test mode is on and the toast may be shown. Answers whether it did.
+function TH.ShowTest()
+    if not (NS.Preview and NS.Preview.IsTestMode()) or not canShow() then return false end
+    TH.toast:Preview(TH.SamplePayload())
+    return true
+end
+
+--- Take the sample down (from the screen and from the queue a Hold sent it back to).
+function TH.HideTest()
+    TH.toast:Remove(TH.PREVIEW_KEY)
+end
+
+local function onTestModeChanged()
+    if NS.Preview.IsTestMode() then TH.ShowTest() else TH.HideTest() end
+end
+
 -- RESTRICTION_CHANGED (reason, canSendChat): fighting holds the toast; with the fight over and
 -- lockdown false it is released, then a dirty known set is diffed, which also covers a restriction
 -- that lifts outside combat. The Hold takes every toast down, which ends a drag in the library
@@ -297,7 +386,10 @@ end
 local receiver
 local function listen()
     receiver = receiver or NS.Bus:NewTarget()
-    if receiver then receiver:RegisterMessage(NS.MSG.RESTRICTION_CHANGED, onRestrictionChanged) end
+    if receiver then
+        receiver:RegisterMessage(NS.MSG.RESTRICTION_CHANGED, onRestrictionChanged)
+        receiver:RegisterMessage(NS.MSG.TEST_MODE_CHANGED, onTestModeChanged)
+    end
 end
 listen()
 
@@ -316,5 +408,8 @@ NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     TH.dragging = nil
     lastShowAt = nil
     TH.toast:Clear()
-    if receiver and not NS.Bus.tracked then receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED) end
+    if receiver and not NS.Bus.tracked then
+        receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED)
+        receiver:UnregisterMessage(NS.MSG.TEST_MODE_CHANGED)
+    end
 end

@@ -48,7 +48,7 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time by LibKa0s-Glow-1.0 and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.109.0 payload, of which eighteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.113.0 payload, of which eighteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -73,7 +73,9 @@ lists the toolchain):
 | Slash | `settings/Slash.lua` | the `/qc` dispatcher |
 
 `LibKa0s-Compat-1.0` is wired for its two secret guards only (`IsSecret`, `IsSafeKey`, assigned in
-`core/Compat.lua` with a library-absent body); `LibKa0s-Role-1.0` is wired in `core/Compat.lua` too (the role and the class's specializations, QFE-F4, each with a library-absent fallback); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
+`core/Compat.lua` with a library-absent body); `LibKa0s-Sim-1.0` is read at call time for one thing, the sample
+crowd (`Sim.SampleCrowd`) that names test mode's sample toast caster (`modules/AutoThank_Toast.lua`
+`TH.SampleName`, FB2-QC-01, LibKa0s#104), and this addon runs no sim; `LibKa0s-Role-1.0` is wired in `core/Compat.lua` too (the role and the class's specializations, QFE-F4, each with a library-absent fallback); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
 `DragHandle`, `HeaderButtons`, `ReorderList`, `CopyWindow`, `Dropdown`, `ContextMenu` (the callout popup's emote menu) and
 `CloseMenu` are used, every one through `core/WidgetsSetup.lua` (`tests/test_setup.lua` holds every other
 file off the major). Each
@@ -183,7 +185,7 @@ tracked registration down and replay it.
 | `SURFACE_REBUILT` | `SurfaceRebuilt` | `modules/Surfaces.lua`: `true` when a rebuild is held for combat, `false` when it ran | surfaceId (a pad's or a dial's), stale | none |
 | `SEND_RESULT` | `SendResult` | `modules/SendEngine.lua`: `guarded` at the press, then `sent` or `dropped` from the echo, so one press can yield two | calloutId, surfaceId, result | `modules/Pad.lua` (the flash, the sound); `modules/Dial.lua` (the wedges' flash) |
 | `COMBAT_QUEUE_DRAINED` | `CombatQueueDrained` | `modules/SendEngine.lua` `Drain` | count | `modules/Surfaces.lua` (clears the stale hints) |
-| `TEST_MODE_CHANGED` | `TestModeChanged` | `modules/Preview.lua` `SetTestMode`, `SetPreviewAs` and `SetEditPreview` | on (test mode, Preview as… or the edit preview) | `modules/Surfaces.lua` (`Request`, and opens dial 1); the editor pages (repaint). The preview window is not a listener: Preview calls `PreviewWindow.Sync` directly beside every send, and at the silent stand-down |
+| `TEST_MODE_CHANGED` | `TestModeChanged` | `modules/Preview.lua` `SetTestMode`, `SetPreviewAs` and `SetEditPreview` | on (test mode, Preview as… or the edit preview) | `modules/Surfaces.lua` (`Request`, and opens dial 1); the editor pages (repaint); the thank toast host (`modules/AutoThank_Toast.lua` `ShowTest`/`HideTest`: test mode proper puts up one sample toast through the library's `Toast:Preview`, whether Auto-thank is on or off, its Thank button a plain placeholder that prints the test echo; off, Preview as or the edit preview take it down, FB-QC-02). The preview window is not a listener: Preview calls `PreviewWindow.Sync` directly beside every send, and at the silent stand-down |
 
 ## Slash Commands
 
@@ -266,6 +268,12 @@ attribute. Auto-thank's toast carries a secure child, its Thank button (`SE.NewT
 click only, so the toast's right-click dismiss never runs it), so the toast is never shown, moved or
 hidden in combat: every Show waits for the end of combat, and a toast on screen at the pull is held
 back into the library's queue at the still-writable `PLAYER_REGEN_DISABLED` edge and released after it.
+Test mode's sample toast (FB-QC-02) carries no secure child: its Thank button is a plain placeholder
+(`frame.qcSample`), and a pool frame that hosted a real toast has its secure button disarmed and hidden
+while it carries the sample, so a test mode ended after lockdown began still takes the sample down.
+Its caster is the first person of the library's seeded sample crowd (`TH.SAMPLE_SEED`), named as a real
+caster reads (the bare name on Retail, "First Surname" on WoW Forever), so every Ka0s addon's previews
+show the same sample people (LibKa0s#104, FB2-QC-01); without the Sim major it reads "A stranger".
 The full notes, frame by frame: [`taint.md`](taint.md).
 
 Every strata and frame level the addon sets is named once, in `core/Constants.lua`
@@ -356,9 +364,10 @@ the settings pages and the library's own windows.
     settings panel, and hiding it ends the preview (the edit preview runs with the panel open). Over
     the edit preview both marks lock with the rest of the window and show its locked tooltip.
   - **The callout popup's modal window** (`settings/ModalWindow.lua`): close alone, the template's X
-    adopted (`closeButton`) or the fallback's built through the wrapper. Settings opted out
-    (`MW.SETTINGS_OPT_OUT`): a modal opened from a settings row with the settings panel already
-    beneath it, under its catcher.
+    adopted (`closeButton`) or the fallback's built through the wrapper. No settings mark: it is a
+    companion (`companion = true`, WidgetsHeader minor 2, LibKa0s v1.112.0; standalone-windows *A
+    companion window carries no settings mark*, v2.119.0), a modal opened only from a settings row,
+    bound to that row's callout, with the settings panel already beneath it, under its catcher.
   - **A Comms Pad's header row:** collapse · lock · settings · close (AF-HDR-QC; standalone-windows
     *Which marks a window owes*, v2.115.0: the pads are this addon's primary display, so their header
     carries close, settings and lock). The collapse toggle is a word mark ("-" / "+") in the Header

@@ -27,9 +27,11 @@ local _, NS = ...
 -- THE MARKS (AD-86-QC, LibKa0s#86, standalone-windows "Title-bar controls"). Both shapes' close is
 -- LibKa0s-Widgets-1.0's W.HeaderButtons strip: the template's own X adopted (`closeButton`), the
 -- fallback's built through the one wrapper (`makeClose = NS.MakeCloseButton`). The strip gives the close
--- its "Close" tooltip and records the offsets S.Header places it at. The settings mark is opted out
--- (SETTINGS_OPT_OUT): the window is a modal opened from a settings row, the Groups page's callout
--- editor, with the settings panel already beneath it and its catcher covering that panel.
+-- its "Close" tooltip and records the offsets S.Header places it at. The window carries no settings
+-- mark because it is a companion (standalone-windows "A companion window carries no settings mark",
+-- standard v2.119.0; WidgetsHeader minor 2's `companion = true`, LibKa0s v1.112.0): a modal opened only
+-- from a settings row, the Groups page's callout editor, editing that row's callout, with the settings
+-- panel already beneath it and its catcher covering that panel.
 --
 -- THE SKIN (QC-02; DECISIONS X10, D2; LibKa0s v1.81.0 R-2, Ka0sAddonsCommonTasks D-06). The
 -- template's chrome is painted through the owner's facade under every skin: the popup is a window,
@@ -96,17 +98,12 @@ local dims = setmetatable({}, { __mode = "k" })
 -- Every window's page, laid under its band again on a looks change: window -> { panel, inset, banded }.
 local pages = setmetatable({}, { __mode = "k" })
 
--- Why the modal carries no settings mark (THE MARKS above; W.HeaderButtons refuses `settings = false`
--- without a reason).
-MW.SETTINGS_OPT_OUT = "a modal opened from a settings row (the Groups page's callout editor): the "
-    .. "settings panel is already beneath it, under its catcher"
-
 local function H() return Settings.Helpers end
 
---- The window's header strip: the close alone (`spec` names it: adopted or built), settings opted out.
---- Placed by S.Header (`place = false`); answers S.Header's `right` list.
+--- The window's header strip: the close alone (`spec` names it: adopted or built), a companion's, so no
+--- settings mark. Placed by S.Header (`place = false`); answers S.Header's `right` list.
 local function strip(bar, spec)
-    spec.settings, spec.settingsOptOut, spec.place = false, MW.SETTINGS_OPT_OUT, false
+    spec.companion, spec.place = true, false
     local hb = NS.HeaderButtons(bar, spec)
     return hb and hb.right or { spec.closeButton }, hb
 end

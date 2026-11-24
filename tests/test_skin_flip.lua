@@ -427,10 +427,14 @@ test("skin flip: a skin switch redraws the shadow on a string that had already d
     local object = label.__fontObject
     assertTrue(object ~= nil, "S.HudFont gave it a font object")
     assertEqual(object.__shadow[1], 1)
-    local choices = Skin:ResolveSkin("contrast")
-    Skin:SetChoice(OWNER, "ka0s", "contrast")
+    -- LibKa0s v1.112.0 (SkinDefsOthers minor 11) dropped High Contrast's 2, -2, so every shipped skin
+    -- draws 1, -1. A probe skin carries its own offset so the redraw still shows.
+    Skin:RegisterSkin({ key = "qcshadowprobe", label = "QC shadow probe",
+                        tokens = { ["hud.shadowX"] = 2, ["hud.shadowY"] = -2 } })
+    local choices = Skin:ResolveSkin("qcshadowprobe")
+    Skin:SetChoice(OWNER, "ka0s", "qcshadowprobe")
     NS.Surfaces.ApplyAll("test")
-    assertEqual(button(NS).qcLabel.__fontObject.__shadow[1], choices["hud.shadowX"], "High Contrast's own offset")
+    assertEqual(button(NS).qcLabel.__fontObject.__shadow[1], choices["hud.shadowX"], "the probe skin's own offset")
     assertEqual(button(NS).qcLabel.__fontObject.__shadow[1], 2)
 end)
 
