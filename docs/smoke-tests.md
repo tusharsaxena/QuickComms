@@ -2676,7 +2676,7 @@ The class picker per client (SF-QC-01, owner ruling 2026-11-25 "split per client
   lists all thirteen (unchanged). Then, with FOREVER-17's copied Retail profile (or a group whose
   Class ticks Death Knight on Retail, copied over while the client is closed), log in on Forever →
   zero Lua errors, the group loads, and its Class row still shows Death Knight ticked after the nine,
-  so it can be cleared. Result: owed
+  so it can be cleared. Result: passed (owner, 2026-11-25)
 
 ## Emotes
 
@@ -3128,3 +3128,5 @@ Owed from the feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-24-FEEDBACK_BA
 Owed from round 2 of the feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-24-FEEDBACK_BATCH/R2_SMOKE_FEEDBACK.md`, LibKa0s v1.113.0, standard v2.120.0): EDIT-37, PREVIEW-15 and THANK-15 (FB2-QC-01), new, each owed; THANK-14 (amended: the sample caster's name is now the library's, still owed). Quick Comms has no sim mode, so no sim-start check is owed.
 
 Owed from the seeds and ForeverDB run (SF-QC-01, LibKa0s#102, Ka0sAddonsCommonTasks `docs/2026-11-25-SEEDS_AND_FOREVERDB/`): FOREVER-27, new, owed.
+
+On 2026-11-25 the owner reported that it passed, recorded on its `Result:` line as `passed (owner, 2026-11-25)`: FOREVER-27.
