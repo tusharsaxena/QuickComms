@@ -1,0 +1,5 @@
+Independent review, Ka0sAddonsCommonTasks docs/2026-11-25-SEEDS_AND_FOREVERDB (workflows wf_df07c1ab-8d1, wf_219c4c4a-92a)
+SF-QC-01: 2 findings (minor, minor); fix pass: 97aabe7 SF-QC-01: review fixes: label the two class lists apart; reword the four class rulings; fix gate green=True
+  - [minor] tests/test_client_data.lua:240 The comment "Forever's own ChrClasses rows ... in class order" sits above RETAIL_CLASSES as well as FOREVER_CLASSES, so it mislabels Retail's thirteen-token list as Forever's rows.
+  - [minor] tools/seeds/forever_rulings.json:2 The four shipped:gone:classes:{DEATHKNIGHT,DEMONHUNTER,EVOKER,MONK} rulings now say "remove", but FOREVER_CLASSES no longer holds those tokens, so derive will never raise these flags again. Under the
+Lead gate re-run 2026-11-25 at this head: green (see EXECUTION_RECORD.md).
