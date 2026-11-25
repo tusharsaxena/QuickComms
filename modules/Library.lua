@@ -370,9 +370,10 @@ local function nameRealm(key)
         and key:match("^[^%s%-]+%-%S+$") ~= nil
 end
 
--- A token the row lists (the class row: NS.GameIds.CLASSES).
+-- A token the row lists (the class row: NS.GameIds.ALL_CLASSES, every token either client has, so a
+-- When copied from Retail still loads on Forever, whose editor offers fewer).
 local function listedToken(row, key)
-    local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row]
+    local list = row == "class" and NS.GameIds.ALL_CLASSES or NS.Resolver.TOKENS[row]
     for _, token in ipairs(list or {}) do
         if token == key then return true end
     end
@@ -380,7 +381,7 @@ local function listedToken(row, key)
 end
 
 --- Whether `key` is a value the When row `row` can ever match (localization-§4: ids and tokens,
---- never a name): a token the row lists (NS.Resolver.TOKENS; the class row, NS.GameIds.CLASSES), a
+--- never a name): a token the row lists (NS.Resolver.TOKENS; the class row, NS.GameIds.ALL_CLASSES), a
 --- positive whole id (instances, battlegrounds, arenas, specializations), the whole kind on a place
 --- row (NS.Resolver.ID_ROWS, NS.Resolver.ALL), or a Name-Realm (characters: no control or "|"
 --- character, at most CHARACTER_MAX bytes).

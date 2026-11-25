@@ -3,10 +3,14 @@
 # repository against them (spec §12.1, §13.2). Dev-only: never loaded by the client or the TOC, and
 # .pkgmeta-ignored (layout-§1, "Where an authored generator lives"). Python 3, standard library only.
 #
-#   python3 -I tools/derive-gameids.py --fetch DIR    download the tables into DIR (a new directory)
+#   python3 -I tools/derive-gameids.py --fetch DIR --build V   download the tables at Retail build V
+#                                                    (`?build=`, required) into DIR (a new directory)
 #   python3 -I tools/derive-gameids.py DIR            derive from DIR and check; exit 1 on any mismatch
-#   python3 -I tools/derive-gameids.py --forever --fetch DIR   the same for WoW Forever: Forever's
-#   python3 -I tools/derive-gameids.py --forever DIR           tables, at FOREVER_BUILD
+#   python3 -I tools/derive-gameids.py --forever --fetch DIR [--build V]   the same for WoW Forever:
+#   python3 -I tools/derive-gameids.py --forever DIR           Forever's tables, at FOREVER_BUILD or V
+#
+# The build is always pinned, never "whatever is latest": `python3 -I tools/seeds/seeds.py status
+# --flavor retail` (or `--flavor forever`) prints the client's newest live build to pass.
 #
 # What it checks, each a loud failure (exit 1):
 #   - every CLIENT_MAPS row in tests/test_gameids.lua equals the row derived from Map (InstanceType)
@@ -250,18 +254,36 @@ def forever(d):
                                          len(ct.read(d, "GroupFinderActivity")), len(listed)))
 
 
+USAGE = ("usage: derive-gameids.py --fetch DIR --build V | derive-gameids.py --forever --fetch DIR [--build V]"
+         " | derive-gameids.py [--forever] DIR")
+BUILD_RE = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
+
+
+def pinned_build(rest, default):
+    """The build `--build V` names after the fetch directory, else `default`; a Retail fetch has no
+    default, so it is never a fetch of whatever wago.tools serves as latest."""
+    if not rest:
+        if default is None:
+            ct.fail("--fetch needs --build V (Retail's build; `python3 -I tools/seeds/seeds.py status --flavor retail`"
+                    " prints the live one)\n" + USAGE)
+        return default
+    if len(rest) != 2 or rest[0] != "--build" or not BUILD_RE.match(rest[1]):
+        ct.fail(USAGE)
+    return rest[1]
+
+
 def main(argv):
-    if len(argv) == 4 and argv[1:3] == ["--forever", "--fetch"]:
-        print("fetched build " + str(ct.fetch(argv[3], FOREVER_TABLES, FOREVER_BUILD)))
+    if len(argv) >= 4 and argv[1:3] == ["--forever", "--fetch"]:
+        print("fetched build " + str(ct.fetch(argv[3], FOREVER_TABLES, pinned_build(argv[4:], FOREVER_BUILD))))
         return
     if len(argv) == 3 and argv[1] == "--forever":
         forever(argv[2])
         return
-    if len(argv) == 3 and argv[1] == "--fetch":
-        print("fetched build " + str(ct.fetch(argv[2], TABLES)))
+    if len(argv) >= 3 and argv[1] == "--fetch":
+        print("fetched build " + str(ct.fetch(argv[2], TABLES, pinned_build(argv[3:], None))))
         return
     if len(argv) != 2:
-        ct.fail("usage: derive-gameids.py [--forever] --fetch DIR | derive-gameids.py [--forever] DIR")
+        ct.fail(USAGE)
     d = argv[1]
     maps = {int(r["ID"]): r for r in ct.read(d, "Map")}
     challenge = {int(r["ID"]): int(r["MapID"]) for r in ct.read(d, "MapChallengeMode")}

@@ -158,7 +158,7 @@ local function whenTakes(row)
     if row == "characters" then
         return NS.Compat.RegionalNames() and L["a first name and surname"] or L["Name-Realm"]
     end
-    local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row] or {}
+    local list = row == "class" and NS.GameIds.ALL_CLASSES or NS.Resolver.TOKENS[row] or {}
     return table.concat(list, ", ")
 end
 

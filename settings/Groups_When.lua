@@ -216,9 +216,17 @@ function W.ContentValues()
     return out
 end
 
-local function classValues()
-    local out = {}
-    for i, cf in ipairs(NS.GameIds.CLASSES) do out[i] = { value = cf, text = NS.Compat.ClassName(cf) or cf } end
+-- The client's classes (NS.GameIds.CLASSES: Forever's nine, SF-QC-01), plus any other class the stored
+-- When picked (a profile copied from Retail), so it stays listed and can be cleared.
+local function classValues(when)
+    local out, offered = {}, {}
+    for i, cf in ipairs(NS.GameIds.CLASSES) do
+        out[i], offered[cf] = { value = cf, text = NS.Compat.ClassName(cf) or cf }, true
+    end
+    local picked = type(when) == "table" and type(when.class) == "table" and when.class or {}
+    for _, cf in ipairs(NS.GameIds.ALL_CLASSES or {}) do
+        if picked[cf] and not offered[cf] then out[#out + 1] = { value = cf, text = NS.Compat.ClassName(cf) or cf } end
+    end
     return out
 end
 
@@ -271,7 +279,7 @@ end
 function W.Values(row, when)
     if row == "content" then return W.ContentValues() end
     if NS.Resolver.TOKENS[row] then return tokenValues(row) end
-    if row == "class" then return classValues() end
+    if row == "class" then return classValues(when) end
     if row == "spec" then return specValues(when) end
     return {}
 end

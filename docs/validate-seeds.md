@@ -17,7 +17,7 @@ runs are `docs/seed-research/2026-11-15-retail/` and `docs/seed-research/2026-11
 | Flavor | Source | Seed files | Tools |
 | --- | --- | --- | --- |
 | `retail` | wago.tools product `wow` (Retail live): `Map`, `JournalInstance`, `LFGDungeons`, `ChrClasses`, `ChrSpecialization` | `defaults/GameIds.lua` (`DUNGEONS`, `RAIDS`, `CLASSES`, `SPECS`), `defaults/GameIds_Instances.lua` (`INSTANCES`, `ARENAS`) | `tools/seeds/seeds.py --flavor retail` |
-| `forever` | wago.tools product `wowf` (WoW Forever): `Map`, `GroupFinderActivity`, `ChrClasses` | `defaults/GameIds_Clients.lua` (`BY_CLIENT.forever`: `FOREVER_DUNGEONS`, `FOREVER_RAIDS`, whose concatenation is its `INSTANCES`), and the shared `CLASSES` in `defaults/GameIds.lua` | `tools/seeds/seeds.py --flavor forever` |
+| `forever` | wago.tools product `wowf` (WoW Forever): `Map`, `GroupFinderActivity`, `ChrClasses` | `defaults/GameIds_Clients.lua` (`BY_CLIENT.forever`: `FOREVER_DUNGEONS`, `FOREVER_RAIDS`, whose concatenation is its `INSTANCES`, and `FOREVER_CLASSES`, its `CLASSES`) | `tools/seeds/seeds.py --flavor forever` |
 
 ## Rules
 
@@ -25,8 +25,8 @@ runs are `docs/seed-research/2026-11-15-retail/` and `docs/seed-research/2026-11
   files, keeping each file's CRLF and its row layout; nothing else edits a list's ids. A seed
   file's comments stay hand-written: the header notes, and a review comment a `renamed` flag says
   to fix. `apply` refuses, and the change is made by hand with the owner, for a list that has no
-  table of its own to write into: Forever's arenas (`ARENAS = {}`, D4) and `CLASSES` under the
-  `forever` flavor (one list both clients read; a removal there would remove it from Retail).
+  table of its own to write into: Forever's arenas (`ARENAS = {}`, D4). Since 2026-11-25 (SF-QC-01)
+  Forever's classes are a list of their own, `FOREVER_CLASSES`, which `apply` writes.
 - **Rulings are data.** They live in `tools/seeds/retail_rulings.json` and
   `tools/seeds/forever_rulings.json`, and `seeds.py rule` is their only writer. A ruling is keyed
   `<list>:<id>` for a candidate (`accept` or `reject`) or `shipped:<kind>:<list>:<id>` for a flag
@@ -176,9 +176,12 @@ Nuances:
 - **Arenas (D4).** Any arena map in Forever's `Map` is proposed; there are none today. An accepted
   one needs a hand change (a Forever `ARENAS` list, the Arena set, `HIDDEN_ROWS`), so `apply`
   refuses it.
-- **CLASSES is shared.** Under this flavor `CLASSES` is checked against Forever's `ChrClasses`. The
-  four Retail-only tokens (DEATHKNIGHT, MONK, DEMONHUNTER, EVOKER) are flagged `gone` and kept
-  pending the owner (2026-11-15): a per-client list is a code change, not a seed edit.
+- **CLASSES is per client (owner ruling 2026-11-25, "split per client", SF-QC-01).** Under this
+  flavor `FOREVER_CLASSES` (`BY_CLIENT.forever.CLASSES`, picked by `Compat.ClientKey()`) is checked
+  against Forever's `ChrClasses`. The four Retail-only tokens (DEATHKNIGHT, MONK, DEMONHUNTER,
+  EVOKER) that the 2026-11-15 run flagged `gone` were removed from it by hand, and their rulings
+  now read `remove`. `G.ALL_CLASSES` (Retail's thirteen) stays what a stored When may name, so a
+  profile copied from Retail still loads on Forever; only the editor's class picker narrows.
 - **SPECS is not checked here.** Forever's spec row reads the client (`Role.SpecsForClass`, C2),
   and `SPECS` is Retail's fallback.
 
@@ -203,7 +206,7 @@ The same order and refusals as Retail.
 
 ### Stage
 
-`defaults/GameIds_Clients.lua`, `tools/seeds/forever_rulings.json`,
+`defaults/GameIds_Clients.lua` (its lists and `FOREVER_CLASSES`), `tools/seeds/forever_rulings.json`,
 `docs/seed-research/<date>-forever`, plus any `tests/test_gameids.lua`, `docs/ARCHITECTURE.md`,
 smoke or citation edits. Commit message: `Seeds (forever): re-validated against <build> (<date>)`.
 
@@ -228,5 +231,9 @@ luacheck must report 0 warnings and 0 errors, and every suite 0 failed.
 - **Not covered.** `THANK_RAID_BUFFS` (spell ids) and the battleground sets' map ids
   (`defaults/BuiltIns_Battlegrounds.lua`) are outside this contract today; `HIDDEN_CONTENT` and the
   other `BY_CLIENT` keys hold content kinds, rows and tokens, not DB2 ids.
+- **Build pins.** Every wago.tools fetch names its build with `?build=`: `seeds.py derive` pins the
+  live build (or `--build`), and `tools/derive-gameids.py --fetch DIR --build V` requires Retail's
+  (`--forever --fetch` defaults to `FOREVER_BUILD`). Both send the User-Agent
+  `QuickComms-seed-check`.
 - **Shared helper.** Whether the build pin, cache, bundle and rulings move into a shared helper is
   LibKa0s#91.

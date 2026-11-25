@@ -3,9 +3,14 @@ local _, NS = ...
 -- Compat.ClientKey(). DATA ONLY: ids and tokens, never a name (localization-§4). defaults/GameIds.lua
 -- and defaults/GameIds_Instances.lua hold Retail's lists. This file keeps them as BY_CLIENT.retail,
 -- holds WoW Forever's beside them, and puts the client's own under the names every reader uses
--- (G.DUNGEONS, G.RAIDS, G.INSTANCES, G.ARENAS), so no reader asks which client it is.
+-- (G.DUNGEONS, G.RAIDS, G.INSTANCES, G.ARENAS, G.CLASSES), so no reader asks which client it is.
 --   DUNGEONS, RAIDS     Preview as...'s lists: Retail's season, Forever's own dungeons and raids.
 --   INSTANCES, ARENAS   the When editor's suggestions.
+--   CLASSES             the class row's tokens the When editor offers, in the client's class order.
+--                       G.ALL_CLASSES (Retail's thirteen, every token either client has) stays what a
+--                       stored When may name, so a profile copied from Retail still loads and matches
+--                       on Forever: hiding is UI only, as for HIDDEN_CONTENT (owner ruling 2026-11-25,
+--                       SF-QC-01).
 --   HIDDEN_CONTENT      the content kinds the When editor and Preview as... do not offer. The classify
 --                       step is the same on both clients, and a stored When that names one still loads
 --                       and matches: hiding is UI and seeds only (owner ruling R1, Claude's call C3).
@@ -28,7 +33,9 @@ local _, NS = ...
 -- maps the group finder lists and the raids exactly its raid maps. tools/derive-gameids.py --forever
 -- re-derives and checks them (docs/common-tasks.md). The in-game check is `/qc probe ids`. Darkspear
 -- Islands, a battleground the group finder lists, gets no built-in set (the battleground kind still
--- matches it). Forever has no arena map, so no arena list (D4).
+-- matches it). Forever has no arena map, so no arena list (D4). Forever's classes are exactly its own
+-- ChrClasses rows (build 1.60.1.70938, bundle docs/seed-research/2026-11-15-forever/): Retail's list
+-- without DEATHKNIGHT, MONK, DEMONHUNTER and EVOKER (owner ruling 2026-11-25, "split per client").
 -- RE-VALIDATED against Forever's build 1.60.1.70938 on 2026-11-15 by tools/seeds/seeds.py
 -- (docs/validate-seeds.md; bundle docs/seed-research/2026-11-15-forever/): no list changed.
 
@@ -87,6 +94,10 @@ local FOREVER_RAIDS = {
     2856, -- Scarlet Enclave
 }
 
+-- WoW Forever's classes, by classFile token, in the client's class order (ChrClasses ids 1-5, 7-9, 11).
+local FOREVER_CLASSES = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK",
+    "DRUID" }
+
 -- WoW Forever's raid buffs (FRB): every player rank of Arcane Intellect, Power Word: Fortitude and Mark
 -- of the Wild, derived from Forever's SpellName and SkillLineAbility tables (build 1.60.1.70862, wago.tools
 -- product wowf, fetched through tools/client_tables.py), matched by spell name and kept to the ranks a
@@ -111,9 +122,14 @@ local function set(list)
     return out
 end
 
+-- Every class token either client has (Retail's list is the superset): what a stored When's class row
+-- may name (modules/Library.lua, settings/SchemaMembers.lua), on either client.
+G.ALL_CLASSES = G.CLASSES
+
 G.BY_CLIENT = {
     retail = {
         DUNGEONS = G.DUNGEONS, RAIDS = G.RAIDS, INSTANCES = G.INSTANCES, ARENAS = G.ARENAS,
+        CLASSES = G.ALL_CLASSES,
         HIDDEN_CONTENT = {}, HIDDEN_ROWS = {}, HIDDEN_TOKENS = {}, SKIP_BUILTINS = {}, BUILTIN_WHEN = {},
         BATTLEGROUND_SETS = nil,
         -- Arcane Intellect, Power Word: Fortitude and Mark of the Wild
@@ -123,6 +139,7 @@ G.BY_CLIENT = {
         DUNGEONS = FOREVER_DUNGEONS, RAIDS = FOREVER_RAIDS,
         INSTANCES = concat(FOREVER_DUNGEONS, FOREVER_RAIDS),
         ARENAS = {},
+        CLASSES = FOREVER_CLASSES,
         HIDDEN_CONTENT = set({ "mythicPlus", "delve", "scenario", "arena", "housing" }),
         HIDDEN_ROWS = set({ "difficulty", "keyLevel", "arena" }),
         HIDDEN_TOKENS = set({ "{dungeon}", "{key}" }),
@@ -139,7 +156,7 @@ G.BY_CLIENT = {
 
 -- Every name a client's table sets, so a pick replaces the other client's whole (Retail's
 -- BATTLEGROUND_SETS is nil).
-local KEYS = { "DUNGEONS", "RAIDS", "INSTANCES", "ARENAS", "HIDDEN_CONTENT", "HIDDEN_ROWS", "HIDDEN_TOKENS",
+local KEYS = { "DUNGEONS", "RAIDS", "INSTANCES", "ARENAS", "CLASSES", "HIDDEN_CONTENT", "HIDDEN_ROWS", "HIDDEN_TOKENS",
     "SKIP_BUILTINS", "BUILTIN_WHEN", "BATTLEGROUND_SETS", "THANK_RAID_BUFFS" }
 
 --- Put client `key`'s data ("retail" | "forever"; anything else is Retail) under the names every

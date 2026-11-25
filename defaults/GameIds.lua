@@ -5,7 +5,8 @@ local _, NS = ...
 --   DUNGEONS  the current Mythic+ season's instanceIDs (GetInstanceInfo's 8th return, which is the
 --             client's Map id): the season's four returning dungeons and Midnight's four new ones.
 --   RAIDS     the current raid tier's instanceIDs: Midnight's three launch raids.
---   CLASSES   classFile tokens, in the client's class order.
+--   CLASSES   Retail's classFile tokens, in the client's class order (Forever's own nine, and the
+--             pick, are in defaults/GameIds_Clients.lua; G.ALL_CLASSES keeps this list).
 --   SPECS     specIDs per classFile. 1480 is the Demon Hunter's Devourer (Midnight): matched in the
 --             client's ChrSpecialization table (class 12); in game, smoke check IDS-1.
 -- MATCHED (phase 5), NOT YET CONFIRMED IN GAME: matched against the client's own data tables as

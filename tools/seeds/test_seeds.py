@@ -61,6 +61,9 @@ local FOREVER_DUNGEONS = {
 local FOREVER_RAIDS = {
     409,  -- Molten Core
 }
+
+local FOREVER_CLASSES = { "WARRIOR",
+    "MAGE" }
 """
 
 RETAIL = {
@@ -241,7 +244,9 @@ class TestDeriveForever(Fixture):
         self.assertNotIn("dungeons:489", keys)          # a battleground is no dungeon
         self.assertIn("arenas:4000", keys)              # D4: any arena map is proposed
         self.assertIn("shipped:unlisted:dungeons:2959", keys)
-        self.assertIn("shipped:gone:classes:PALADIN", keys)
+        # its own FOREVER_CLASSES (SF-QC-01), never Retail's G.CLASSES
+        self.assertIn("shipped:gone:classes:MAGE", keys)
+        self.assertNotIn("shipped:gone:classes:PALADIN", keys)
         self.assertFalse([k for k in keys if k.startswith("specs:")], "Forever reads its specs from the client")
 
 
@@ -288,6 +293,15 @@ class TestRulingsAndApply(Fixture):
         seeds.apply_bundle(doc, rulings, self.defaults)
         text = (self.defaults / "GameIds_Clients.lua").read_bytes().decode()
         self.assertIn("    2959, -- City of Dalaran\r\n    3001, -- The Shaper's Terrace\r\n}", text)
+
+    def test_forever_classes_apply_to_their_own_list(self):
+        doc, _b = self.derive("forever", FOREVER)
+        before = (self.defaults / "GameIds.lua").read_bytes()
+        rulings = self.rule_all(doc, remove={"shipped:gone:classes:MAGE"})
+        self.assertEqual(seeds.apply_bundle(doc, rulings, self.defaults), ["GameIds_Clients.lua classes: -MAGE"])
+        text = (self.defaults / "GameIds_Clients.lua").read_bytes().decode()
+        self.assertIn('local FOREVER_CLASSES = { "WARRIOR" }', text)
+        self.assertEqual((self.defaults / "GameIds.lua").read_bytes(), before, "Retail's CLASSES untouched")
 
     def test_hand_only_lists_refuse(self):
         doc, _b = self.derive("forever", FOREVER)

@@ -2,12 +2,13 @@
 
 ## The green commit gate
 
-All three MUST pass before every commit (testing-§4):
+All four MUST pass before every commit (testing-§4):
 
 ```sh
 lua tests/run.lua      # the headless suite, Lua 5.1
 KA0S_KIT_CLIENT=forever lua tests/run.lua   # the same under the kit's forever profile (clients-§6)
 ~/.claude/dev-copilot/bin/ka0s-bounded luacheck .   # 0 warnings / 0 errors; loads no kit, so it runs through the bounded runner (testing-§15)
+python3 -m pytest -q tools/seeds   # the seed-validation tool's offline tests (validate-seeds.md, ## Gate)
 ```
 
 No authored `.lua` file may pass 1500 lines (layout-§1); the kit's `test_layout_cap` reads the
@@ -169,9 +170,9 @@ before SHINE-1 and SHINE-2. It is not a suite and gates nothing (`DEPENDENCIES.m
 ## The seed-validation tool's tests
 
 `tools/seeds/test_seeds.py` tests `tools/seeds/seeds.py` offline, on tiny fixture tables and seed
-files in a temporary folder: `python3 -m pytest -q tools/seeds`. It is not part of the Lua suite;
-it runs with the commit gate whenever `tools/seeds/` or a seed file it reads changes, and it is in
-the seed-validation contract's `## Gate` ([`validate-seeds.md`](validate-seeds.md)).
+files in a temporary folder: `python3 -m pytest -q tools/seeds`. It is not part of the Lua suite,
+but it is part of the commit gate above (since 2026-11-25, SF-QC-01), and it is in the
+seed-validation contract's `## Gate` ([`validate-seeds.md`](validate-seeds.md)).
 
 ## In game
 
