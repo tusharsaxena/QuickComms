@@ -561,7 +561,7 @@ Total.
 - game ids: [QFE-F3] every WoW Forever id has its FOREVER_MAPS row, of its kind
 - game ids: [CA-M4-3] THANK_RAID_BUFFS on each client: the single-target raid buffs a stranger can cast
 
-### test_client_data.lua (9)
+### test_client_data.lua (11)
 
 - client data: [QFE-F3] the lists are the client's, picked once by ClientKey
 - client data: [QFE-F3] UseClient replaces the whole pick, BATTLEGROUND_SETS included
@@ -572,6 +572,8 @@ Total.
 - client data: [QFE-F3] a set held from Retail still loads, matches and keeps its callouts on Forever
 - client data: [QFE-F3] the battleground row suggests the seeded sets' maps
 - client data: [QFE-F3] the token help leaves {dungeon} and {key} out on Forever
+- client data: [SF-QC-01] CLASSES is the client's, and both lists are pinned
+- client data: [SF-QC-01] the class picker offers the client's classes; a Retail When still loads
 
 ### test_library.lua (83)
 
@@ -2445,7 +2447,7 @@ Total.
 | test_resolver.lua | 13 |
 | test_builtins.lua | 40 |
 | test_gameids.lua | 6 |
-| test_client_data.lua | 9 |
+| test_client_data.lua | 11 |
 | test_library.lua | 83 |
 | test_members.lua | 28 |
 | test_editors.lua | 25 |
@@ -2517,4 +2519,4 @@ Total.
 | test_skin_switch.lua | 37 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2123** |
+| **Total** | **2125** |

@@ -40,6 +40,7 @@ marked as such rather than listed as a requirement.
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh`, which runs it over a sanitized shadow and checks function-count parity, because `lizard` alone is blind in Lua (automated-tests-§3) | `lizard --version` |
 | `git` | any recent | vendoring, the vendored-payload gate (`tests/test_vendor_sync.lua` reads the index and compares against the sibling `../LibKa0s` checkout) and the line-ending gate (`git check-attr`) | `tests/_kit/vendor_sync.lua`, `tests/_kit/test_eol.lua` |
 | POSIX shell (`bash`) | any | `tests/_kit/run-automated-tests.sh` and the commands in this file | the runner's shebang |
+| `python3` (3.8+) + `pytest` | any recent pytest | `python3 -m pytest -q tools/seeds`, the seed tool's offline tests, which the root `CLAUDE.md` gate runs before every commit (SF-QC-01); `python3 -m unittest` in that folder runs the same cases with nothing extra | `tools/seeds/test_seeds.py`; `docs/validate-seeds.md` → `## Gate` |
 
 **Lua 5.1 is a requirement, not a preference.** The harness sandboxes each source file with
 `setfenv`, which was removed in 5.2 — "5.2 will probably work" is false and costs an hour to
@@ -57,11 +58,15 @@ sudo apt-get install -y pipx
 pipx ensurepath          # then open a new shell, or: source ~/.bashrc
 pipx install lizard
 
+# Python 3 and pytest, for the seed tool's tests in the gate
+sudo apt-get install -y python3 python3-pytest
+
 # verify — each of these must print a version
 lua5.1 -v                # Lua 5.1.5 …   (if `lua` is not 5.1, use lua5.1 explicitly)
 luacheck --version
 lizard --version
 git --version
+python3 -m pytest --version
 ```
 
 Versions are pinned only where a version matters: `lua5.1` is hard, `luacheck` and `lizard` are
@@ -154,15 +159,18 @@ git-ignored `tools/seeds/.cache/`, and `derive --replay` re-runs a bundle offlin
 (`python3 -m pytest -q tools/seeds`, or `python3 -m unittest` in that folder) need no network. The
 contract is `docs/validate-seeds.md`.
 
-**None of this group is required to build, run or test the addon.**
+**None of this group is required to build or run the addon.** Testing needs only the Python 3 and
+pytest of the development toolchain, for the seed tool's offline tests.
 
 ## Am I set up correctly?
 
 ```sh
 lua tests/run.lua                                     # the suite — must be green
 lua tests/run.lua -j auto                             # same, fanned across CPUs (testing-§14)
+KA0S_KIT_CLIENT=forever lua tests/run.lua             # the same suite under the WoW Forever kit profile
 # every run above is bounded by the vendored kit on load (testing-§15); KA0S_KIT_GUARD=off only under a debugger
 ~/.claude/dev-copilot/bin/ka0s-bounded luacheck .     # must be 0 warnings / 0 errors; luacheck loads no kit, so it takes the bounded runner
+python3 -m pytest -q tools/seeds                      # the seed tool's offline tests, no network
 bash tests/_kit/run-automated-tests.sh --suite complexity   # the sighted complexity report (release-time);
                                                       # never raw `lizard`, which is blind in Lua (automated-tests-§3)
 ```
