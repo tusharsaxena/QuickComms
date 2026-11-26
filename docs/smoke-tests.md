@@ -3130,3 +3130,11 @@ Owed from round 2 of the feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-24-
 Owed from the seeds and ForeverDB run (SF-QC-01, LibKa0s#102, Ka0sAddonsCommonTasks `docs/2026-11-25-SEEDS_AND_FOREVERDB/`): FOREVER-27, new, owed.
 
 On 2026-11-25 the owner reported that it passed, recorded on its `Result:` line as `passed (owner, 2026-11-25)`: FOREVER-27.
+
+## Help glyph (2026-11-27)
+
+The owner picked the help and missing-icon glyphs (Ka0sAddonsCommonTasks round 6). Unrun.
+
+| ID | Check | Result |
+|---|---|---|
+| GLYPH-1 | Unlock the dial (and any other handle QuickComms draws): the **?** help mark is a white filled circle with the question mark cut out (Phosphor `ph:question`), not the bare **?**; hovering it still shows the help tooltip. | |
